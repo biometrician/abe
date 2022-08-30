@@ -1,0 +1,10 @@
+exportPattern("^[[:alpha:]]+")
+importFrom("graphics", "hist", "par", "barplot","pie")
+  importFrom("stats", "as.formula", "coef", "drop1", "formula",
+             "getCall", "median", "model.frame", "model.matrix",
+             "qchisq", "quantile", "sd", "terms", "update",
+             "update.formula", "var", "vcov")
+S3method(summary, abe)
+S3method(plot, abe)
+
+
