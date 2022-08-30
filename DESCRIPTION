@@ -2,13 +2,21 @@ Package: abe
 Type: Package
 Title: Augmented Backward Elimination
 Version: 4.0.5
+<<<<<<< HEAD
 Date: 2022-08-30
+=======
+Date: 2018-1-10
+>>>>>>> 79e6be84721b852a0df558c2cd7cd3ce9520ab54
 Authors@R: c(person(c("Rok","Blagus"),role=c("aut","cre"),email="rok.blagus@mf.uni-lj.si"),person("Sladana", "Babic", role = "ctb",
              email = "sladja93babic@gmail.com"))
 Author: Rok Blagus [aut, cre],  Sladana Babic [ctb]
 Maintainer: Rok Blagus <rok.blagus@mf.uni-lj.si>
 Description: Performs augmented backward elimination and checks the stability of the obtained model. Augmented backward elimination combines significance or information based criteria with the change in estimate to either select the optimal model for prediction purposes or to serve as a tool to obtain a practically sound, highly interpretable model. More details can be found in Dunkler et al. (2014) <doi:10.1371/journal.pone.0113677>. 
+<<<<<<< HEAD
 License: GPL (>= 3)
+=======
+License: GPL (>= 2)
+>>>>>>> 79e6be84721b852a0df558c2cd7cd3ce9520ab54
 RoxygenNote: 7.1.1
 NeedsCompilation: no
 Packaged: 2022-01-06 07:06:33 UTC; rblagus
