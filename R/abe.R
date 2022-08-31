@@ -41,7 +41,7 @@
 #' @return An object of class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the model chosen by abe method.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #'
-#' @seealso \code{\link{abe.boot}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
+#' @seealso \code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @export
@@ -222,7 +222,7 @@ bt
 
 
 
-#' Bootstrapped Augmented Backward Elimination
+#' Resampled Augmented Backward Elimination
 #'
 #' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 #'
@@ -249,7 +249,7 @@ bt
 #' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
 #' @param num.boot number of bootstrap re-samples
 #' @param type.boot String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details
-#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.632. See details.
+#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
 #'
@@ -267,7 +267,7 @@ bt
 #'
 #' \code{fit.or} the initial model
 #'
-#' \code{misc} the parameters of the call to \code{abe.boot}
+#' \code{misc} the parameters of the call to \code{abe.resampling}
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -291,7 +291,7 @@ bt
 #' # use ABE on 50 bootstrap re-samples considering different
 #' # change-in-estimate thresholds and significance levels
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="bootstrap")
@@ -302,14 +302,14 @@ bt
 #' # considering different change-in-estimate thresholds and
 #' # significance levels
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="subsampling",prop.sampling=0.5)
 #'
-#' summary(fit.boot)
+#' summary(fit.resample)
 
-abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.632){
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
 
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
@@ -637,21 +637,21 @@ misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.samp
 
 #' Print Function
 #'
-#' Prints a summary table of a bootstrapped version of ABE using the latest guideliness.
+#' Prints a summary table of a resampled version of ABE using the latest guideliness.
 #' The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
 #' the relative inclusion frequencies of the covariates from the initial model (using \code{type.boot="resampling"} and \code{prop.sampling =0.5}),
 #' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS) all using \code{type.boot="bootstrap"}.
-#' While not required, it makes sense to call \code{\link{abe.boot}} with \code{type.boot="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.boot} and refit \code{\link{abe.boot}} (twice) which greatly increases the computing time.
+#' While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.boot="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.boot} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}, preferably using \code{type.boot="bootstrap"} or \code{type.boot="subsampling"} with \code{prop.sampling=0.5}.
+#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}, preferably using \code{type.boot="bootstrap"} or \code{type.boot="subsampling"} with \code{prop.sampling=0.5}.
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @seealso \code{\link{print.abe}}, \code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+#' @seealso \code{\link{print.abe}}, \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
 #' set.seed(1)
@@ -663,16 +663,16 @@ misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.samp
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.resampling<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="bootstrap")
 #'
-#' print.abe.default(fit.boot,conf.level=0.95,alpha=0.2,tau=0.05)
+#' print.abe.default(fit.resampling,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
 print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
-  cat("Printing the output of a call to abe.boot using the latest guideliness. Be patient, as this might take a while.")
+  cat("Printing the output of a call to abe.resampling using the latest guideliness. Be patient, as this might take a while.")
   object<-x
   type.boot<-object$misc$type.boot
 
@@ -689,15 +689,15 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
     boot<-update(object,type.boot = "bootstrap" )
   }
   if (conf.level<0|conf.level>1) stop("Confidence level out of range")
-  if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.boot.")
-  if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.boot.")
+  if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
+  if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.resampling.")
 
 
   if (object$misc$criterion=="alpha") if(is.null(alpha)) alpha=object$misc$alpha[1]
 
   if (is.null(tau)) tau=object$misc$tau[1]
 
-  cat("Printing results of a call to abe.boot for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
+  cat("Printing results of a call to abe.resampling for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
   if (object$misc$criterion=="alpha" ) cat("  alpha=",alpha,sep="")
 
   set<-paste("tau=",tau,sep="")
@@ -743,9 +743,9 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
 
 #' Summary Function
 #'
-#' makes a summary of a bootstrapped version of ABE
+#' makes a summary of a resampled version of ABE
 #'
-#' @param object an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}
+#' @param object an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param ... additional arguments affecting the summary produced.
 
@@ -755,11 +755,11 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
 #'
 #' \code{model.rel.frequencies}: relative frequencies of the final models
 #'
-#' \code{var.coefs}: bootstrap medians and percentiles for the estimates of the regression coefficients for each variable from the initial model
+#' \code{var.coefs}: bootstrap/resampled medians and percentiles for the estimates of the regression coefficients for each variable from the initial model
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @seealso \code{\link{abe.boot}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+#' @seealso \code{\link{abe.resampling}}, \code{\link{print.abe.default}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
 #' set.seed(1)
@@ -771,7 +771,7 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="bootstrap")
@@ -987,15 +987,16 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' the relative inclusion frequencies of the covariates from the initial model,
 #' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS).
+#' In cotrast to funciton \code{\link{print.abe.default}} which calculates these measures using either bootstrap or resampling (accordng to the latest guideliness), the function \code{\link{print.abe}} calculates the measures using only the option specified in the argument \code{type.boot} in a call to \code{\link{abe.resampling}}.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}
+#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @seealso \code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+#' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
 #' set.seed(1)
@@ -1007,7 +1008,7 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="bootstrap")
@@ -1018,15 +1019,15 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 print.abe<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
   object<-x
   if (conf.level<0|conf.level>1) stop("Confidence level out of range")
-  if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.boot.")
-  if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.boot.")
+  if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
+  if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.resampling.")
 
 
   if (object$misc$criterion=="alpha") if(is.null(alpha)) alpha=object$misc$alpha[1]
 
   if (is.null(tau)) tau=object$misc$tau[1]
 
-  cat("Printing results of a call to abe.boot for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
+  cat("Printing results of a call to abe.resampling for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
   if (object$misc$criterion=="alpha" ) cat("  alpha=",alpha,sep="")
 
   set<-paste("tau=",tau,sep="")
@@ -1063,9 +1064,9 @@ print(mat)
 
 #' Plot Function
 #'
-#' Plot function for the bootstrapped version of ABE.
+#' Plot function for the resampled/bootstrapped version of ABE.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}
+#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
 #' @param type.plot string which specifies the type of the plot. See details.
 #' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
@@ -1078,7 +1079,7 @@ print(mat)
 #' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau.
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s).
 #' @export
-#' @seealso \code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
+#' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
 #' set.seed(1)
 #' n=100
@@ -1089,7 +1090,7 @@ print(mat)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="bootstrap")
@@ -1144,8 +1145,8 @@ object$all.vars<-ggff(object$all.vars)
   }
 
 
-  if (!is.null(alpha)) if (sum(paste("alpha=",alpha,sep="")%in%unique(alphas))!=length(alpha)) stop("This value of alpha was not considered when using abe.boot.")
-  if (!is.null(tau)) if (sum(paste("tau=",tau,sep="")%in%unique(taus))!=length(tau)) stop("This value of tau was not considered when using abe.boot.")
+  if (!is.null(alpha)) if (sum(paste("alpha=",alpha,sep="")%in%unique(alphas))!=length(alpha)) stop("This value of alpha was not considered when using abe.resampling.")
+  if (!is.null(tau)) if (sum(paste("tau=",tau,sep="")%in%unique(taus))!=length(tau)) stop("This value of tau was not considered when using abe.resampling.")
 
 
 
@@ -1341,17 +1342,17 @@ if (type.plot=="models"){
 
 #' Pie Function
 #'
-#' Pie function for the bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of \code{alpha} and \code{tau}.
+#' Pie function for the resampled/bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of \code{alpha} and \code{tau}.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}
+#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
 #' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param labels plot labels, defaults to NA, i.e. no labels are ploted
-#' @param ... Arguments to be passed to methods, such as graphical parameters (see \code{\link{barplot}}, \code{\link{hist}}).
+#' @param ... Arguments to be passed to methods, such as graphical parameters (see \code{\link{pie}}, \code{\link{barplot}}, \code{\link{hist}}).
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @export
-#' @seealso \code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
+#' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
 #' @examples
 #' set.seed(1)
 #' n=100
@@ -1362,7 +1363,7 @@ if (type.plot=="models"){
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.boot=50,type.boot="bootstrap")
@@ -1397,8 +1398,8 @@ pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
   }
 
 
-  if (!is.null(alpha)) if (sum(paste("alpha=",alpha,sep="")%in%unique(alphas))!=length(alpha)) stop("This value of alpha was not considered when using abe.boot.")
-  if (!is.null(tau)) if (sum(paste("tau=",tau,sep="")%in%unique(taus))!=length(tau)) stop("This value of tau was not considered when using abe.boot.")
+  if (!is.null(alpha)) if (sum(paste("alpha=",alpha,sep="")%in%unique(alphas))!=length(alpha)) stop("This value of alpha was not considered when using abe.resampling.")
+  if (!is.null(tau)) if (sum(paste("tau=",tau,sep="")%in%unique(taus))!=length(tau)) stop("This value of tau was not considered when using abe.resampling.")
 
 
 
