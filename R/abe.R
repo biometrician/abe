@@ -634,6 +634,417 @@ misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.samp
 }
 
 
+#' Bootstrapped Augmented Backward Elimination
+#'
+#' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
+#'
+#'
+#' @param fit An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
+#' Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.
+#' @param data data frame used when fitting the object \code{fit}.
+#' @param include a vector containing the names of variables that will be included in the final model. These variables are used as passive variables during modeling. These variables might be exposure variables of interest or known confounders.
+#' They will never be dropped from the working model in the selection process,
+#' but they will be used passively in evaluating change-in-estimate criteria of other variables.
+#' Note, variables which are not specified as include or active in the model fit are assumed to be active and passive variables.
+#' @param active a vector containing the names of active variables. These less important explanatory variables will only be used as active,
+#' but not as passive variables when evaluating the change-in-estimate criterion.
+#' @param tau  Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.
+#' @param exp.beta Logical specifying if exponent is used in formula to standardize the criterion. Default is set to TRUE.
+#' @param exact Logical, specifies if the method will use exact change-in-estimate or approximated. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
+#' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
+#' @param criterion String that specifies the strategy to select variables for the blacklist.
+#' Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
+#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}). Default is set to \code{"alpha"}.
+#' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
+#' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
+#' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
+#' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
+#' @param num.boot number of bootstrap re-samples
+#' @param type.boot String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details
+#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.632. See details.
+#' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
+#' A list with the following elements:
+#'
+#' \code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}
+#'
+#' \code{alpha} the vector of significance levels used
+#'
+#' \code{tau} the vector of threshold values for the change-in-estimate
+#'
+#' \code{num.boot} number of re-sampled datasets
+#'
+#' \code{criterion} criterion used when constructing the black-list
+#'
+#' \code{all.vars} a list of variables used when estimating \code{fit}
+#'
+#' \code{fit.or} the initial model
+#'
+#' \code{misc} the parameters of the call to \code{abe.boot}
+#'
+#' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
+#' @author Sladana Babic
+#' @details Used only for compatibility with the previous versions and will be removed at some point; see/use \code{\link{abe.resampling}} instead.
+#' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
+#' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
+#' @seealso \code{\link{abe.resampling}}
+#' @export
+#' @examples
+#' # simulate some data and fit a model
+#'
+#' set.seed(1)
+#' n=100
+#' x1<-runif(n)
+#' x2<-runif(n)
+#' x3<-runif(n)
+#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
+#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
+#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#'
+#' # use ABE on 50 bootstrap re-samples considering different
+#' # change-in-estimate thresholds and significance levels
+#'
+#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.boot=50,type.boot="bootstrap")
+#'
+#' summary(fit.boot)
+#'
+#' # use ABE on 50 subsamples randomly selecting 50% of subjects
+#' # considering different change-in-estimate thresholds and
+#' # significance levels
+#'
+#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.boot=50,type.boot="subsampling",prop.sampling=0.5)
+#'
+#' summary(fit.boot)
+
+abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.632){
+
+  if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
+
+  if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
+  if (nrow(fit$x)!=nrow(data)) stop("Data contains missing values. Remove all the missing values and refit the model.")
+
+  if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
+
+  if (class(fit)[1]=="coxph"&exp.beta==F) stop("setting exp.beta=F for the cox model is not supported")
+
+  if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
+
+  if (class(fit)[1]=="lm"&exp.beta==T) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
+
+  if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
+
+  if (length(criterion)!=1) stop("you need to specify a single criterion")
+  if (sum(criterion%in%c("alpha","AIC","BIC"))==0) stop("valid criteria are alpha, AIC and BIC")
+  if (criterion=="alpha") if (sum(alpha<0)!=0|sum(alpha>1)!=0) stop("specify alphas between zero and one")
+  if (is.null(tau)) stop("Specify tau.")
+  if (sum(tau<0)!=0) stop("Taus has to be >=0.")
+
+  if (length(type.boot)!=1) stop("you need to specify a single resampling method")
+
+  if (criterion!="alpha") alpha=NULL
+
+  if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+
+  if (!is.matrix(xm) ) stop("performing variable selection with a single variable in the model is meaningless")
+
+  if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
+
+    warning("offset variables are in the model treating them as only passive")
+
+    offset.var<-names(attributes(fit$terms)$dataClasses)[my_grepl("offset",names(attributes(fit$terms)$dataClasses))]
+
+    if (!is.null(active)){
+      for (ii in 1:length(active)){
+        if (sum(my_grepl(  active[ii],offset.var )!=0)) active[ii]<-NA
+      }
+
+      active=active[!is.na(active)]
+      if (length(active)==0) active=NULL
+    }
+    if (!is.null(include)){
+      for (ii in 1:length(include)){
+        if (sum(my_grepl(  include[ii],offset.var )!=0)) include[ii]<-NA
+      }
+
+      include=include[!is.na(include)]
+      if (length(include)==0) include=NULL
+    }
+
+  }
+  if (class(fit)[1]=="coxph"){
+    if (sum(my_grepl("strata",attributes(fit$terms)$term.labels))!=0){
+      strata.vars<-attributes(fit$terms)$term.labels[my_grepl("strata",attributes(fit$terms)$term.labels)]
+      if ( is.null(include)&is.null(active) ) {
+        if (criterion=="alpha") stop("The model includes strata and stratification variables are either only active or passive and active, using alpha as a criterion is inappropriate, use either AIC or BIC.")
+        warning("The model includes strata and stratification variables are either only active or passive and active, using approximate change-in-estimate is inappropriate, using exact change-in-estimate.")
+        exact=TRUE
+      }
+      if (!is.null(active)&is.null(include)){
+
+        if (criterion=="alpha") stop("The model includes strata and stratification variables are either only active or passive and active, using alpha as a criterion is inappropriate, use either AIC or BIC.")
+        warning("The model includes strata and stratification variables are either only active or passive and active, using approximate change-in-estimate is inappropriate, using exact change-in-estimate.")
+        exact=TRUE
+
+
+      }
+      if (!is.null(active)&!is.null(include)){
+        log<-rep(NA,length(active))
+        for (ii in 1:length(active)){
+          log[ii]<-sum(my_grepl(active[ii],strata.vars))
+        }
+        log1<-rep(NA,length(include))
+        for (ii in 1:length(include)){
+          log1[ii]<-sum(my_grepl(include[ii],strata.vars))
+        }
+        if (sum(log)!=0&sum(log1)!=0) stop("stratification variable cannot be specified as include and active")
+        if (sum(log1)==0){
+          if (criterion=="alpha") stop("The model includes strata and stratification variables are either only active or passive and active, using alpha as a criterion is inappropriate, use either AIC or BIC.")
+          warning("The model includes strata and stratification variables are either only active or passive and active, using approximate change-in-estimate is inappropriate, using exact change-in-estimate.")
+          exact=TRUE
+
+        }
+      }
+
+      if (!is.null(include)&is.null(active)){
+        log1<-rep(NA,length(include))
+        for (ii in 1:length(include)){
+          log1[ii]<-sum(my_grepl(include[ii],strata.vars))
+        }
+        if (sum(log1)==0){
+          if (criterion=="alpha") stop("The model includes strata and stratification variables are either only active or passive and active, using alpha as a criterion is inappropriate, use either AIC or BIC.")
+          warning("The model includes strata and stratification variables are either only active or passive and active, using approximate change-in-estimate is inappropriate, using exact change-in-estimate.")
+          exact=TRUE
+
+        }
+      }
+
+    }
+
+  }
+  if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){warning("The model contains a covariate which was fitted as a matrix (splines etc.), treating it as a single covariate. Using type.factor=factor for factors. Using approximate change-in-estimate is inappropriate; using exact change in estimate instead.")} else {
+
+
+    if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0&is.null(type.factor)) {type.factor="factor"; warning("There are factors in the model but type.factor is not specified, using type.factor=factor")}
+
+    if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0) if(type.factor=="factor"&exact==FALSE) {warning("there are factors in the model, using approximate change-in-estimate with this type.factor is inappropriate; using exact change in estimate instead"); exact=T}
+  }
+
+  cnms<-attributes(fit$terms)$term.labels
+
+  if (!is.null(include)) {
+    include.l<-list()
+    for (i in 1:length(include)) {
+      if (sum(my_grepl(include[i],cnms))==0) stop("at least one include variable is not in the model")
+      include.l[[i]]<-cnms[my_grep(include[i],cnms)]
+    }
+    include2<-unlist(include.l)
+  } else include2<-include
+
+  if (!is.null(active))  {
+    active.l<-list()
+    for (i in 1:length(active)) {
+      if (sum(my_grepl(active[i],cnms))==0) stop("at least one active variable is not in the model")
+      active.l[[i]]<-cnms[my_grep(active[i],cnms)]
+    }
+    active2<-unlist(active.l)
+  } else active2<-active
+
+
+  if (sum(include2%in%active2)!=0) stop("at least one include variable is also specified as active")
+
+
+
+  if ( sum(cnms%in%include2)==length(cnms) ) stop("all variables are specified as pasive, cannot perform variable selection")
+  if ( sum(cnms%in%active2)==length(cnms) ) {
+    include=active=NULL
+    warning("all variables are specified as active, treating all variables as active or pasive")
+  }
+
+  if (criterion[1]=="alpha"&is.null(alpha)) stop("specify alpha")
+
+
+  if (criterion[1]=="alpha") k<-NULL
+  if (criterion[1]=="AIC") k<-2
+
+  n<-nrow(fit$x)
+  if (type.boot!="bootstrap") m<-round(n*prop.sampling,0) else m<-n
+  if (criterion[1]=="BIC") k<-log(m)
+
+
+
+  boot<-list()
+
+  i=0
+
+  if (!is.null(alpha)&!is.null(tau)){
+
+    for (a in alpha){
+
+      if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
+
+      for (t in tau){
+        for (ii in 1:num.boot){
+          i=i+1
+
+          if (type.boot=="bootstrap") ids<-sample(1:n,n,replace=T)
+          if (type.boot=="mn.bootstrap") ids<-sample(1:n,m,replace=T)
+          if (type.boot=="subsampling") ids<-sample(1:n,m,replace=F)
+
+          data.boot<-data[ids,]
+
+          fit.i<-my_update_boot(fit,data=data.boot)
+          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+            if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
+
+              if (type.factor=="factor") {
+
+
+                boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+
+                  boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+
+
+                }
+
+
+            } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
+
+          }}
+      }
+    }}
+
+
+  if (is.null(alpha)&!is.null(tau)){
+
+
+    for (t in tau){
+      for (ii in 1:num.boot){
+        i=i+1
+        if (type.boot=="bootstrap") ids<-sample(1:n,n,replace=T)
+        if (type.boot=="mn.bootstrap") ids<-sample(1:n,m,replace=T)
+        if (type.boot=="subsampling") ids<-sample(1:n,m,replace=F)
+
+        data.boot<-data[ids,]
+
+        fit.i<-my_update_boot(fit,data=data.boot)
+
+        if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else {
+
+          if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
+
+            if (type.factor=="factor") {
+
+
+              boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
+
+                boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
+              }
+
+
+          } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
+
+        }}
+
+    }}
+
+  if (!is.null(alpha)&is.null(tau)){
+
+
+    for (a in alpha){
+
+      if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
+
+      for (ii in 1:num.boot){
+        i=i+1
+        if (type.boot=="bootstrap") ids<-sample(1:n,n,replace=T)
+        if (type.boot=="mn.bootstrap") ids<-sample(1:n,m,replace=T)
+        if (type.boot=="subsampling") ids<-sample(1:n,m,replace=F)
+
+        data.boot<-data[ids,]
+
+        fit.i<-my_update_boot(fit,data=data.boot)
+
+        if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+
+          if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
+
+            if (type.factor=="factor") {
+
+
+              boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+
+                boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+
+              }
+
+
+          } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
+
+        }}
+
+    }}
+
+  fit.or<-fit
+  if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
+    if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0){
+      if (type.factor=="individual") {
+        df<-as.data.frame(model.matrix(fit))
+
+        names(df)<-gsub("factor", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
+                        fixed = FALSE, useBytes = FALSE)
+
+        names(df)<-gsub(")", replacement=".", names(df), ignore.case = FALSE, perl = FALSE,
+                        fixed = FALSE, useBytes = FALSE)
+
+        names(df)<-gsub("\\(", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
+                        fixed = FALSE, useBytes = FALSE)
+
+        check.names<-names(df)
+        var.mod<-attributes(fit$terms)$term.labels
+        if (sum(my_grepl("strata",var.mod))!=0)  check.names<-c(check.names, var.mod[my_grepl("strata",var.mod)] )
+
+
+
+        if (!is.null(include)) {
+          include.l<-list()
+          for (i in 1:length(include)) {
+            if (sum(my_grepl(include[i],check.names))==0) stop("at least one include variable is not in the model")
+            include.l[[i]]<-check.names[my_grep(include[i],check.names)]
+          }
+          include<-unlist(include.l)
+        }
+        if (!is.null(active))  {
+          active.l<-list()
+          for (i in 1:length(active)) {
+            if (sum(my_grepl(active[i],check.names))==0) stop("at least one active variable is not in the model")
+            active.l[[i]]<-check.names[my_grep(active[i],check.names)]
+          }
+          active<-unlist(active.l)
+        }
+
+        if ( colnames(model.matrix(fit))[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
+
+        df<-cbind(df,model.frame(fit),data)
+
+        fit.or<-my_update(fit, updt.f   ,data=df)
+
+      }
+    }
+  }
+
+  misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.sampling=prop.sampling)
+
+  res<-list(models=boot,alpha=alpha,tau=tau,num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),fit.or=fit.or,misc=misc,call=match.call())
+
+  class(res)<-"abe"
+  res
+}
+
 
 #' Print Function
 #'
