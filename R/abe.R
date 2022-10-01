@@ -24,7 +24,7 @@
 #' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
 #' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
 #' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
-#' @param verbose Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm.
+#' @param verbose Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.
 #'
 #' @details
 #' Using the default settings ABE will perform augmented backward elimination based on significance.
@@ -99,7 +99,7 @@
 #' summary(abe.fit.ind)
 
 
-abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,verbose=T){
+abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,verbose=TRUE){
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 assign(as.character(substitute(data)),data)
 
@@ -112,7 +112,7 @@ if (class(fit)[1]=="coxph"&exp.beta==F) stop("setting exp.beta=F for the cox mod
 
 if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
 
-if (class(fit)[1]=="lm"&exp.beta==T) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
+if (class(fit)[1]=="lm"&exp.beta==T&any(tau!=Inf)) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
 
 if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
@@ -247,8 +247,8 @@ bt
 #' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
 #' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
 #' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
-#' @param num.boot number of bootstrap re-samples
-#' @param type.boot String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details
+#' @param num.resamples number of resamples.
+#' @param type.resampling String that specifies the type of resampling. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details
 #' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
@@ -259,7 +259,7 @@ bt
 #'
 #' \code{tau} the vector of threshold values for the change-in-estimate
 #'
-#' \code{num.boot} number of re-sampled datasets
+#' \code{num.boot} number of resampled datasets
 #'
 #' \code{criterion} criterion used when constructing the black-list
 #'
@@ -271,7 +271,7 @@ bt
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details \code{type.boot} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement), where m is [prop.sampling*n].
+#' @details \code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement), where m is [prop.sampling*n].
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @seealso \code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
@@ -291,12 +291,12 @@ bt
 #' # use ABE on 50 bootstrap re-samples considering different
 #' # change-in-estimate thresholds and significance levels
 #'
-#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
+#' num.resamples=50,type.resampling="bootstrap")
 #'
-#' summary(fit.boot)
+#' summary(fit.resample)
 #'
 #' # use ABE on 50 subsamples randomly selecting 50% of subjects
 #' # considering different change-in-estimate thresholds and
@@ -305,12 +305,13 @@ bt
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="subsampling",prop.sampling=0.5)
+#' num.resamples=50,type.resampling="subsampling",prop.sampling=0.5)
 #'
 #' summary(fit.resample)
 
-abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
-
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
+type.boot<-type.resampling
+num.boot<-num.resamples
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
   if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
@@ -322,7 +323,7 @@ abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.bet
 
   if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
 
-  if (class(fit)[1]=="lm"&exp.beta==T) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
+  if (class(fit)[1]=="lm"&exp.beta==T&any(tau!=Inf)) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
 
   if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
@@ -734,7 +735,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 
   if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
 
-  if (class(fit)[1]=="lm"&exp.beta==T) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
+  if (class(fit)[1]=="lm"&exp.beta==T&any(tau!=Inf)) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
 
   if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
@@ -1050,12 +1051,12 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' Prints a summary table of a resampled version of ABE using the latest guideliness.
 #' The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
-#' the relative inclusion frequencies of the covariates from the initial model (using \code{type.boot="resampling"} and \code{prop.sampling =0.5}),
+#' the relative inclusion frequencies of the covariates from the initial model (using \code{type.resampling="resampling"} and \code{prop.sampling =0.5}),
 #' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
-#' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS) all using \code{type.boot="bootstrap"}.
-#' While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.boot="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.boot} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time.
+#' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS) all using \code{type.resampling="bootstrap"}.
+#' While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.resampling="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.resampling} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time. Not supported for function \code{\link{abe.resampling}}, resulting in error.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}, preferably using \code{type.boot="bootstrap"} or \code{type.boot="subsampling"} with \code{prop.sampling=0.5}.
+#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}, preferably using \code{type.resmpling="bootstrap"} or \code{type.resampling="subsampling"} with \code{prop.sampling=0.5}.
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
@@ -1074,12 +1075,12 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.resampling<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
+#' num.resamples=50,type.resampling="bootstrap")
 #'
-#' print.abe.default(fit.resampling,conf.level=0.95,alpha=0.2,tau=0.05)
+#' print.abe.default(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
 print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
@@ -1089,15 +1090,15 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
 
   if (type.boot=="subsampling") {
       if  (object$misc$prop.sampling==0.5 ) subs<-object else subs<-update(object,prop.sampling =0.5 )
-      boot<-update(object,type.boot = "bootstrap" )
+      boot<-update(object,type.resampling = "bootstrap" )
       }
   if (type.boot=="bootstrap"){
     boot<-object
-    subs<-update(object,type.boot ="subsampling",prop.sampling =0.5 )
+    subs<-update(object,type.resampling ="subsampling",prop.sampling =0.5 )
   }
   if (type.boot=="mn.bootstrap"){
-    subs<-update(object,type.boot ="subsampling",prop.sampling =0.5 )
-    boot<-update(object,type.boot = "bootstrap" )
+    subs<-update(object,type.resampling ="subsampling",prop.sampling =0.5 )
+    boot<-update(object,type.resampling = "bootstrap" )
   }
   if (conf.level<0|conf.level>1) stop("Confidence level out of range")
   if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
@@ -1182,12 +1183,12 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
+#' num.resamples=50,type.resampling="bootstrap")
 #'
-#' summary(fit.boot)$var.rel.frequencies
+#' summary(fit.resample)$var.rel.frequencies
 
 
 summary.abe<-function(object,conf.level=0.95,...){
@@ -1419,12 +1420,12 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
+#' num.resamples=50,type.resampling="bootstrap")
 #'
-#' print(fit.boot,conf.level=0.95,alpha=0.2,tau=0.05)
+#' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
 print.abe<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
@@ -1501,21 +1502,21 @@ print(mat)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
+#' num.resamples=50,type.resampling="bootstrap")
 #'
-#' plot(fit.boot,type.plot="coefficients",
+#' plot(fit.resample,type.plot="coefficients",
 #' alpha=0.2,tau=0.1,variable=c("x1","x3"),
 #' col="light blue")
 #'
-#' plot(fit.boot,type.plot="variables",
+#' plot(fit.resample,type.plot="variables",
 #' alpha=0.2,tau=0.1,variable=c("x1","x2","x3"),
 #' col="light blue",horiz=TRUE,las=1)
 #'
 #' par(mar=c(4,6,4,2))
-#' plot(fit.boot,type.plot="models",
+#' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
 
@@ -1774,12 +1775,12 @@ if (type.plot=="models"){
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
-#' fit.boot<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
+#' num.resamples=50,type.resampling="bootstrap")
 #'
-#' pie.abe(fit.boot, alpha=0.2,tau=0.1)
+#' pie.abe(fit.resample, alpha=0.2,tau=0.1)
 
 
 
@@ -1926,7 +1927,7 @@ pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
 #' summary(abe.fit)
 #' }
 
-abe.num<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=T){
+abe.num<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=TRUE){
 
 
 if (criterion[1]=="alpha") k<-qchisq(1-alpha,df=1)
@@ -2288,7 +2289,7 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
 
 
-abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=T){
+abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=TRUE){
 
 
 
@@ -2762,7 +2763,7 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 #' }
 
 
-abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=T){
+abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=TRUE){
 
 
 df<-as.data.frame(model.matrix(fit))

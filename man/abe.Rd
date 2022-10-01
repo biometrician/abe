@@ -4,9 +4,20 @@
 \alias{abe}
 \title{Augmented Backward Elimination}
 \usage{
-abe(fit, data = NULL, include = NULL, active = NULL, tau = 0.05,
-  exp.beta = TRUE, exact = FALSE, criterion = "alpha", alpha = 0.2,
-  type.test = "Chisq", type.factor = NULL, verbose = T)
+abe(
+  fit,
+  data = NULL,
+  include = NULL,
+  active = NULL,
+  tau = 0.05,
+  exp.beta = TRUE,
+  exact = FALSE,
+  criterion = "alpha",
+  alpha = 0.2,
+  type.test = "Chisq",
+  type.factor = NULL,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{fit}{An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
@@ -40,7 +51,7 @@ Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"
 
 \item{type.factor}{String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.}
 
-\item{verbose}{Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm.}
+\item{verbose}{Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.}
 }
 \value{
 An object of class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the model chosen by abe method.
@@ -118,7 +129,7 @@ summary(abe.fit.ind)
 Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 }
 \seealso{
-\code{\link{abe.boot}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
+\code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

@@ -11,10 +11,10 @@ Encoding: UTF-8
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
-<<<<<<< HEAD
+
+AutoAppendNewline: Yes
+StripTrailingWhitespace: Yes
 
 BuildType: Package
-PackageUseDevtools: Yes
 PackageInstallArgs: --no-multiarch --with-keep.source
-=======
->>>>>>> 79e6be84721b852a0df558c2cd7cd3ce9520ab54
+PackageRoxygenize: rd,collate,namespace

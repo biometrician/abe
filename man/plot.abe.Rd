@@ -4,11 +4,17 @@
 \alias{plot.abe}
 \title{Plot Function}
 \usage{
-\method{plot}{abe}(x, type.plot = c("coefficients", "models",
-  "variables"), alpha = NULL, tau = NULL, variable = NULL, ...)
+\method{plot}{abe}(
+  x,
+  type.plot = c("coefficients", "models", "variables"),
+  alpha = NULL,
+  tau = NULL,
+  variable = NULL,
+  ...
+)
 }
 \arguments{
-\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}}
+\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
 
 \item{type.plot}{string which specifies the type of the plot. See details.}
 
@@ -21,7 +27,7 @@
 \item{...}{Arguments to be passed to methods, such as graphical parameters (see \code{\link{barplot}}, \code{\link{hist}}).}
 }
 \description{
-Plot function for the bootstrapped version of ABE.
+Plot function for the resampled/bootstrapped version of ABE.
 }
 \details{
 when using \code{type.plot="coefficients"} the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
@@ -39,25 +45,25 @@ y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
-fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.boot=50,type.boot="bootstrap")
+num.resamples=50,type.resampling="bootstrap")
 
-plot(fit.boot,type.plot="coefficients",
+plot(fit.resample,type.plot="coefficients",
 alpha=0.2,tau=0.1,variable=c("x1","x3"),
 col="light blue")
 
-plot(fit.boot,type.plot="variables",
+plot(fit.resample,type.plot="variables",
 alpha=0.2,tau=0.1,variable=c("x1","x2","x3"),
 col="light blue",horiz=TRUE,las=1)
 
 par(mar=c(4,6,4,2))
-plot(fit.boot,type.plot="models",
+plot(fit.resample,type.plot="models",
 alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 }
 \seealso{
-\code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
+\code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

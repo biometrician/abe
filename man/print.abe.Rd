@@ -4,11 +4,10 @@
 \alias{print.abe}
 \title{Print Function}
 \usage{
-\method{print}{abe}(x, conf.level = 0.95, alpha = NULL, tau = NULL,
-  ...)
+\method{print}{abe}(x, conf.level = 0.95, alpha = NULL, tau = NULL, ...)
 }
 \arguments{
-\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}}
+\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
 
 \item{conf.level}{the confidence level, defaults to 0.95}
 
@@ -24,6 +23,7 @@ The table displays the coefficient estimates and standard errors from the initia
 the relative inclusion frequencies of the covariates from the initial model,
 resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS).
+In cotrast to funciton \code{\link{print.abe.default}} which calculates these measures using either bootstrap or resampling (accordng to the latest guideliness), the function \code{\link{print.abe}} calculates the measures using only the option specified in the argument \code{type.boot} in a call to \code{\link{abe.resampling}}.
 }
 \examples{
 set.seed(1)
@@ -35,15 +35,15 @@ y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
-fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.boot=50,type.boot="bootstrap")
+num.resamples=50,type.resampling="bootstrap")
 
-print(fit.boot,conf.level=0.95,alpha=0.2,tau=0.05)
+print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 }
 \seealso{
-\code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+\code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

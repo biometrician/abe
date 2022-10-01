@@ -7,7 +7,7 @@
 \method{summary}{abe}(object, conf.level = 0.95, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}}
+\item{object}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
 
 \item{conf.level}{the confidence level, defaults to 0.95}
 
@@ -20,10 +20,10 @@ a list with the following elements:
 
 \code{model.rel.frequencies}: relative frequencies of the final models
 
-\code{var.coefs}: bootstrap medians and percentiles for the estimates of the regression coefficients for each variable from the initial model
+\code{var.coefs}: bootstrap/resampled medians and percentiles for the estimates of the regression coefficients for each variable from the initial model
 }
 \description{
-makes a summary of a bootstrapped version of ABE
+makes a summary of a resampled version of ABE
 }
 \examples{
 set.seed(1)
@@ -35,15 +35,15 @@ y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
-fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.boot=50,type.boot="bootstrap")
+num.resamples=50,type.resampling="bootstrap")
 
-summary(fit.boot)$var.rel.frequencies
+summary(fit.resample)$var.rel.frequencies
 }
 \seealso{
-\code{\link{abe.boot}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+\code{\link{abe.resampling}}, \code{\link{print.abe.default}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
