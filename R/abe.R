@@ -592,6 +592,8 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
 
       names(df)<-gsub("\\(", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
                       fixed = FALSE, useBytes = FALSE)
+      names(df)<-unlist(lapply(strsplit(names(df),split=""),function(x) {if(x[length(x)]==".") x<-x[-length(x)];paste(x,collapse="")}))
+      names(df)<-unlist(lapply(strsplit(names(df),split="\\^"),paste,collapse=""))
 
       check.names<-names(df)
       var.mod<-attributes(fit$terms)$term.labels
@@ -1004,6 +1006,8 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 
         names(df)<-gsub("\\(", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
                         fixed = FALSE, useBytes = FALSE)
+        names(df)<-unlist(lapply(strsplit(names(df),split=""),function(x) {if(x[length(x)]==".") x<-x[-length(x)];paste(x,collapse="")}))
+        names(df)<-unlist(lapply(strsplit(names(df),split="\\^"),paste,collapse=""))
 
         check.names<-names(df)
         var.mod<-attributes(fit$terms)$term.labels
@@ -2315,10 +2319,23 @@ if (length(var.mod)==0) fit$assign<-0 else {
 fit$assign<-list()
 fit$assign[1]<-1
 name.cf<-names(coef(fit))
+name.cfi<-name.cf
+for(i in 1:length(name.cf)){
+  name.cfi[i]<-paste(unlist(strsplit(paste(unlist(strsplit(name.cf[i],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+}
+
+
 
   for (i in 1:length(var.mod)){
-      fit$assign[[i+1]]<-length(grep(paste(unlist(strsplit(paste(unlist(strsplit(var.mod[i],split="\\(")),collapse="\\("),split="\\)")),collapse="\\)"),name.cf))
-  }
+
+    var.modi<-paste(unlist(strsplit(paste(unlist(strsplit(var.mod[i],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+    rep.var.names<-sum(grepl(var.modi,var.mod))-1
+if (sum(rep.var.names)<0) rep.var.names<-0
+    if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+
+            }
 
 fit$assign<-unlist(fit$assign)
 
@@ -2326,6 +2343,7 @@ fit$assign<-rep(0:length(var.mod),fit$assign)
 }
 
 cnms<-rep(attributes(fit$terms)$term.labels[!my_grepl("strata",var.mod)],table(fit$assign[-1]))
+
 
 
  vcvx<-var(xm)
@@ -2429,27 +2447,42 @@ if (length(black.list.i)!=0){
 
 
 				  var.mod.i<-attributes(fit.i$terms)$term.labels
-
 				  if (length(var.mod.i)==0) fit.i$assign<-0 else {
 				  fit.i$assign<-list()
 				  fit.i$assign[1]<-1
 				  name.cfi<-names(coef(fit.i))
+				  name.cfii<-name.cfi
+				  for(iii in 1:length(name.cfi)){
+				    name.cfii[iii]<-paste(unlist(strsplit(paste(unlist(strsplit(name.cfi[iii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
 
-				  for (ii in 1:length(var.mod.i)){
-				    fit.i$assign[[ii+1]]<-length(grep(paste(unlist(strsplit(paste(unlist(strsplit(var.mod.i[ii],split="\\(")),collapse="\\("),split="\\)")),collapse="\\)"),name.cfi))
 				  }
+
+
+
+				  for (iii in 1:length(var.mod.i)){
+
+
+				  	    var.modii<-paste(unlist(strsplit(paste(unlist(strsplit(var.mod.i[iii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+				    rep.var.namesi<-sum(grepl(var.modii,var.mod.i))-1
+				    if (sum(rep.var.namesi)<0) rep.var.namesi<-0
+				    if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
+				   }
 
 				  fit.i$assign<-unlist(fit.i$assign)
 
 				  fit.i$assign<-rep(0:length(var.mod.i),fit.i$assign)
-				}
+		}
+
+
 
 
 				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
 
 					change.in.estimate<-abs(fit$coef[which(rep(attributes(fit$terms)$term.labels[!my_grepl("strata",var.mod)],table(fit$assign[-1]))%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!rep(attributes(fit.i$terms)$term.labels[!my_grepl("strata",var.mod.i)],table(fit.i$assign[-1]))%in%active[!active%in%black.list.i[i]])+1])
 					} else {
-					change.in.estimate<-abs(fit$coef[which(rep(attributes(fit$terms)$term.labels[!my_grepl("strata",var.mod)],table(fit$assign[-1]))%in%varpas[!varpas%in%black.list.i[i]])]-fit.i$coef[which(!rep(attributes(fit.i$terms)$term.labels[!my_grepl("strata",var.mod.i)],table(fit.i$assign[-1]))%in%active[!active%in%black.list.i[i]])])
+					change.in.estimate<-abs(fit$coef[which(rep(attributes(fit$terms)$term.labels[!my_grepl("strata",var.mod)],table(fit$assign[-1]))%in%varpas[!varpas%in%black.list.i[i]])]-
+					                          fit.i$coef[which(!rep(attributes(fit.i$terms)$term.labels[!my_grepl("strata",var.mod.i)],table(fit.i$assign[-1]))%in%active[!active%in%black.list.i[i]])])
 					}
 
 
@@ -2479,17 +2512,33 @@ if (length(black.list.i)!=0){
 
    			    var.mod<-attributes(fit$terms)$term.labels
    			    if (length(var.mod)==0) fit$assign<-0 else {
-   			    fit$assign<-list()
-   			    fit$assign[1]<-1
-   			    name.cf<-names(coef(fit))
 
-   			    for (i in 1:length(var.mod)){
-   			      fit$assign[[i+1]]<-length(grep(paste(unlist(strsplit(paste(unlist(strsplit(var.mod[i],split="\\(")),collapse="\\("),split="\\)")),collapse="\\)"),name.cf))
-   			    }
 
-   			    fit$assign<-unlist(fit$assign)
+   			      fit$assign<-list()
+   			      fit$assign[1]<-1
+   			      name.cf<-names(coef(fit))
+   			      name.cfi<-name.cf
+   			      for(ii in 1:length(name.cf)){
+   			        name.cfi[ii]<-paste(unlist(strsplit(paste(unlist(strsplit(name.cf[ii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
 
-   			    fit$assign<-rep(0:length(var.mod),fit$assign)
+   			      }
+
+
+
+   			      for (ii in 1:length(var.mod)){
+
+   			        var.modi<-paste(unlist(strsplit(paste(unlist(strsplit(var.mod[ii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+   			        rep.var.names<-sum(grepl(var.modi,var.mod))-1
+   			        if (sum(rep.var.names)<0) rep.var.names<-0
+   			        if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+   			       }
+
+   			      fit$assign<-unlist(fit$assign)
+
+   			      fit$assign<-rep(0:length(var.mod),fit$assign)
+
+
    			  }
 
    			}
@@ -2557,9 +2606,22 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     fit$assign<-list()
     fit$assign[1]<-1
     name.cf<-names(coef(fit))
+    name.cfi<-name.cf
+    for(i in 1:length(name.cf)){
+      name.cfi[i]<-paste(unlist(strsplit(paste(unlist(strsplit(name.cf[i],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+    }
+
+
 
     for (i in 1:length(var.mod)){
-      fit$assign[[i+1]]<-length(grep(paste(unlist(strsplit(paste(unlist(strsplit(var.mod[i],split="\\(")),collapse="\\("),split="\\)")),collapse="\\)"),name.cf))
+
+      var.modi<-paste(unlist(strsplit(paste(unlist(strsplit(var.mod[i],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+      rep.var.names<-sum(grepl(var.modi,var.mod))-1
+      if (sum(rep.var.names)<0) rep.var.names<-0
+      if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+
     }
 
     fit$assign<-unlist(fit$assign)
@@ -2658,9 +2720,22 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
           fit.i$assign<-list()
           fit.i$assign[1]<-1
           name.cfi<-names(coef(fit.i))
+          name.cfii<-name.cfi
+          for(iii in 1:length(name.cfi)){
+            name.cfii[iii]<-paste(unlist(strsplit(paste(unlist(strsplit(name.cfi[iii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
 
-          for (ii in 1:length(var.mod.i)){
-            fit.i$assign[[ii+1]]<-length(grep(paste(unlist(strsplit(paste(unlist(strsplit(var.mod.i[ii],split="\\(")),collapse="\\("),split="\\)")),collapse="\\)"),name.cfi))
+          }
+
+
+
+          for (iii in 1:length(var.mod.i)){
+
+
+            var.modii<-paste(unlist(strsplit(paste(unlist(strsplit(var.mod.i[iii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+            rep.var.namesi<-sum(grepl(var.modii,var.mod.i))-1
+            if (sum(rep.var.namesi)<0) rep.var.namesi<-0
+            if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
           }
 
           fit.i$assign<-unlist(fit.i$assign)
@@ -2703,9 +2778,21 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
             fit$assign<-list()
             fit$assign[1]<-1
             name.cf<-names(coef(fit))
+            name.cfi<-name.cf
+            for(ii in 1:length(name.cf)){
+              name.cfi[ii]<-paste(unlist(strsplit(paste(unlist(strsplit(name.cf[ii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
 
-            for (i in 1:length(var.mod)){
-              fit$assign[[i+1]]<-length(grep(paste(unlist(strsplit(paste(unlist(strsplit(var.mod[i],split="\\(")),collapse="\\("),split="\\)")),collapse="\\)"),name.cf))
+            }
+
+
+
+            for (ii in 1:length(var.mod)){
+
+              var.modi<-paste(unlist(strsplit(paste(unlist(strsplit(var.mod[ii],split="\\(")),collapse="\\("),split="\\)")),collapse = "\\)")
+
+              rep.var.names<-sum(grepl(var.modi,var.mod))-1
+              if (sum(rep.var.names)<0) rep.var.names<-0
+              if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
             }
 
             fit$assign<-unlist(fit$assign)
@@ -2777,6 +2864,9 @@ names(df)<-gsub(")", replacement=".", names(df), ignore.case = FALSE, perl = FAL
 names(df)<-gsub("\\(", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
      fixed = FALSE, useBytes = FALSE)
 
+
+names(df)<-unlist(lapply(strsplit(names(df),split=""),function(x) {if(x[length(x)]==".") x<-x[-length(x)];paste(x,collapse="")}))
+names(df)<-unlist(lapply(strsplit(names(df),split="\\^"),paste,collapse=""))
 check.names<-names(df)
 var.mod<-attributes(fit$terms)$term.labels
 if (sum(my_grepl("strata",var.mod))!=0)  check.names<-c(check.names, var.mod[my_grepl("strata",var.mod)] )
@@ -3000,6 +3090,9 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   names(df)<-gsub("\\(", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
                   fixed = FALSE, useBytes = FALSE)
+
+  names(df)<-unlist(lapply(strsplit(names(df),split=""),function(x) {if(x[length(x)]==".") x<-x[-length(x)];paste(x,collapse="")}))
+  names(df)<-unlist(lapply(strsplit(names(df),split="\\^"),paste,collapse=""))
 
   check.names<-names(df)
   var.mod<-attributes(fit$terms)$term.labels
