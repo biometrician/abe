@@ -132,14 +132,16 @@ if (class(fit)[1]=="lm"){
   epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
-if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
+if (class(fit)[1]=="glm"){
+  if (fit$family$family=="binomial"){
   n<-min(table(fit$y))
   epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
+}
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
-  npv<-n/nm.var
+  epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 
 }
@@ -367,14 +369,16 @@ if (class(fit)[1]=="lm"){
   epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
-if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
-  n<-min(table(fit$y))
-  epv<-n/nm.var
-  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+if (class(fit)[1]=="glm"){
+  if (fit$family$family=="binomial"){
+    n<-min(table(fit$y))
+    epv<-n/nm.var
+    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  }
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
-  npv<-n/nm.var
+  epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 
 }
@@ -793,14 +797,16 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
     epv<-n/nm.var
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
   }
-  if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
-    n<-min(table(fit$y))
-    epv<-n/nm.var
-    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  if (class(fit)[1]=="glm"){
+    if (fit$family$family=="binomial"){
+      n<-min(table(fit$y))
+      epv<-n/nm.var
+      if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+    }
   }
   if (class(fit)[1]=="coxph"){
     n <-fit$nevent
-    npv<-n/nm.var
+    epv<-n/nm.var
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 
   }
