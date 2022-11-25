@@ -125,6 +125,26 @@ if (sum(criterion%in%c("alpha","AIC","BIC"))==0) stop("valid criteria are alpha,
 if (criterion=="alpha") if (alpha<0|alpha>1) stop("specify alpha between zero and one")
 if (is.null(tau)) stop("Specify tau.")
 if (tau<0) stop("Tau has to be >=0.")
+
+nm.var<-ncol(model.matrix(fit))
+if (class(fit)[1]=="lm"){
+  n<-nrow(model.matrix(fit))
+  epv<-n/p
+  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+}
+if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
+  n<-min(table(fit$y))
+  epv<-n/p
+  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+}
+if (class(fit)[1]=="coxph"){
+  n<-fit$n
+  n1<-fit$nevent
+  n<-min(n1,n-n1)
+  epv<-n/p
+  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+}
+
 if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
 
   warning("offset variables are in the model treating them as only passive")
@@ -340,6 +360,26 @@ num.boot<-num.resamples
   if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
   if (!is.matrix(xm) ) stop("performing variable selection with a single variable in the model is meaningless")
+
+
+nm.var<-ncol(model.matrix(fit))
+if (class(fit)[1]=="lm"){
+  n<-nrow(model.matrix(fit))
+  epv<-n/p
+  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+}
+if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
+  n<-min(table(fit$y))
+  epv<-n/p
+  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+}
+if (class(fit)[1]=="coxph"){
+  n<-fit$n
+  n1<-fit$nevent
+  n<-min(n1,n-n1)
+  epv<-n/p
+  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+}
 
   if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
 
@@ -748,7 +788,24 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
   if (sum(tau<0)!=0) stop("Taus has to be >=0.")
 
   if (length(type.boot)!=1) stop("you need to specify a single resampling method")
-
+  nm.var<-ncol(model.matrix(fit))
+  if (class(fit)[1]=="lm"){
+    n<-nrow(model.matrix(fit))
+    epv<-n/p
+    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  }
+  if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
+    n<-min(table(fit$y))
+    epv<-n/p
+    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  }
+  if (class(fit)[1]=="coxph"){
+    n<-fit$n
+    n1<-fit$nevent
+    n<-min(n1,n-n1)
+    epv<-n/p
+    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  }
   if (criterion!="alpha") alpha=NULL
 
   if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
