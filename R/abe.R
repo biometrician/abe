@@ -1119,6 +1119,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
+#' @param digits integer, indicating the number of digits to display in the table. Defaults to \code{2}
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1142,7 +1143,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' print.abe.default(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
+print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
   cat("Printing the output of a call to abe.resampling using the latest guidelines. Be patient, as this might take a while.")
   object<-x
   type.boot<-object$misc$type.boot
@@ -1205,6 +1206,7 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
                           "Incl. Freq.")
   colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
   colnames(mat)[7:8]<-c("RMSD ratio","RCB")
+  mat<-round(mat,digits)
   cat("\n\n")
 
   print(mat)
@@ -1464,6 +1466,7 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
+#' @param digits integer, indicating the number of digits to display in the table. Defaults to \code{2}
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1487,7 +1490,7 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
+print.abe<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
   object<-x
   if (conf.level<0|conf.level>1) stop("Confidence level out of range")
   if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
@@ -1528,6 +1531,7 @@ rownames(mat)<-names(ss$var.rel.frequencies[rs,])[idv]
                         "Incl. Freq.")
 colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
 colnames(mat)[7:8]<-c("RMSD ratio","RBCS")
+mat<-round(mat,digits)
 cat("\n\n")
 
 print(mat)
