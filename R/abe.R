@@ -129,17 +129,17 @@ if (tau<0) stop("Tau has to be >=0.")
 nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
-  epv<-n/p
+  epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
   n<-min(table(fit$y))
-  epv<-n/p
+  epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
-  npv<-n/p
+  npv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 
 }
@@ -364,20 +364,21 @@ num.boot<-num.resamples
 nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
-  epv<-n/p
+  epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
   n<-min(table(fit$y))
-  epv<-n/p
+  epv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
-  npv<-n/p
+  npv<-n/nm.var
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 
 }
+
 
   if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
 
@@ -789,19 +790,19 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
   nm.var<-ncol(model.matrix(fit))
   if (class(fit)[1]=="lm"){
     n<-nrow(model.matrix(fit))
-    epv<-n/p
+    epv<-n/nm.var
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
   }
   if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
     n<-min(table(fit$y))
-    epv<-n/p
+    epv<-n/nm.var
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
   }
   if (class(fit)[1]=="coxph"){
-
     n <-fit$nevent
-    npv<-n/p
+    npv<-n/nm.var
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+
   }
   if (criterion!="alpha") alpha=NULL
 
