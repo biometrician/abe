@@ -138,11 +138,10 @@ if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="coxph"){
-  n<-fit$n
-  n1<-fit$nevent
-  n<-min(n1,n-n1)
-  epv<-n/p
+  n <-fit$nevent
+  npv<-n/p
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+
 }
 
 if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
@@ -374,11 +373,10 @@ if (class(fit)[1]=="glm"&fit$family$family=="binomial"){
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="coxph"){
-  n<-fit$n
-  n1<-fit$nevent
-  n<-min(n1,n-n1)
-  epv<-n/p
+  n <-fit$nevent
+  npv<-n/p
   if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+
 }
 
   if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
@@ -800,10 +798,9 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
   }
   if (class(fit)[1]=="coxph"){
-    n<-fit$n
-    n1<-fit$nevent
-    n<-min(n1,n-n1)
-    epv<-n/p
+
+    n <-fit$nevent
+    npv<-n/p
     if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
   }
   if (criterion!="alpha") alpha=NULL
