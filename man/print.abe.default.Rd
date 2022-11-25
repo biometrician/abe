@@ -23,7 +23,7 @@ The table displays the coefficient estimates and standard errors from the initia
 the relative inclusion frequencies of the covariates from the initial model (using \code{type.resampling="resampling"} and \code{prop.sampling =0.5}),
 resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS) all using \code{type.resampling="bootstrap"}.
-While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.resampling="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.resampling} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time. Not supported for function \code{\link{abe.resampling}}, resulting in error.
+While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.resampling="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.resampling} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time. Not supported for function \code{\link{abe.boot}}, resulting in error.
 }
 \examples{
 set.seed(1)

@@ -664,7 +664,7 @@ misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.samp
 #' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
 #' @param num.boot number of bootstrap re-samples
 #' @param type.boot String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details
-#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.632. See details.
+#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
 #'
@@ -724,7 +724,7 @@ misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.samp
 #'
 #' summary(fit.boot)
 
-abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.632){
+abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
 
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
@@ -1058,7 +1058,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' the relative inclusion frequencies of the covariates from the initial model (using \code{type.resampling="resampling"} and \code{prop.sampling =0.5}),
 #' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS) all using \code{type.resampling="bootstrap"}.
-#' While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.resampling="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.resampling} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time. Not supported for function \code{\link{abe.resampling}}, resulting in error.
+#' While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.resampling="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.resampling} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time. Not supported for function \code{\link{abe.boot}}, resulting in error.
 #'
 #' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}, preferably using \code{type.resmpling="bootstrap"} or \code{type.resampling="subsampling"} with \code{prop.sampling=0.5}.
 #' @param conf.level the confidence level, defaults to 0.95
@@ -1088,7 +1088,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 
 
 print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
-  cat("Printing the output of a call to abe.resampling using the latest guideliness. Be patient, as this might take a while.")
+  cat("Printing the output of a call to abe.resampling using the latest guidelines. Be patient, as this might take a while.")
   object<-x
   type.boot<-object$misc$type.boot
 
@@ -1149,7 +1149,7 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,...){
   colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
                           "Incl. Freq.")
   colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
-  colnames(mat)[7:8]<-c("RMSD ratio","RBCS")
+  colnames(mat)[7:8]<-c("RMSD ratio","RCB")
   cat("\n\n")
 
   print(mat)

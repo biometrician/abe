@@ -18,7 +18,7 @@ abe.boot(
   type.factor = NULL,
   num.boot = 100,
   type.boot = c("bootstrap", "mn.bootstrap", "subsampling"),
-  prop.sampling = 0.632
+  prop.sampling = 0.5
 )
 }
 \arguments{
@@ -57,7 +57,7 @@ Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"
 
 \item{type.boot}{String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details}
 
-\item{prop.sampling}{Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.632. See details.}
+\item{prop.sampling}{Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.}
 }
 \value{
 an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
