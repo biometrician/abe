@@ -1211,7 +1211,8 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
   colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
                           "Incl. Freq.")
   colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
-  colnames(mat)[7:8]<-c("RMSD ratio","RCB")
+  colnames(mat)[7:8]<-c("Estimate, mean","Estimate, sd")
+  colnames(mat)[9:10]<-c("RMSD ratio","RCB")
   mat<-round(mat,digits)
   cat("\n\n")
 
@@ -1234,7 +1235,7 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
 #'
 #' \code{model.rel.frequencies}: relative frequencies of the final models
 #'
-#' \code{var.coefs}: bootstrap/resampled medians and percentiles for the estimates of the regression coefficients for each variable from the initial model
+#' \code{var.coefs}: bootstrap/resampled medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1306,11 +1307,15 @@ ff<-function(x){
 
 gg<-matrix(unlist(x),nrow=length(x),ncol=length(object$all.vars),byrow=T)
 
-sum<-apply(gg,2,function(x)  c(median(x,na.rm=T),quantile(x,na.rm=T,probs=c((1-conf.level)/2,conf.level+(1-conf.level)/2)))  )
+sum<-apply(gg,2,function(x)  c(median(x,na.rm=T),
+                               quantile(x,na.rm=T,
+                                        probs=c((1-conf.level)/2,conf.level+(1-conf.level)/2)),
+           mean(x,na.rm=TRUE),sd(x,na.rm=T))
+)
 
 colnames(sum)<-object$all.vars
 
-rownames(sum)<-c("median","CI lower","CI upper")
+rownames(sum)<-c("median","CI lower","CI upper","mean","sd")
 sum
 
 }
@@ -1536,7 +1541,8 @@ rownames(mat)<-names(ss$var.rel.frequencies[rs,])[idv]
  colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
                         "Incl. Freq.")
 colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
-colnames(mat)[7:8]<-c("RMSD ratio","RBCS")
+colnames(mat)[7:8]<-c("Estimate, mean","Estimate, sd")
+colnames(mat)[9:10]<-c("RMSD ratio","RCB")
 mat<-round(mat,digits)
 cat("\n\n")
 
