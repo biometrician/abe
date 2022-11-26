@@ -130,19 +130,19 @@ nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
   epv<-n/nm.var
-  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="glm"){
   if (fit$family$family=="binomial"){
   n<-min(table(fit$y))
   epv<-n/nm.var
-  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
 }
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
   epv<-n/nm.var
-  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
 
 }
 
@@ -367,19 +367,19 @@ nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
   epv<-n/nm.var
-  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
 }
 if (class(fit)[1]=="glm"){
   if (fit$family$family=="binomial"){
     n<-min(table(fit$y))
     epv<-n/nm.var
-    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+    if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
   }
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
   epv<-n/nm.var
-  if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
 
 }
 
@@ -795,19 +795,19 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
   if (class(fit)[1]=="lm"){
     n<-nrow(model.matrix(fit))
     epv<-n/nm.var
-    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+    if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
   }
   if (class(fit)[1]=="glm"){
     if (fit$family$family=="binomial"){
       n<-min(table(fit$y))
       epv<-n/nm.var
-      if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+      if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
     }
   }
   if (class(fit)[1]=="coxph"){
     n <-fit$nevent
     epv<-n/nm.var
-    if (epv<25) print("Warning: Events per variable ratio is smaller than 25.")
+    if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
 
   }
   if (criterion!="alpha") alpha=NULL
