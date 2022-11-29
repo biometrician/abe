@@ -1125,7 +1125,7 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
-#' @param digits integer, indicating the number of digits to display in the table. Defaults to \code{2}
+#' @param digits integer, indicating the number of digits to display in the table. Defaults to 2
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1477,7 +1477,7 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' @param conf.level the confidence level, defaults to 0.95
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
-#' @param digits integer, indicating the number of digits to display in the table. Defaults to \code{2}
+#' @param digits integer, indicating the number of digits to display in the table. Defaults to 2
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
