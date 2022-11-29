@@ -768,7 +768,7 @@ misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot,prop.samp
 #' summary(fit.boot)
 
 abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
-
+warning("This function is obsolete, please use abe.resampling instead.")
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
   if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
