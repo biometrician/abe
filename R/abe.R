@@ -1848,12 +1848,13 @@ print(mat)
 #' @param ... Arguments to be passed to methods, such as graphical parameters (see \code{\link{barplot}}, \code{\link{hist}}).
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details when using \code{type.plot="coefficients"} the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
-#' When the variable is not included in the final model, its regression coefficient is set to zero.
-#' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau.
-#' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s).
+#' @details When using \code{type.plot="coefficients"} the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
+#' When the variable is not included in the final model, its regression coefficient is set to zero. When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
 #'
-#' When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
+#' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+#'
+#' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+#'
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
@@ -1865,6 +1866,23 @@ print(mat)
 #' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#'
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021")
+#'
+#' plot(fit.resample,type.plot="coefficients",
+#' alpha=0.2,tau=0.1,variable=c("x1","x3"),
+#' col="light blue")
+#'
+#' plot(fit.resample,type.plot="variables",
+#' alpha=0.2,tau=0.1,variable=c("x1","x2","x3"),
+#' col="light blue",horiz=TRUE,las=1)
+#'
+#' par(mar=c(4,6,4,2))
+#' plot(fit.resample,type.plot="models",
+#' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
@@ -1938,10 +1956,21 @@ object$all.vars<-ggff(object$all.vars)
 
   if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
 
-
+if (object$misc$type.boot!="Wallisch2021"){
 vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
 vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+} else {
+  if (type.plot=="coefficients"){
+    vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
+    vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
 
+  } else {
+    vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
+    vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+
+  }
+
+}
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
 
@@ -1949,7 +1978,16 @@ ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx
 vars.model<-lapply(vars.model,ggff  )
 vars.model.cf<-lapply(vars.model.cf,ggff   )
 
+
+if (object$misc$type.boot!="Wallisch2021"){
 coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
+} else {
+  if (type.plot=="coefficients"){
+    coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
+  } else {
+    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  coef(x))
+  }
+}
 
 
 object$all.vars<-ggff(object$all.vars)
@@ -2130,7 +2168,7 @@ if (type.plot=="models"){
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param labels plot labels, defaults to NA, i.e. no labels are ploted
 #' @param ... Arguments to be passed to methods, such as graphical parameters (see \code{\link{pie}}, \code{\link{barplot}}, \code{\link{hist}}).
-#' @details When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
+#' @details When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @export
@@ -2144,6 +2182,13 @@ if (type.plot=="models"){
 #' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#'
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021")
+#'
+#' pie.abe(fit.resample, alpha=0.2,tau=0.1)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
@@ -2192,19 +2237,25 @@ pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
 
   if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
 
-
+if (object$misc$type.boot!="Wallisch2021"){
   vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
   vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+} else {
+  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
+  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
 
+}
 
   ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
 
 
   vars.model<-lapply(vars.model,ggff  )
   vars.model.cf<-lapply(vars.model.cf,ggff   )
-
+  if (object$misc$type.boot!="Wallisch2021"){
   coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
-
+  } else {
+    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  coef(x))
+}
 
   object$all.vars<-ggff(object$all.vars)
 
