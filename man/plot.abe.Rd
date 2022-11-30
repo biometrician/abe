@@ -34,6 +34,8 @@ when using \code{type.plot="coefficients"} the function plots a histogram of the
 When the variable is not included in the final model, its regression coefficient is set to zero.
 When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau.
 When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s).
+
+When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
 }
 \examples{
 set.seed(1)

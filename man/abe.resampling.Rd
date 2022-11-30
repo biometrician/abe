@@ -17,7 +17,7 @@ abe.resampling(
   type.test = "Chisq",
   type.factor = NULL,
   num.resamples = 100,
-  type.resampling = c("bootstrap", "mn.bootstrap", "subsampling"),
+  type.resampling = "Wallisch2021",
   prop.sampling = 0.5
 )
 }
@@ -55,7 +55,7 @@ Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"
 
 \item{num.resamples}{number of resamples.}
 
-\item{type.resampling}{String that specifies the type of resampling. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details}
+\item{type.resampling}{String that specifies the type of resampling. Possible values are \code{"Wallisch2021"}, \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"}. Default is set to \code{"Wallisch2021"}. See details.}
 
 \item{prop.sampling}{Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.}
 }
@@ -63,7 +63,8 @@ Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"
 an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 A list with the following elements:
 
-\code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}
+\code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+\code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
 
 \code{alpha} the vector of significance levels used
 
@@ -83,7 +84,7 @@ A list with the following elements:
 Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 }
 \details{
-\code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement), where m is [prop.sampling*n].
+\code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement, where m is [prop.sampling*n]) and \code{"Wallisch2021"}. When using \code{"Wallisch2021"} the resampling is done twice: first time using bootstrap (these results are contained in \code{models}) and the second time using resampling with \code{prop.sampling} equal to 0.5 (these results are contained in \code{models.wallisch}); see Walisch et al. (2021).
 }
 \examples{
 # simulate some data and fit a model
@@ -122,9 +123,11 @@ summary(fit.resample)
 Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 
 Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
+
+Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 }
 \seealso{
-\code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+\code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

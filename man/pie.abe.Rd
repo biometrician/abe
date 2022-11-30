@@ -20,6 +20,9 @@ pie.abe(x, alpha = NULL, tau = NULL, labels = NA, ...)
 \description{
 Pie function for the resampled/bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of \code{alpha} and \code{tau}.
 }
+\details{
+When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
+}
 \examples{
 set.seed(1)
 n=100

@@ -1,8 +1,8 @@
 Package: abe
 Type: Package
 Title: Augmented Backward Elimination
-Version: 4.0.9
-Date: 2018-1-10
+Version: 5.0.0
+Date: 2022-11-30
 Authors@R: c(person(c("Rok","Blagus"),role=c("aut","cre"),email="rok.blagus@mf.uni-lj.si"),person("Sladana", "Babic", role = "ctb",
              email = "sladja93babic@gmail.com"))
 Author: Rok Blagus [aut, cre],  Sladana Babic [ctb]
