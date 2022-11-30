@@ -1117,18 +1117,19 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' Prints a summary table of a resampled version of ABE using the latest guideliness.
 #' The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
 #' the relative inclusion frequencies of the covariates from the initial model (using \code{type.resampling="resampling"} and \code{prop.sampling =0.5}),
-#' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
+#' resampled median and percentiles (specified via argument \code{alpha}) for the estimates of the regression coefficients for each variable from the initial model,
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS) all using \code{type.resampling="bootstrap"}.
 #' While not required, it makes sense to call \code{\link{abe.resampling}} with \code{type.resampling="bootstrap"}. If it is not specified in this way, the print function will override the argument \code{type.resampling} and refit \code{\link{abe.resampling}} (twice) which greatly increases the computing time. Not supported for function \code{\link{abe.boot}}, resulting in error.
 #'
 #' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}, preferably using \code{type.resmpling="bootstrap"} or \code{type.resampling="subsampling"} with \code{prop.sampling=0.5}.
-#' @param conf.level the confidence level, defaults to 0.95
+#' @param conf.level the confidence level, defaults to 0.95, see \code{details}
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
 #' @param digits integer, indicating the number of digits to display in the table. Defaults to 2
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @details Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @seealso \code{\link{print.abe}}, \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
@@ -1226,7 +1227,7 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
 #' makes a summary of a resampled version of ABE
 #'
 #' @param object an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
-#' @param conf.level the confidence level, defaults to 0.95
+#' @param conf.level the confidence level, defaults to 0.95, see \code{details}
 #' @param ... additional arguments affecting the summary produced.
 
 #' @return a list with the following elements:
@@ -1239,6 +1240,7 @@ print.abe.default<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @details Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @seealso \code{\link{abe.resampling}}, \code{\link{print.abe.default}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
@@ -1315,7 +1317,7 @@ sum<-apply(gg,2,function(x)  c(median(x,na.rm=T),
 
 colnames(sum)<-object$all.vars
 
-rownames(sum)<-c("median","CI lower","CI upper","mean","sd")
+rownames(sum)<-c("median","lower quantile","upper quantile","mean","sd")
 sum
 
 }
@@ -1474,13 +1476,14 @@ list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 #' In cotrast to funciton \code{\link{print.abe.default}} which calculates these measures using either bootstrap or resampling (accordng to the latest guideliness), the function \code{\link{print.abe}} calculates the measures using only the option specified in the argument \code{type.boot} in a call to \code{\link{abe.resampling}}.
 #'
 #' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
-#' @param conf.level the confidence level, defaults to 0.95
+#' @param conf.level the confidence level, defaults to 0.95, see \code{details}
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
 #' @param digits integer, indicating the number of digits to display in the table. Defaults to 2
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @details Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
