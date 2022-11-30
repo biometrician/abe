@@ -36,7 +36,7 @@ fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="bootstrap")
+num.resamples=50,type.resampling="subsampling")
 
 pie.abe(fit.resample, alpha=0.2,tau=0.1)
 }

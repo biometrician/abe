@@ -275,6 +275,7 @@ bt
 #' A list with the following elements:
 #'
 #' \code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+#'
 #' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
 #'
 #' \code{alpha} the vector of significance levels used
@@ -310,6 +311,17 @@ bt
 #' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 #' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#'
+#' # use ABE on 50 re-samples considering different
+#' # change-in-estimate thresholds and significance levels
+#'
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021")
+#'
+#' summary(fit.resample)
+#' print(fit.resample)
 #'
 #' # use ABE on 50 bootstrap re-samples considering different
 #' # change-in-estimate thresholds and significance levels
@@ -1359,18 +1371,11 @@ warning("This function is obsolete, please use abe.resampling instead.")
 
 #' @return a list with the following elements:
 #'
-#' \code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+#' \code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 #'
-#' \code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+#' \code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 #'
-#' \code{var.coefs}: bootstrap/resampled medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
-#'
-#' \code{var.rel.frequencies.wallisch}: if using \code{type.resampling="Wallisch2021"} inclusion relative frequencies for all variables from the initial model by using subsampling with \code{prop.sampling} equal to 0.5, \code{NULL} otherwise
-#'
-#' \code{model.rel.frequencies.wallisch}: if using \code{type.resampling="Wallisch2021"} relative frequencies of the final models by using subsampling with \code{prop.sampling} equal to 0.5, \code{NULL} otherwise
-#'
-#' \code{var.coefs.wallisch}: if using \code{type.resampling="Wallisch2021"} medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model by using subsampling with \code{prop.sampling} equal to 0.5, \code{NULL} otherwise
-#'
+#' \code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1390,9 +1395,9 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.resamples=50,type.resampling="bootstrap")
+#' num.resamples=50,type.resampling="Wallisch2021")
 #'
-#' summary(fit.resample)$var.rel.frequencies
+#' summary(fit.resample)
 
 
 summary.abe<-function(object,conf.level=0.95,...){
@@ -1725,16 +1730,15 @@ if (object$misc$type.boot=="Wallisch2021"){
 
 
 
-} else list2<-list(var.rel.frequencies=NULL,model.rel.frequencies=NULL,var.coefs=NULL)
+}
 
-list(var.rel.frequencies=list1$var.rel.frequencies,
-     model.rel.frequencies=list1$model.rel.frequencies,
-     var.coefs=list1$var.coefs,
+if (object$misc$type.boot!="Wallisch2021") list<-list1 else
 
-     var.rel.frequencies.wallisch=list2$var.rel.frequencies,
-     model.rel.frequencies.wallisch=list2$model.rel.frequencies,
-     var.coefs.wallisch=list2$var.coefs)
+list<-list(var.rel.frequencies=list2$var.rel.frequencies,
+     model.rel.frequencies=list2$model.rel.frequencies,
+     var.coefs=list1$var.coefs)
 
+list
 
 }
 
@@ -1774,7 +1778,7 @@ list(var.rel.frequencies=list1$var.rel.frequencies,
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.resamples=50,type.resampling="bootstrap")
+#' num.resamples=50,type.resampling="Wallisch2021")
 #'
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
@@ -1808,24 +1812,17 @@ idg<-which(vars.num%in%object$all.vars==FALSE)
 
 if (length(idv)!=length(vars.num)) {
 
- if (object$misc$type.boot!="Wallisch2021")  pt<-paste(paste(names(ss$var.rel.frequencies[rs,])[idg],": ",ss$var.rel.frequencies[rs,idg],sep=""),collapse=",") else pt<-paste(paste(names(ss$var.rel.frequencies.wallisch[rs,])[idg],": ",ss$var.rel.frequencies[rs,idg],sep=""),collapse=",")
-   cat("\n\n Inclusion relative frequencies of the offset/stratification variable(s):",pt)
+  pt<-paste(paste(names(ss$var.rel.frequencies[rs,])[idg],": ",ss$var.rel.frequencies[rs,idg],sep=""),collapse=",")
+  cat("\n\n Inclusion relative frequencies of the offset/stratification variable(s):",pt)
 
 }
 
-if (object$misc$type.boot!="Wallisch2021") {
+
  mat <- cbind(coef(object$fit.or),
                                 sqrt(diag(vcov(object$fit.or))),
                                   c(ss$var.rel.frequencies[rs,idv]),
                                   t(ss$var.coefs[[rs]][,idv]))
-} else {
-  mat <- cbind(coef(object$fit.or),
-               sqrt(diag(vcov(object$fit.or))),
-               c(ss$var.rel.frequencies.wallisch[rs,idv]),
-               t(ss$var.coefs[[rs]][,idv]))
 
-
-}
 rownames(mat)<-names(ss$var.rel.frequencies[rs,])[idv]
 
  colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
@@ -1877,6 +1874,11 @@ print(mat)
 #' plot(fit.resample,type.plot="coefficients",
 #' alpha=0.2,tau=0.1,variable=c("x1","x3"),
 #' col="light blue")
+#'
+#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="subsampling")
 #'
 #' plot(fit.resample,type.plot="variables",
 #' alpha=0.2,tau=0.1,variable=c("x1","x2","x3"),
@@ -2146,7 +2148,7 @@ if (type.plot=="models"){
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 #' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.resamples=50,type.resampling="bootstrap")
+#' num.resamples=50,type.resampling="subsampling")
 #'
 #' pie.abe(fit.resample, alpha=0.2,tau=0.1)
 

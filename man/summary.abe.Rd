@@ -16,17 +16,11 @@
 \value{
 a list with the following elements:
 
-\code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+\code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 
-\code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+\code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 
-\code{var.coefs}: bootstrap/resampled medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
-
-\code{var.rel.frequencies.wallisch}: if using \code{type.resampling="Wallisch2021"} inclusion relative frequencies for all variables from the initial model by using subsampling with \code{prop.sampling} equal to 0.5, \code{NULL} otherwise
-
-\code{model.rel.frequencies.wallisch}: if using \code{type.resampling="Wallisch2021"} relative frequencies of the final models by using subsampling with \code{prop.sampling} equal to 0.5, \code{NULL} otherwise
-
-\code{var.coefs.wallisch}: if using \code{type.resampling="Wallisch2021"} medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model by using subsampling with \code{prop.sampling} equal to 0.5, \code{NULL} otherwise
+\code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
 }
 \description{
 makes a summary of a resampled version of ABE
@@ -47,9 +41,9 @@ fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="bootstrap")
+num.resamples=50,type.resampling="Wallisch2021")
 
-summary(fit.resample)$var.rel.frequencies
+summary(fit.resample)
 }
 \seealso{
 \code{\link{abe.resampling}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}

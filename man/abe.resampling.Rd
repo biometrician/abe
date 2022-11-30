@@ -64,6 +64,7 @@ an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pi
 A list with the following elements:
 
 \code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+
 \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
 
 \code{alpha} the vector of significance levels used
@@ -97,6 +98,17 @@ x3<-runif(n)
 y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+
+# use ABE on 50 re-samples considering different
+# change-in-estimate thresholds and significance levels
+
+fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
+tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+num.resamples=50,type.resampling="Wallisch2021")
+
+summary(fit.resample)
+print(fit.resample)
 
 # use ABE on 50 bootstrap re-samples considering different
 # change-in-estimate thresholds and significance levels
