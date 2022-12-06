@@ -4,9 +4,19 @@
 \alias{abe.fact2.boot}
 \title{ABE for model which includes categorical covariates, individual option, bootstrap version}
 \usage{
-abe.fact2.boot(fit, data, include = NULL, active = NULL, tau = 0.05,
-  exp.beta = TRUE, exact = FALSE, criterion = "alpha", alpha = 0.2,
-  type.test = "Chisq", k)
+abe.fact2.boot(
+  fit,
+  data,
+  include = NULL,
+  active = NULL,
+  tau = 0.05,
+  exp.beta = TRUE,
+  exact = FALSE,
+  criterion = "alpha",
+  alpha = 0.2,
+  type.test = "Chisq",
+  k
+)
 }
 \description{
 ABE for model which includes categorical covariates, individual option, bootstrap version

@@ -6,5 +6,8 @@ importFrom("graphics", "hist", "par", "barplot","pie")
              "update.formula", "var", "vcov")
 S3method(summary, abe)
 S3method(plot, abe)
+S3method(pie, abe)
+S3method(print, abe)
+
 
 

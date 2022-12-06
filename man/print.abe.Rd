@@ -4,17 +4,18 @@
 \alias{print.abe}
 \title{Print Function}
 \usage{
-\method{print}{abe}(x, conf.level = 0.95, alpha = NULL, tau = NULL,
-  ...)
+\method{print}{abe}(x, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 2, ...)
 }
 \arguments{
-\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}}
+\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
 
-\item{conf.level}{the confidence level, defaults to 0.95}
+\item{conf.level}{the confidence level, defaults to 0.95, see \code{details}}
 
 \item{alpha}{the alpha value for which the output is to be printed, defaults to \code{NULL}}
 
 \item{tau}{the tau value for which the output is to be printed, defaults to \code{NULL}}
+
+\item{digits}{integer, indicating the number of digits to display in the table. Defaults to 2}
 
 \item{...}{additional arguments affecting the summary produced.}
 }
@@ -23,7 +24,12 @@ Prints a summary table of a bootstrapped/resampled version of ABE.
 The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
 the relative inclusion frequencies of the covariates from the initial model,
 resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
-root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS).
+root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see \code{details}.
+}
+\details{
+When using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}}, the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in \code{type.resampling}.
+
+Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 }
 \examples{
 set.seed(1)
@@ -35,15 +41,18 @@ y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
-fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.boot=50,type.boot="bootstrap")
+num.resamples=50,type.resampling="Wallisch2021")
 
-print(fit.boot,conf.level=0.95,alpha=0.2,tau=0.05)
+print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
+}
+\references{
+Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 }
 \seealso{
-\code{\link{abe.boot}}, \code{\link{summary.abe}}, \code{\link{print.abe.default}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+\code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

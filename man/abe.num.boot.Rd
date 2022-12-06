@@ -4,9 +4,19 @@
 \alias{abe.num.boot}
 \title{ABE for model which include only numeric covariates, bootstrap version}
 \usage{
-abe.num.boot(fit, data, include = NULL, active = NULL, tau = 0.05,
-  exp.beta = TRUE, exact = FALSE, criterion = "alpha", alpha = 0.2,
-  type.test = "Chisq", k)
+abe.num.boot(
+  fit,
+  data,
+  include = NULL,
+  active = NULL,
+  tau = 0.05,
+  exp.beta = TRUE,
+  exact = FALSE,
+  criterion = "alpha",
+  alpha = 0.2,
+  type.test = "Chisq",
+  k
+)
 }
 \description{
 ABE for model which include only numeric covariates, bootstrap version

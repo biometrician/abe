@@ -4,9 +4,19 @@
 \alias{abe.num}
 \title{ABE for models which include only numeric covariates}
 \usage{
-abe.num(fit, data, include = NULL, active = NULL, tau = 0.05,
-  exp.beta = TRUE, exact = FALSE, criterion = "alpha", alpha = 0.2,
-  type.test = "Chisq", verbose = T)
+abe.num(
+  fit,
+  data,
+  include = NULL,
+  active = NULL,
+  tau = 0.05,
+  exp.beta = TRUE,
+  exact = FALSE,
+  criterion = "alpha",
+  alpha = 0.2,
+  type.test = "Chisq",
+  verbose = TRUE
+)
 }
 \description{
 ABE for models which include only numeric covariates

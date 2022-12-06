@@ -7,23 +7,26 @@
 \method{summary}{abe}(object, conf.level = 0.95, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.boot}}}
+\item{object}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
 
-\item{conf.level}{the confidence level, defaults to 0.95}
+\item{conf.level}{the confidence level, defaults to 0.95, see \code{details}}
 
 \item{...}{additional arguments affecting the summary produced.}
 }
 \value{
 a list with the following elements:
 
-\code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model
+\code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 
-\code{model.rel.frequencies}: relative frequencies of the final models
+\code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 
-\code{var.coefs}: bootstrap medians and percentiles for the estimates of the regression coefficients for each variable from the initial model
+\code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
 }
 \description{
-makes a summary of a bootstrapped version of ABE
+makes a summary of a resampled version of ABE
+}
+\details{
+Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 }
 \examples{
 set.seed(1)
@@ -35,15 +38,15 @@ y<--5+5*x1+5*x2+ rnorm(n,sd=5)
 dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
-fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
+fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
 tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.boot=50,type.boot="bootstrap")
+num.resamples=50,type.resampling="Wallisch2021")
 
-summary(fit.boot)$var.rel.frequencies
+summary(fit.resample)
 }
 \seealso{
-\code{\link{abe.boot}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+\code{\link{abe.resampling}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
