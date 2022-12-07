@@ -278,7 +278,7 @@ bt
 #'
 #' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
 #'
-#' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models
+#' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 #'
 #' \code{alpha} the vector of significance levels used
 #'
@@ -920,8 +920,15 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
 }
 
-  grid <- expand.grid(1:num.resamples, "tau" = tau, "alpha" = alpha)
-  model.params <- grid[, c("alpha", "tau")]
+  if(!is.null(alpha)){
+    grid <- expand.grid(1:num.resamples, "tau" = tau, "alpha" = alpha)
+    model.params <- grid[, c("alpha", "tau")]
+  }
+  if(is.null(alpha)){
+    grid <- expand.grid(1:num.resamples, "tau" = tau)
+    model.params <- grid[, c("tau")]
+  }
+
 
 
   misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot.or,prop.sampling=prop.sampling)
@@ -1420,7 +1427,7 @@ if (is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=1*object$n
 
 if (is.null(object$tau)) taus<-NULL else {
 
-if (is.null(object$alpha)) {taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),1),sep="")} else {
+if (is.null(object$alpha)) {taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),1), ", ", object$criterion, sep="")} else {
 
 taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),length(object$alpha)),sep="")
 }
@@ -1742,6 +1749,7 @@ if (object$misc$type.boot=="Wallisch2021"){
 
 if (object$misc$type.boot!="Wallisch2021") list<-list1 else
 
+
 list<-list(var.rel.frequencies=list2$var.rel.frequencies,
      model.rel.frequencies=list2$model.rel.frequencies,
      var.coefs=list1$var.coefs)
@@ -1808,7 +1816,7 @@ print.abe<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
   set<-paste("tau=",tau,sep="")
   sea<-paste("alpha=",alpha,sep="")
 
-  if (object$misc$criterion=="alpha") rs<-paste(set,sea,sep=".") else rs<-set
+  if (object$misc$criterion=="alpha") rs<-paste(set,sea,sep=".") else rs <- paste0(set, ", ", object$criterion)
 
   ss<-summary(object,conf.level = conf.level)
 
@@ -1915,7 +1923,7 @@ print(mat)
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
 
-plot.abe<-function(x,type.plot=c("coefficients","models","variables"),alpha=NULL,tau=NULL,variable=NULL,...){
+plot.abe<-function(x,type.plot=c("coefficients","models","variables"),alpha=NULL,tau=NULL,variable=NULL, horiz = TRUE, decreasing = TRUE, ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -2041,8 +2049,8 @@ if (type.plot=="coefficients"){
 
 if (object$criterion=="alpha"&!is.null(object$tau)) {
  ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
-  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
+ if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
+  par(mfcol=c(length(ss),ncol(ss[[1]])), mar = c(4, 4, 2, 1))
 
  for (i in 1:ncol(ss[[1]])){
    for (j in 1:length(ss)){
@@ -2056,7 +2064,7 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
   ss<-lapply(split(coefs.model,list(alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
+  par(mfcol=c(length(ss),ncol(ss[[1]])), mar = c(4, 4, 2, 1))
 
   for (i in 1:ncol(ss[[1]])){
     for (j in 1:length(ss)){
@@ -2074,7 +2082,8 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
 
   for (i in 1:ncol(ss[[1]])){
     for (j in 1:length(ss)){
-      hist(ss[[j]][,i],xlab=colnames(ss[[1]])[i],main=names(ss)[j],...)
+      hist(ss[[j]][,i],xlab=colnames(ss[[1]])[i],
+           main=paste0(names(ss)[j], ", ", object$criterion),...)
     }
   }
 
@@ -2086,7 +2095,7 @@ if (object$criterion!="alpha"&is.null(object$tau)) {
   ss<-lapply(coefs.model,function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
+  par(mfcol=c(length(ss),ncol(ss[[1]])), mar = c(4, 4, 2, 1))
 
   for (i in 1:ncol(ss[[1]])){
       hist(ss[[1]][,i],xlab=colnames(ss[[1]])[i],main=names(ss)[1],...)
@@ -2126,11 +2135,17 @@ if (type.plot=="variables"){
     sum.obj<-sum.obji
 
 
+    par(mfcol = c(nrow(sum.obj), 1), mar = c(4, 4, 2, 1))
+    if(decreasing){
+      for (i in 1:nrow(sum.obj)) barplot(rev(sum.obj[i, ]),
+                                         main=rownames(sum.obj)[i],
+                                         horiz = horiz, xlab = "VIF (%)", ... )
+    } else{
+      for (i in 1:nrow(sum.obj)) barplot(sum.obj[i,],
+                                         main=rownames(sum.obj)[i],
+                                         horiz = horiz, xlab = "VIF (%)", ... )
+    }
 
-
-
-    par(mfcol=c(nrow(sum.obj),1)   )
-    for (i in 1:nrow(sum.obj)) barplot(sum.obj[i,],main=rownames(sum.obj)[i],names=colnames(sum.obj),... )
 
 
 }
@@ -2155,7 +2170,7 @@ if (type.plot=="models"){
 
   sum.obj<-sum.obj[names(sum.obj)%in%cnm]
 
-  par(mfcol=c(length(sum.obj),1)   )
+  par(mfcol = c(length(sum.obj),1), mar = c(4, 4, 2, 1))
   for (i in 1:length(sum.obj)) barplot(sum.obj[[i]],main=names(sum.obj)[i],names=names(sum.obj[[i]]),... )
 
 
