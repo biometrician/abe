@@ -278,6 +278,8 @@ bt
 #'
 #' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
 #'
+#' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models
+#'
 #' \code{alpha} the vector of significance levels used
 #'
 #' \code{tau} the vector of threshold values for the change-in-estimate
@@ -918,12 +920,18 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
 }
 
-misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot.or,prop.sampling=prop.sampling)
+  grid <- expand.grid(1:num.resamples, "tau" = tau, "alpha" = alpha)
+  model.params <- grid[, c("alpha", "tau")]
 
-  res<-list(models=boot1,models.wallisch=boot2,alpha=alpha,tau=tau,num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),fit.or=fit.or,misc=misc,call=match.call())
+
+  misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot.or,prop.sampling=prop.sampling)
+
+  res<-list(models=boot1,models.wallisch=boot2, model.parameters = model.params,
+            alpha=alpha,tau=tau,num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),
+            fit.or=fit.or,misc=misc,call=match.call())
 
   class(res)<-"abe"
-   res
+  res
 }
 
 
