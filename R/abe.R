@@ -2050,7 +2050,7 @@ if (type.plot=="coefficients"){
 if (object$criterion=="alpha"&!is.null(object$tau)) {
  ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-  par(mfcol=c(length(ss),ncol(ss[[1]])), mar = c(4, 4, 2, 1))
+  par(mfcol=c(length(ss),ncol(ss[[1]])))
 
  for (i in 1:ncol(ss[[1]])){
    for (j in 1:length(ss)){
@@ -2064,7 +2064,7 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
   ss<-lapply(split(coefs.model,list(alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])), mar = c(4, 4, 2, 1))
+  par(mfcol=c(length(ss),ncol(ss[[1]])))
 
   for (i in 1:ncol(ss[[1]])){
     for (j in 1:length(ss)){
@@ -2095,7 +2095,7 @@ if (object$criterion!="alpha"&is.null(object$tau)) {
   ss<-lapply(coefs.model,function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])), mar = c(4, 4, 2, 1))
+  par(mfcol=c(length(ss),ncol(ss[[1]])))
 
   for (i in 1:ncol(ss[[1]])){
       hist(ss[[1]][,i],xlab=colnames(ss[[1]])[i],main=names(ss)[1],...)
@@ -2135,15 +2135,15 @@ if (type.plot=="variables"){
     sum.obj<-sum.obji
 
 
-    par(mfcol = c(nrow(sum.obj), 1), mar = c(4, 4, 2, 1))
+    par(mfcol = c(nrow(sum.obj), 1))
     if(decreasing){
       for (i in 1:nrow(sum.obj)) barplot(rev(sum.obj[i, ]),
                                          main=rownames(sum.obj)[i],
-                                         horiz = horiz, xlab = "VIF (%)", ... )
+                                         horiz = horiz, xlab = "VIF (%)", las = 1, ... )
     } else{
       for (i in 1:nrow(sum.obj)) barplot(sum.obj[i,],
                                          main=rownames(sum.obj)[i],
-                                         horiz = horiz, xlab = "VIF (%)", ... )
+                                         horiz = horiz, xlab = "VIF (%)", las = 1, ... )
     }
 
 
@@ -2170,7 +2170,7 @@ if (type.plot=="models"){
 
   sum.obj<-sum.obj[names(sum.obj)%in%cnm]
 
-  par(mfcol = c(length(sum.obj),1), mar = c(4, 4, 2, 1))
+  par(mfcol = c(length(sum.obj),1))
   for (i in 1:length(sum.obj)) barplot(sum.obj[[i]],main=names(sum.obj)[i],names=names(sum.obj[[i]]),... )
 
 
