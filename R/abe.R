@@ -2166,7 +2166,9 @@ if (type.plot=="models"){
   sum.obj<-sum.obj[names(sum.obj)%in%cnm]
 
   par(mfcol = c(length(sum.obj),1))
-  for (i in 1:length(sum.obj)) barplot(sum.obj[[i]],main=names(sum.obj)[i],names=names(sum.obj[[i]]),... )
+  for (i in 1:length(sum.obj)) barplot(sort(sum.obj[[i]], decreasing = !decreasing),
+                                       main=names(sum.obj)[i],names=names(sort(sum.obj[[i]], decreasing = !decreasing)),
+                                       horiz = horiz, las = 1, ... )
 
 
 
