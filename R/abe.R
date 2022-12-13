@@ -2136,15 +2136,10 @@ if (type.plot=="variables"){
 
 
     par(mfcol = c(nrow(sum.obj), 1))
-    if(decreasing){
-      for (i in 1:nrow(sum.obj)) barplot(rev(sum.obj[i, ]),
-                                         main=rownames(sum.obj)[i],
-                                         horiz = horiz, xlab = "VIF (%)", las = 1, ... )
-    } else{
-      for (i in 1:nrow(sum.obj)) barplot(sum.obj[i,],
-                                         main=rownames(sum.obj)[i],
-                                         horiz = horiz, xlab = "VIF (%)", las = 1, ... )
-    }
+    for (i in 1:nrow(sum.obj)) barplot(sort(sum.obj[i, ], decreasing = !decreasing),
+                                       main=rownames(sum.obj)[i],
+                                       horiz = horiz, xlab = "VIF (%)", las = 1, ... )
+
 
 
 
