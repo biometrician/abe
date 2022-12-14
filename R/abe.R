@@ -2162,7 +2162,7 @@ if (type.plot=="variables"){
     colnames(d.plot) <- c("Model", "Variable", "VIF")
 
     if(object$criterion == "AIC") d.plot$alpha.plot <- 0.157
-    if(object$criterion == "BIC") d.plot$alpha.plot <- 0.1 # Whats the appropriate value here?
+    if(object$criterion == "BIC") d.plot$alpha.plot <- 1-pchisq(log(nrow(object$fit.or$x)), df=1) # Whats the appropriate value here?
     if(object$criterion == "alpha"){
       d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha="), "[[", 2))
     }
