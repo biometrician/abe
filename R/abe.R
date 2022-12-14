@@ -1861,7 +1861,7 @@ print(mat)
 #' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param variable variables for which the plot is to be made (can be a vector of length >1)
-#' @param ... Arguments to be passed to methods, such as graphical parameters (see \code{\link{barplot}}, \code{\link{hist}}).
+#' @param ... Arguments to be passed to methods, such as graphical parameters.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @details When using \code{type.plot="coefficients"} the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
@@ -1870,7 +1870,7 @@ print(mat)
 #' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #'
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
-#'
+#' @import ggplot2
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
@@ -1923,7 +1923,7 @@ print(mat)
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
 
-plot.abe<-function(x,type.plot=c("coefficients","models","variables"),alpha=NULL,tau=NULL,variable=NULL, horiz = TRUE, decreasing = TRUE, ...){
+plot.abe<-function(x,type.plot=c("coefficients","models","variables"),alpha=NULL,tau=NULL,variable=NULL, ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -2047,16 +2047,25 @@ if (!is.null(alpha)|!is.null(tau)){
 
 if (type.plot=="coefficients"){
 
+
 if (object$criterion=="alpha"&!is.null(object$tau)) {
  ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
 
- for (i in 1:ncol(ss[[1]])){
-   for (j in 1:length(ss)){
-     hist(ss[[j]][,i],xlab=colnames(ss[[1]])[i],main=names(ss)[j],...)
-   }
- }
+ d.plot <- do.call(rbind, Map(function(x, y){
+   d <- reshape2::melt(x)
+   d$Model <- y
+   d
+ }, ss, names(ss)))
+
+ p <- qplot(value, data = d.plot) +
+   geom_vline( xintercept = 0, color = "blue") +
+   facet_wrap(~ Model + Var2, scales = "free") +
+   theme_bw() +
+   xlab("Coefficient values") +
+   ylab("Number of resamples")
+
+
 
 }
 
@@ -2064,13 +2073,18 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
   ss<-lapply(split(coefs.model,list(alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
+  d.plot <- do.call(rbind, Map(function(x, y){
+    d <- reshape2::melt(x)
+    d$Model <- y
+    d
+  }, ss, names(ss)))
 
-  for (i in 1:ncol(ss[[1]])){
-    for (j in 1:length(ss)){
-      hist(ss[[j]][,i],xlab=colnames(ss[[1]])[i],main=names(ss)[j],...)
-    }
-  }
+  p <- qplot(value, data = d.plot) +
+    geom_vline( xintercept = 0, color = "blue") +
+    facet_wrap(~ Model + Var2, scales = "free") +
+    theme_bw() +
+    xlab("Coefficient values") +
+    ylab("Number of resamples")
 
 }
 
@@ -2078,14 +2092,18 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
   ss<-lapply(split(coefs.model,list(taus)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
+  d.plot <- do.call(rbind, Map(function(x, y){
+    d <- reshape2::melt(x)
+    d$Model <- paste0(y, ", ", object$criterion)
+    d
+  }, ss, names(ss)))
 
-  for (i in 1:ncol(ss[[1]])){
-    for (j in 1:length(ss)){
-      hist(ss[[j]][,i],xlab=colnames(ss[[1]])[i],
-           main=paste0(names(ss)[j], ", ", object$criterion),...)
-    }
-  }
+  p <- qplot(value, data = d.plot) +
+    geom_vline( xintercept = 0, color = "blue") +
+    facet_wrap(~ Model + Var2, scales = "free") +
+    theme_bw() +
+    xlab("Coefficient values") +
+    ylab("Number of resamples")
 
 }
 
@@ -2095,15 +2113,21 @@ if (object$criterion!="alpha"&is.null(object$tau)) {
   ss<-lapply(coefs.model,function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
-  par(mfcol=c(length(ss),ncol(ss[[1]])))
+  d.plot <- do.call(rbind, Map(function(x, y){
+    d <- reshape2::melt(x)
+    d$Model <- paste0(y, ", ", object$criterion)
+    d
+  }, ss, names(ss)))
 
-  for (i in 1:ncol(ss[[1]])){
-      hist(ss[[1]][,i],xlab=colnames(ss[[1]])[i],main=names(ss)[1],...)
-    }
-  }
+  p <- qplot(value, data = d.plot) +
+    geom_vline( xintercept = 0, color = "blue") +
+    facet_wrap(~ Model + Var2, scales = "free") +
+    theme_bw() +
+    xlab("Coefficient values") +
+    ylab("Number of resamples")
 
 }
-
+}
 
 if (type.plot=="variables"){
   sum.obj<-summary(object)$var.rel.frequencies
@@ -2134,14 +2158,21 @@ if (type.plot=="variables"){
     rownames(sum.obji)<-rownames(sum.obj)[rownames(sum.obj)%in%cnm]
     sum.obj<-sum.obji
 
+    d.plot <- reshape2::melt(sum.obj)
+    colnames(d.plot) <- c("Model", "Variable", "VIF")
 
-    par(mfcol = c(nrow(sum.obj), 1))
-    for (i in 1:nrow(sum.obj)) barplot(sort(sum.obj[i, ], decreasing = !decreasing),
-                                       main=rownames(sum.obj)[i],
-                                       horiz = horiz, xlab = "VIF (%)", las = 1, ... )
+    if(object$criterion == "AIC") d.plot$alpha.plot <- 0.157
+    if(object$criterion == "BIC") d.plot$alpha.plot <- 0.1 # Whats the appropriate value here?
+    if(object$criterion == "alpha"){
+      d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha="), "[[", 2))
+    }
 
-
-
+    p <- ggplot(d.plot) +
+      geom_col(aes(y = reorder(Variable, +VIF, max), x = VIF)) +
+      geom_vline(data = d.plot, aes(xintercept = alpha.plot), col = 4) +
+      facet_wrap( ~ Model, scales = "free") +
+      labs(y = NULL, x = "VIF") +
+      theme_bw()
 
 }
 
@@ -2165,14 +2196,24 @@ if (type.plot=="models"){
 
   sum.obj<-sum.obj[names(sum.obj)%in%cnm]
 
-  par(mfcol = c(length(sum.obj),1))
-  for (i in 1:length(sum.obj)) barplot(sort(sum.obj[[i]], decreasing = !decreasing),
-                                       main=names(sum.obj)[i],names=names(sort(sum.obj[[i]], decreasing = !decreasing)),
-                                       horiz = horiz, las = 1, ... )
+  d.plot <- do.call(rbind, Map(function(x, y){
+    d <- data.frame("Parameters" = y, "Model" = names(x), "Frequency" = as.vector(x))
+    d
+  }, sum.obj, names(sum.obj)))
 
+
+  p <- ggplot(d.plot) +
+    geom_col(aes(y = reorder(Model, +Frequency, max), x = Frequency)) +
+    facet_wrap( ~ Parameters, scales = "free") +
+    labs(y = NULL, x = "Frequency") +
+    theme_bw()
 
 
 }
+
+
+  return(p)
+
 
 }
 

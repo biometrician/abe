@@ -24,7 +24,7 @@
 
 \item{variable}{variables for which the plot is to be made (can be a vector of length >1)}
 
-\item{...}{Arguments to be passed to methods, such as graphical parameters (see \code{\link{barplot}}, \code{\link{hist}}).}
+\item{...}{Arguments to be passed to methods, such as graphical parameters.}
 }
 \description{
 Plot function for the resampled/bootstrapped version of ABE.

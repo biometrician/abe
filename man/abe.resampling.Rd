@@ -67,7 +67,7 @@ A list with the following elements:
 
 \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
 
-\code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models
+\code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 
 \code{alpha} the vector of significance levels used
 
