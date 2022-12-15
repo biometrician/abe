@@ -1870,7 +1870,9 @@ print(mat)
 #' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #'
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
-#' @import ggplot2
+#'
+#' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha.
+#' @import ggplot2 reshape2
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
@@ -2212,8 +2214,37 @@ if (type.plot=="models"){
 }
 
 
-  return(p)
 
+if(type.plot == "stability"){
+
+
+  alphas <- object$alpha
+  taus <- object$tau
+
+  if(length(alphas) <= 1) stop("Stability plots require more than one alpha value.")
+
+  sum.obj <- summary(object)
+  var_rel_freqABE <- data.frame(sum.obj$var.rel.frequencies)[, -1]
+
+  grid <- expand.grid( "tau" = taus, "alpha" = alphas)
+  var_rel_freqABE <- cbind(var_rel_freqABE, grid)
+
+
+  # stability path for VIF
+  data_longABE <- reshape2::melt(var_rel_freqABE, id.vars = c("alpha", "tau"))
+
+
+  p <- ggplot(data_longABE) +
+    geom_line(aes(x = alpha, y = value, col = variable), linewidth = 0.75) +
+    facet_wrap(~ paste0("Tau = ", tau)) +
+    theme_bw() +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+    labs(x = "Alpha", y = "Inclusion Frequency", col = "") +
+    ylim(0, 1)
+
+}
+
+  return(p)
 
 }
 
