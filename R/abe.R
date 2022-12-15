@@ -1861,6 +1861,7 @@ print(mat)
 #' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param variable variables for which the plot is to be made (can be a vector of length >1)
+#' @param type.stability string which specifies the type of stability plot. See details.
 #' @param ... Arguments to be passed to methods, such as graphical parameters.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1871,7 +1872,7 @@ print(mat)
 #'
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #'
-#' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha.
+#' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 #' @import ggplot2 reshape2
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
@@ -1925,7 +1926,7 @@ print(mat)
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
 
-plot.abe<-function(x,type.plot=c("coefficients","models","variables"),alpha=NULL,tau=NULL,variable=NULL, ...){
+plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -2217,11 +2218,10 @@ if (type.plot=="models"){
 
 if(type.plot == "stability"){
 
+  if(object$criterion != "alpha") stop("Stability plots are not available for criteria other than alpha.")
 
   alphas <- object$alpha
   taus <- object$tau
-
-  if(length(alphas) <= 1) stop("Stability plots require more than one alpha value.")
 
   sum.obj <- summary(object)
   var_rel_freqABE <- data.frame(sum.obj$var.rel.frequencies)[, -1]
@@ -2230,17 +2230,33 @@ if(type.plot == "stability"){
   var_rel_freqABE <- cbind(var_rel_freqABE, grid)
 
 
-  # stability path for VIF
   data_longABE <- reshape2::melt(var_rel_freqABE, id.vars = c("alpha", "tau"))
 
+  if(type.stability == "alpha"){
 
-  p <- ggplot(data_longABE) +
-    geom_line(aes(x = alpha, y = value, col = variable), linewidth = 0.75) +
-    facet_wrap(~ paste0("Tau = ", tau)) +
-    theme_bw() +
-    geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
-    labs(x = "Alpha", y = "Inclusion Frequency", col = "") +
-    ylim(0, 1)
+    if(length(alphas) <= 1) stop("Stability plots require more than one alpha value.")
+
+    p <- ggplot(data_longABE) +
+      geom_line(aes(x = alpha, y = value, col = variable), linewidth = 0.75) +
+      facet_wrap(~ paste0("Tau = ", tau)) +
+      theme_bw() +
+      geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+      labs(x = "Alpha", y = "Inclusion Frequency", col = "") +
+      ylim(0, 1)
+  }
+
+  if(type.stability == "tau"){
+
+    if(length(taus) <= 1) stop("Stability plots require more than one tau value.")
+
+    p <- ggplot(data_longABE) +
+      geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
+      facet_wrap(~ paste0("Alpha = ", alpha)) +
+      theme_bw() +
+      labs(x = "Tau", y = "Inclusion Frequency", col = "") +
+      ylim(0, 1)
+  }
+
 
 }
 

@@ -6,10 +6,11 @@
 \usage{
 \method{plot}{abe}(
   x,
-  type.plot = c("coefficients", "models", "variables"),
+  type.plot = c("coefficients", "models", "variables", "stability"),
   alpha = NULL,
   tau = NULL,
   variable = NULL,
+  type.stability = c("alpha", "tau"),
   ...
 )
 }
@@ -24,6 +25,8 @@
 
 \item{variable}{variables for which the plot is to be made (can be a vector of length >1)}
 
+\item{type.stability}{string which specifies the type of stability plot. See details.}
+
 \item{...}{Arguments to be passed to methods, such as graphical parameters.}
 }
 \description{
@@ -37,7 +40,7 @@ When using \code{type.plot="variables"} the function plots a barplot of the rela
 
 When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 
-When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha.
+When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 }
 \examples{
 set.seed(1)
