@@ -1926,7 +1926,7 @@ print(mat)
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
 
-plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), ...){
+plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability"),alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }

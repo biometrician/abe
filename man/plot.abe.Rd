@@ -10,7 +10,7 @@
   alpha = NULL,
   tau = NULL,
   variable = NULL,
-  type.stability = c("alpha", "tau"),
+  type.stability = "alpha",
   ...
 )
 }
