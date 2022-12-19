@@ -271,12 +271,13 @@ bt
 #' @param num.resamples number of resamples.
 #' @param type.resampling String that specifies the type of resampling. Possible values are \code{"Wallisch2021"}, \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"}. Default is set to \code{"Wallisch2021"}. See details.
 #' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
+#' @param save.out String that specifies if only the minimal output of the refitted models (\code{save.out="minimal"}) or the entire object (\code{save.out="complete"}) is to be saved. Defaults to \code{"minimal"}
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
 #'
-#' \code{models} the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+#' \code{models} if \code{save.out="minimal"} the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap; if \code{save.out="complete"} these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}.
 #'
-#' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the coefficients and terms of the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5; \code{NULL} when using any other option in \code{type.resampling}
+#' \code{models.wallisch} similar as \code{models}; if using \code{type.resampling="Wallisch2021"} the coefficients and terms of the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5; \code{NULL} when using any other option in \code{type.resampling}
 #'
 #' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 #'
@@ -348,13 +349,14 @@ bt
 #'
 #' summary(fit.resample)
 
-abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5){
-
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal"){
+#save.out<-"minimal" #add as argument if needed!
   #added to reduce the size of the final object
-  my.sum.int<-function(x){
+  my.sum.int<-function(x,save=save.out){
+    if (save=="minimal"){
     xn<-list()
     xn$terms<-x$terms
-    xn$coef<-coef(x)
+    xn$coef<-coef(x)} else xn<-x
     xn
   }
 
