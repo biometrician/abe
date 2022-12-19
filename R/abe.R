@@ -274,9 +274,9 @@ bt
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
 #'
-#' \code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+#' \code{models} the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
 #'
-#' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
+#' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the coefficients and terms of the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5; \code{NULL} when using any other option in \code{type.resampling}
 #'
 #' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 #'
@@ -293,6 +293,8 @@ bt
 #' \code{fit.or} the initial model
 #'
 #' \code{misc} the parameters of the call to \code{abe.resampling}
+#'
+#' \code{id} the rows of the data which were used when refitting the model; the list with elements \code{id1} (the rows used to refit the model; when \code{type.resampling="Wallisch2021"} these are based on bootstrap) and \code{id2} (\code{NULL} unless when \code{type.resampling="Wallisch2021"} in which case these are the rows used to refit the models based on subsampling)
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -953,7 +955,7 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
   id<-list(id.models=id1,id.wallisch=id2)
   res<-list(models=boot1,models.wallisch=boot2, model.parameters = model.params,
             alpha=alpha,tau=tau,num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),
-            fit.or=fit.or,misc=misc,call=match.call())
+            fit.or=fit.or,misc=misc,id=id,call=match.call())
 
   class(res)<-"abe"
   res
