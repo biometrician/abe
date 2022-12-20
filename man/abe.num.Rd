@@ -22,7 +22,7 @@ abe.num(
 ABE for models which include only numeric covariates
 }
 \examples{
-\dontshow{
+\dontrun{
 set.seed(1)
 n=100
 x1<-runif(n)

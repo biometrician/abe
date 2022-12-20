@@ -10,7 +10,7 @@ my_grepl(...)
 grepl function changed
 }
 \examples{
-\dontshow{
+\dontrun{
 my_grepl("x",c("xy","xz","ab"))
 }
 }

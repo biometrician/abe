@@ -1881,6 +1881,13 @@ cat("\n\n")
 print(mat)
 }
 
+
+
+
+#' @import utils
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VIF", "alpha.plot", "Model", "Frequency"))
+
+
 #' Plot Function
 #'
 #' Plot function for the resampled/bootstrapped version of ABE.
@@ -1902,7 +1909,7 @@ print(mat)
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #'
 #' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
-#' @import ggplot2 reshape2
+#' @import stats ggplot2 reshape2
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
@@ -1953,7 +1960,6 @@ print(mat)
 #' par(mar=c(4,6,4,2))
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
-
 
 plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability"),alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
 object<-x
@@ -2311,6 +2317,7 @@ if(type.plot == "stability"){
 #' @details When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @import graphics
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
 #' @examples
@@ -2478,7 +2485,7 @@ if (object$misc$type.boot!="Wallisch2021"){
 #' ABE for models which include only numeric covariates
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -2686,7 +2693,7 @@ fit
 #' ABE for model which include only numeric covariates, bootstrap version
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -2838,7 +2845,7 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 #' ABE for model which includes categorical covariates, factor option
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3141,7 +3148,7 @@ fit
 #' ABE for model which includes categorical covariates, factor option, bootstrap version
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3396,7 +3403,7 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 #' ABE for model which includes categorical covariates, individual option
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3623,7 +3630,7 @@ fit
 #' ABE for model which includes categorical covariates, individual option, bootstrap version
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3820,7 +3827,7 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 #' update function which searches for objects within the parent environment, gives a nicer output than my_update
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3859,7 +3866,7 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
 #' update function which searches for objects within the parent environment
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3897,7 +3904,7 @@ my_update <- function(mod, formula = NULL, data = NULL) {
 #' update function which searches for objects within the parent environment, bootstrap version, i.e. can only update the model based on a new dataset
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3928,7 +3935,7 @@ my_update_boot <- function(mod, data = NULL) {
 #' grepl function changed
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' my_grepl("x",c("xy","xz","ab"))
 #' }
 my_grepl<-function(...) grepl(fixed=TRUE,...)
@@ -3937,7 +3944,7 @@ my_grepl<-function(...) grepl(fixed=TRUE,...)
 #' grep function changed
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' my_grep("x",c("xy","xz","ab"))
 #' }
 my_grep<-function(...) grep(fixed=TRUE,...)
