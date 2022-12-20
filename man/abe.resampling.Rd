@@ -18,7 +18,8 @@ abe.resampling(
   type.factor = NULL,
   num.resamples = 100,
   type.resampling = "Wallisch2021",
-  prop.sampling = 0.5
+  prop.sampling = 0.5,
+  save.out = "minimal"
 )
 }
 \arguments{
@@ -58,14 +59,16 @@ Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"
 \item{type.resampling}{String that specifies the type of resampling. Possible values are \code{"Wallisch2021"}, \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"}. Default is set to \code{"Wallisch2021"}. See details.}
 
 \item{prop.sampling}{Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.}
+
+\item{save.out}{String that specifies if only the minimal output of the refitted models (\code{save.out="minimal"}) or the entire object (\code{save.out="complete"}) is to be saved. Defaults to \code{"minimal"}}
 }
 \value{
 an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 A list with the following elements:
 
-\code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+\code{models} if \code{save.out="minimal"} the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap; if \code{save.out="complete"} these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}.
 
-\code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
+\code{models.wallisch} similar as \code{models}; if using \code{type.resampling="Wallisch2021"} the coefficients and terms of the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5; \code{NULL} when using any other option in \code{type.resampling}
 
 \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 
@@ -82,6 +85,8 @@ A list with the following elements:
 \code{fit.or} the initial model
 
 \code{misc} the parameters of the call to \code{abe.resampling}
+
+\code{id} the rows of the data which were used when refitting the model; the list with elements \code{id1} (the rows used to refit the model; when \code{type.resampling="Wallisch2021"} these are based on bootstrap) and \code{id2} (\code{NULL} unless when \code{type.resampling="Wallisch2021"} in which case these are the rows used to refit the models based on subsampling)
 }
 \description{
 Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
