@@ -271,12 +271,13 @@ bt
 #' @param num.resamples number of resamples.
 #' @param type.resampling String that specifies the type of resampling. Possible values are \code{"Wallisch2021"}, \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"}. Default is set to \code{"Wallisch2021"}. See details.
 #' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
+#' @param save.out String that specifies if only the minimal output of the refitted models (\code{save.out="minimal"}) or the entire object (\code{save.out="complete"}) is to be saved. Defaults to \code{"minimal"}
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
 #'
-#' \code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap
+#' \code{models} if \code{save.out="minimal"} the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap; if \code{save.out="complete"} these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}.
 #'
-#' \code{models.wallisch} if using \code{type.resampling="Wallisch2021"} the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5, each object in the list is of the same class as \code{fit}; \code{NULL} when using any other option in \code{type.resampling}
+#' \code{models.wallisch} similar as \code{models}; if using \code{type.resampling="Wallisch2021"} the coefficients and terms of the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5; \code{NULL} when using any other option in \code{type.resampling}
 #'
 #' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 #'
@@ -293,6 +294,8 @@ bt
 #' \code{fit.or} the initial model
 #'
 #' \code{misc} the parameters of the call to \code{abe.resampling}
+#'
+#' \code{id} the rows of the data which were used when refitting the model; the list with elements \code{id1} (the rows used to refit the model; when \code{type.resampling="Wallisch2021"} these are based on bootstrap) and \code{id2} (\code{NULL} unless when \code{type.resampling="Wallisch2021"} in which case these are the rows used to refit the models based on subsampling)
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -346,8 +349,19 @@ bt
 #'
 #' summary(fit.resample)
 
-abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5){
-type.boot<-type.resampling
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal"){
+#save.out<-"minimal" #add as argument if needed!
+  #added to reduce the size of the final object
+  my.sum.int<-function(x,save=save.out){
+    if (save=="minimal"){
+    xn<-list()
+    xn$terms<-x$terms
+    xn$coef<-coef(x)} else xn<-x
+    xn
+  }
+
+
+  type.boot<-type.resampling
 num.boot<-num.resamples
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
@@ -527,6 +541,14 @@ if (class(fit)[1]=="coxph"){
     n<-nrow(fit$x)
     if (type.boot!="bootstrap") m<-round(n*prop.sampling,0) else m<-n
     if (criterion[1]=="BIC") k<-log(m)
+    ids<-matrix(NA,ncol=m,nrow=num.boot)
+    for (ii in 1:num.boot){
+      if (type.boot=="bootstrap") idsi<-sample(1:n,n,replace=T)
+      if (type.boot=="mn.bootstrap") idsi<-sample(1:n,m,replace=T)
+      if (type.boot=="subsampling") idsi<-sample(1:n,m,replace=F)
+
+      ids[ii,]<-idsi
+    }
 
     type.boot.or<-type.boot
   boot<-list()
@@ -543,11 +565,8 @@ if (class(fit)[1]=="coxph"){
     for (ii in 1:num.boot){
      i=i+1
 
-     if (type.boot=="bootstrap") ids<-sample(1:n,n,replace=T)
-     if (type.boot=="mn.bootstrap") ids<-sample(1:n,m,replace=T)
-     if (type.boot=="subsampling") ids<-sample(1:n,m,replace=F)
 
-    data.boot<-data[ids,]
+    data.boot<-data[ids[ii,],]
 
      fit.i<-my_update_boot(fit,data=data.boot)
     if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
@@ -556,15 +575,15 @@ if (class(fit)[1]=="coxph"){
     if (type.factor=="factor") {
 
 
-                boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+                boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
 
-                boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+                boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
 
 
                       }
 
 
-    } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
+    } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
 
     }}
    }
@@ -577,11 +596,8 @@ if (class(fit)[1]=="coxph"){
       for (t in tau){
         for (ii in 1:num.boot){
           i=i+1
-          if (type.boot=="bootstrap") ids<-sample(1:n,n,replace=T)
-          if (type.boot=="mn.bootstrap") ids<-sample(1:n,m,replace=T)
-          if (type.boot=="subsampling") ids<-sample(1:n,m,replace=F)
 
-          data.boot<-data[ids,]
+          data.boot<-data[ids[ii,],]
 
             fit.i<-my_update_boot(fit,data=data.boot)
 
@@ -592,13 +608,13 @@ if (class(fit)[1]=="coxph"){
             if (type.factor=="factor") {
 
 
-              boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
+              boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
 
-                boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
+                boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
                       }
 
 
-          } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
+          } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
 
         }}
 
@@ -613,11 +629,8 @@ if (class(fit)[1]=="coxph"){
 
       for (ii in 1:num.boot){
         i=i+1
-        if (type.boot=="bootstrap") ids<-sample(1:n,n,replace=T)
-        if (type.boot=="mn.bootstrap") ids<-sample(1:n,m,replace=T)
-        if (type.boot=="subsampling") ids<-sample(1:n,m,replace=F)
 
-        data.boot<-data[ids,]
+        data.boot<-data[ids[ii,],]
 
          fit.i<-my_update_boot(fit,data=data.boot)
 
@@ -628,14 +641,14 @@ if (class(fit)[1]=="coxph"){
           if (type.factor=="factor") {
 
 
-            boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+            boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
 
-              boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+              boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
 
                        }
 
 
-        } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
+        } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
 
       }}
 
@@ -651,6 +664,13 @@ boot2<-NULL
     boot<-list()
     n<-nrow(fit$x)
     m<-n
+
+    idsb<-matrix(NA,ncol=m,nrow=num.boot)
+    for (ii in 1:num.boot){
+      idsi<-sample(1:n,n,replace=T)
+      idsb[ii,]<-idsi
+    }
+
     if (criterion[1]=="BIC") k<-log(m)
 
     i=0
@@ -665,9 +685,8 @@ boot2<-NULL
           for (ii in 1:num.boot){
             i=i+1
 
-            ids<-sample(1:n,n,replace=T)
 
-            data.boot<-data[ids,]
+            data.boot<-data[idsb[ii,],]
 
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
@@ -676,15 +695,15 @@ boot2<-NULL
                 if (type.factor=="factor") {
 
 
-                  boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+                  boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
 
-                    boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+                    boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
 
 
                   }
 
 
-              } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
+              } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
 
             }}
         }
@@ -697,9 +716,8 @@ boot2<-NULL
       for (t in tau){
         for (ii in 1:num.boot){
           i=i+1
-          ids<-sample(1:n,n,replace=T)
 
-          data.boot<-data[ids,]
+          data.boot<-data[idsb[ii,],]
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
@@ -710,13 +728,13 @@ boot2<-NULL
               if (type.factor=="factor") {
 
 
-                boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
+                boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
 
-                  boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
+                  boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
                 }
 
 
-            } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
+            } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
 
           }}
 
@@ -731,9 +749,8 @@ boot2<-NULL
 
         for (ii in 1:num.boot){
           i=i+1
-          ids<-sample(1:n,n,replace=T)
 
-          data.boot<-data[ids,]
+          data.boot<-data[idsb[ii,],]
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
@@ -744,14 +761,14 @@ boot2<-NULL
               if (type.factor=="factor") {
 
 
-                boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+                boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
 
-                  boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+                  boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
 
                 }
 
 
-            } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
+            } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
 
           }}
 
@@ -761,7 +778,14 @@ boot1<-boot
     type.boot<-"subsampling"
     n<-nrow(fit$x)
     m<-round(n*0.5,0)
+
     if (criterion[1]=="BIC") k<-log(m)
+
+    idss<-matrix(NA,ncol=m,nrow=num.boot)
+    for (ii in 1:num.boot){
+      idsi<-sample(1:n,m,replace=F)
+      idss[ii,]<-idsi
+    }
 
     boot<-list()
 
@@ -777,9 +801,8 @@ boot1<-boot
           for (ii in 1:num.boot){
             i=i+1
 
-              ids<-sample(1:n,m,replace=F)
 
-            data.boot<-data[ids,]
+            data.boot<-data[idss[ii,],]
 
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
@@ -788,15 +811,15 @@ boot1<-boot
                 if (type.factor=="factor") {
 
 
-                  boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+                  boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
 
-                    boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+                    boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
 
 
                   }
 
 
-              } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
+              } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
 
             }}
         }
@@ -809,8 +832,7 @@ boot1<-boot
       for (t in tau){
         for (ii in 1:num.boot){
           i=i+1
-          ids<-sample(1:n,m,replace=F)
-          data.boot<-data[ids,]
+          data.boot<-data[idss[ii,],]
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
@@ -821,13 +843,13 @@ boot1<-boot
               if (type.factor=="factor") {
 
 
-                boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
+                boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
 
-                  boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
+                  boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
                 }
 
 
-            } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
+            } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
 
           }}
 
@@ -842,8 +864,7 @@ boot1<-boot
 
         for (ii in 1:num.boot){
           i=i+1
-          ids<-sample(1:n,m,replace=F)
-          data.boot<-data[ids,]
+           data.boot<-data[idss[ii,],]
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
@@ -854,14 +875,14 @@ boot1<-boot
               if (type.factor=="factor") {
 
 
-                boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
+                boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
 
-                  boot[[i]]<-abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
+                  boot[[i]]<-my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
 
                 }
 
 
-            } else  boot[[i]]<-abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
+            } else  boot[[i]]<-my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
 
           }}
 
@@ -930,12 +951,13 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
 
 
+if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 
   misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot.or,prop.sampling=prop.sampling)
-
+  id<-list(id.models=id1,id.wallisch=id2)
   res<-list(models=boot1,models.wallisch=boot2, model.parameters = model.params,
             alpha=alpha,tau=tau,num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),
-            fit.or=fit.or,misc=misc,call=match.call())
+            fit.or=fit.or,misc=misc,id=id,call=match.call())
 
   class(res)<-"abe"
   res
@@ -1440,8 +1462,12 @@ if (is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boo
 if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
 
 
-vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+  if (is.null(coef(x))) c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])}
+  )
+vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+  if (is.null(coef(x))) names(x$coef) else  names(coef(x))}
+)
 
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -1450,7 +1476,7 @@ ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx
 vars.model<-lapply(vars.model,ggff  )
 vars.model.cf<-lapply(vars.model.cf,ggff   )
 
-coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
+coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  if (!is.null(coef(x)) ) coef(x) else x$coef)
 
 
 object$all.vars<-ggff(object$all.vars)
@@ -1615,8 +1641,10 @@ list1<-list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
 
 if (object$misc$type.boot=="Wallisch2021"){
 
-  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
+   if (!is.null(coef(x))) c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
+  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
+    if (!is.null(coef(x))) names(coef(x)) else names(x$coef)})
 
 
 
@@ -1624,7 +1652,8 @@ if (object$misc$type.boot=="Wallisch2021"){
   vars.model<-lapply(vars.model,ggff  )
   vars.model.cf<-lapply(vars.model.cf,ggff   )
 
-  coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  coef(x))
+  coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  {
+    if (!is.null(coef(x))) coef(x) else x$coef})
 
 
   object$all.vars<-ggff(object$all.vars)
@@ -1976,16 +2005,27 @@ object$all.vars<-ggff(object$all.vars)
   if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
 
 if (object$misc$type.boot!="Wallisch2021"){
-vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+ if (!is.null(coef(x))) c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
+
+
+vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+  if (!is.null(coef(x))) names(coef(x)) else names(x$coef)
+  })
 } else {
   if (type.plot=="coefficients"){
-    vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-    vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+    vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+      if (!is.null(coef(x)))  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])
+      })
+    vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+      if (!is.null(coef(x))) names(coef(x)) else names(x$coef)})
 
   } else {
-    vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-    vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+    vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
+      if (!is.null(coef(x)))  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
+
+    vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
+      if (!is.null(coef(x))) names(coef(x)) else names(x$coef)   } )
 
   }
 
@@ -1999,12 +2039,15 @@ vars.model.cf<-lapply(vars.model.cf,ggff   )
 
 
 if (object$misc$type.boot!="Wallisch2021"){
-coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
+coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  {
+  if (!is.null(coef(x))) coef(x) else x$coef})
 } else {
   if (type.plot=="coefficients"){
-    coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
+    coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  {
+      if (!is.null(coef(x))) coef(x) else x$coef})
   } else {
-    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  coef(x))
+    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  {
+      if (!is.null(coef(x))) coef(x) else x$coef})
   }
 }
 
@@ -2346,11 +2389,15 @@ pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
   if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
 
 if (object$misc$type.boot!="Wallisch2021"){
-  vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-  vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+  vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+    if (!is.null(coef(x)))  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
+  vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
+    if (!is.null(coef(x)))  names(coef(x)) else names(x$coef)})
 } else {
-  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]))
-  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else names(coef(x)))
+  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
+    if (!is.null(coef(x)))   c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) })
+  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
+    if (!is.null(coef(x))) names(coef(x)) else names(x$coef)})
 
 }
 
@@ -2360,9 +2407,11 @@ if (object$misc$type.boot!="Wallisch2021"){
   vars.model<-lapply(vars.model,ggff  )
   vars.model.cf<-lapply(vars.model.cf,ggff   )
   if (object$misc$type.boot!="Wallisch2021"){
-  coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  coef(x))
+  coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  {
+    if (!is.null(coef(x))) coef(x) else x$coef})
   } else {
-    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  coef(x))
+    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  {
+      if (!is.null(coef(x))) coef(x) else x$coef})
 }
 
   object$all.vars<-ggff(object$all.vars)
