@@ -2247,9 +2247,9 @@ if (type.plot=="models"){
 
 if(type.plot == "stability"){
 
-  if(object$criterion != "alpha") stop("Stability plots are not available for criteria other than alpha.")
-
-  alphas <- object$alpha
+  if(object$criterion == "alpha") alphas <- object$alpha
+  if(object$criterion == "AIC") alphas <- c("0.157")
+  if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.or$x)), df=1))
   taus <- object$tau
 
   sum.obj <- summary(object)
@@ -2280,7 +2280,9 @@ if(type.plot == "stability"){
 
     p <- ggplot(data_longABE) +
       geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
-      facet_wrap(~ paste0("Alpha = ", alpha)) +
+      facet_wrap(~ ifelse(object$criterion != "alpha",
+                          paste0(object$criterion, " (Alpha = ", alpha, ")"),
+                          paste0("Alpha = ", alpha))) +
       scale_x_reverse() +
       theme_bw() +
       labs(x = expression(tau), y = "Inclusion Frequencies", col = "") +
