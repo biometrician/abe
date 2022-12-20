@@ -2104,15 +2104,6 @@ if (object$criterion=="alpha"&!is.null(object$tau)) {
    d
  }, ss, names(ss)))
 
- p <- qplot(value, data = d.plot) +
-   geom_vline( xintercept = 0, color = "blue") +
-   facet_wrap(~ Model + Var2, scales = "free") +
-   theme_bw() +
-   xlab("Coefficient values") +
-   ylab("Number of resamples")
-
-
-
 }
 
 if (object$criterion=="alpha"&is.null(object$tau)) {
@@ -2126,13 +2117,6 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
     d
   }, ss, names(ss)))
 
-  p <- qplot(value, data = d.plot) +
-    geom_vline( xintercept = 0, color = "blue") +
-    facet_wrap(~ Model + Var2, scales = "free") +
-    theme_bw() +
-    xlab("Coefficient values") +
-    ylab("Number of resamples")
-
 }
 
 if (object$criterion!="alpha"&!is.null(object$tau)){
@@ -2145,13 +2129,6 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
     d$Model <- paste0(y, ", ", object$criterion)
     d
   }, ss, names(ss)))
-
-  p <- qplot(value, data = d.plot) +
-    geom_vline( xintercept = 0, color = "blue") +
-    facet_wrap(~ Model + Var2, scales = "free") +
-    theme_bw() +
-    xlab("Coefficient values") +
-    ylab("Number of resamples")
 
 }
 
@@ -2168,14 +2145,18 @@ if (object$criterion!="alpha"&is.null(object$tau)) {
     d
   }, ss, names(ss)))
 
+
+
+}
+
   p <- qplot(value, data = d.plot) +
     geom_vline( xintercept = 0, color = "blue") +
     facet_wrap(~ Model + Var2, scales = "free") +
     theme_bw() +
-    xlab("Coefficient values") +
-    ylab("Number of resamples")
+    xlab("Regression coefficient values") +
+    ylab("Number of resamples") +
+    theme(strip.text.x = element_text(size = 11))
 
-}
 }
 
 if (type.plot=="variables"){
@@ -2289,7 +2270,7 @@ if(type.plot == "stability"){
       facet_wrap(~ paste0("Tau = ", tau)) +
       theme_bw() +
       geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
-      labs(x = "Alpha", y = "Inclusion Frequency", col = "") +
+      labs(x = expression(alpha), y = "Inclusion frequencies", col = "") +
       ylim(0, 1)
   }
 
@@ -2300,8 +2281,9 @@ if(type.plot == "stability"){
     p <- ggplot(data_longABE) +
       geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
       facet_wrap(~ paste0("Alpha = ", alpha)) +
+      scale_x_reverse() +
       theme_bw() +
-      labs(x = "Tau", y = "Inclusion Frequency", col = "") +
+      labs(x = expression(tau), y = "Inclusion Frequencies", col = "") +
       ylim(0, 1)
   }
 
