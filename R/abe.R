@@ -2059,8 +2059,6 @@ coefs.model<-lapply(1:length(vars.model.cf),function(i,x,y,z) {zz<-list();zz[[i]
 
 
 
-
-
 if (!is.null(alpha)|!is.null(tau)){
 
   if ( !is.null(alpha)&!is.null(tau)){
@@ -2098,8 +2096,10 @@ if (object$criterion=="alpha"&!is.null(object$tau)) {
  ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
+
  d.plot <- do.call(rbind, Map(function(x, y){
    d <- reshape2::melt(x)
+   d <- d[d$Var2 != "(Intercept)", ]
    d$Model <- y
    d
  }, ss, names(ss)))
@@ -2121,6 +2121,7 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
 
   d.plot <- do.call(rbind, Map(function(x, y){
     d <- reshape2::melt(x)
+    d <- d[d$Var2 != "(Intercept)", ]
     d$Model <- y
     d
   }, ss, names(ss)))
@@ -2140,6 +2141,7 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
 
   d.plot <- do.call(rbind, Map(function(x, y){
     d <- reshape2::melt(x)
+    d <- d[d$Var2 != "(Intercept)", ]
     d$Model <- paste0(y, ", ", object$criterion)
     d
   }, ss, names(ss)))
@@ -2161,6 +2163,7 @@ if (object$criterion!="alpha"&is.null(object$tau)) {
 
   d.plot <- do.call(rbind, Map(function(x, y){
     d <- reshape2::melt(x)
+    d <- d[d$Var2 != "(Intercept)", ]
     d$Model <- paste0(y, ", ", object$criterion)
     d
   }, ss, names(ss)))
@@ -2206,6 +2209,8 @@ if (type.plot=="variables"){
 
     d.plot <- reshape2::melt(sum.obj)
     colnames(d.plot) <- c("Model", "Variable", "VIF")
+
+    d.plot <- d.plot[d.plot$Variable != "(Intercept)", ]
 
     if(object$criterion == "AIC") d.plot$alpha.plot <- 0.157
     if(object$criterion == "BIC") d.plot$alpha.plot <- 1-pchisq(log(nrow(object$fit.or$x)), df=1)
