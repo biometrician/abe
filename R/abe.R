@@ -569,7 +569,9 @@ if (class(fit)[1]=="coxph"){
     data.boot<-data[ids[ii,],]
 
      fit.i<-my_update_boot(fit,data=data.boot)
-    if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+    if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+      boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+      } else {
     if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
     if (type.factor=="factor") {
@@ -601,7 +603,9 @@ if (class(fit)[1]=="coxph"){
 
             fit.i<-my_update_boot(fit,data=data.boot)
 
-          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else {
+          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+            boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+            } else {
 
           if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -634,7 +638,9 @@ if (class(fit)[1]=="coxph"){
 
          fit.i<-my_update_boot(fit,data=data.boot)
 
-        if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+        if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+          boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+          } else {
 
         if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -689,7 +695,9 @@ boot2<-NULL
             data.boot<-data[idsb[ii,],]
 
             fit.i<-my_update_boot(fit,data=data.boot)
-            if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+            if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+              boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
                 if (type.factor=="factor") {
@@ -721,7 +729,9 @@ boot2<-NULL
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
-          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else {
+          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+            boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) )
+            } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -754,7 +764,9 @@ boot2<-NULL
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
-          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+            boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -805,7 +817,9 @@ boot1<-boot
             data.boot<-data[idss[ii,],]
 
             fit.i<-my_update_boot(fit,data=data.boot)
-            if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+            if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+              boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
                 if (type.factor=="factor") {
@@ -836,7 +850,9 @@ boot1<-boot
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
-          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else {
+          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+            boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) )
+            } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -868,7 +884,9 @@ boot1<-boot
 
           fit.i<-my_update_boot(fit,data=data.boot)
 
-          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){boot[[i]]<-abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else {
+          if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
+            boot[[i]]<-my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
