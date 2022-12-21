@@ -947,7 +947,7 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
   if(is.null(alpha)){
     grid <- expand.grid(1:num.resamples, "tau" = tau)
-    model.params <- grid[, c("tau")]
+    model.params <- grid[, c("tau"), drop = FALSE]
   }
 
 
@@ -1404,6 +1404,7 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #'
 #' @param object an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
 #' @param conf.level the confidence level, defaults to 0.95, see \code{details}
+#' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.
 #' @param ... additional arguments affecting the summary produced.
 
 #' @return a list with the following elements:
@@ -1413,6 +1414,8 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' \code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 #'
 #' \code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+#'
+#' \code{pair.rel.frequencies}: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1437,7 +1440,7 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' summary(fit.resample)
 
 
-summary.abe<-function(object,conf.level=0.95,...){
+summary.abe<-function(object,conf.level=0.95,pval=0.01,...){
 
 if (object$criterion!="alpha") alphas<-NULL else {
 
@@ -1783,7 +1786,63 @@ list<-list(var.rel.frequencies=list2$var.rel.frequencies,
      model.rel.frequencies=list2$model.rel.frequencies,
      var.coefs=list1$var.coefs)
 
-list
+
+ind <- 1:nrow(object$model.parameters)
+pair.rel.freqs <- Map(function(ind.models, r.names){
+
+  pred <- object$all.vars[-1]
+  pred_order <- order(gg1[r.names, pred], decreasing = T)
+
+  resampling_number <- object$num.boot
+
+
+  if(object$misc$type.boot != "Wallisch2021") coef_matrix <- t(sapply(object$models[ind.models], function(x) x$coef[pred[pred_order]]))
+  if(object$misc$type.boot == "Wallisch2021") coef_matrix <- t(sapply(object$models.wallisch[ind.models], function(x) x$coef[pred[pred_order]]))
+
+  coef_matrix_01 <- !is.na(coef_matrix)
+  colnames(coef_matrix_01) <- colnames(coef_matrix) <- pred[pred_order]
+
+  resampling_VIF <- gg1[r.names, pred[pred_order]] * 100
+
+  resampling_pairfreq <- matrix(100, ncol = length(pred), nrow = length(pred),
+                                dimnames = list(pred[pred_order],  pred[pred_order]))
+
+  expect_pairfreq <- NULL
+  combis <- combn(pred[pred_order], 2)
+
+
+  for (i in 1:dim(combis)[2]) {
+    resampling_pairfreq[combis[1, i], combis[2, i]] <- sum(apply(coef_matrix_01[, combis[, i]], 1, sum) == 2) / resampling_number * 100
+
+    expect_pairfreq[i] <- resampling_VIF[grepl(combis[1, i], pred)][1] * resampling_VIF[grepl(combis[2, i], pred)][1] / 100
+
+    resampling_pairfreq[combis[2, i], combis[1, i]] <-
+      ifelse(is(suppressWarnings(try(chisq.test(coef_matrix_01[, combis[1, i]],
+                                                coef_matrix_01[, combis[2, i]]),
+                                     silent = T)), "try-error"),
+             NA, ifelse(suppressWarnings(
+               chisq.test(coef_matrix_01[, combis[1, i]],
+                          coef_matrix_01[, combis[2, i]])$p.value) > pval,
+               "", ifelse(as.numeric(resampling_pairfreq[combis[1, i], combis[2, i]]) <
+                            expect_pairfreq[i], "-", "+")))
+  }
+
+
+
+  diag(resampling_pairfreq) <- resampling_VIF
+
+  resampling_pairfreq <-
+    resampling_pairfreq[!diag(resampling_pairfreq) == 100, !diag(resampling_pairfreq) == 100]
+
+  return(resampling_pairfreq)
+
+}, split(ind, ceiling(seq_along(ind) / object$num.boot)), rownames(gg1))
+
+
+names(pair.rel.freqs) <- names(gg)
+list <- c(list, pair.rel.frequencies = list(pair.rel.freqs))
+
+return(list)
 
 }
 
