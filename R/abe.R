@@ -1,3 +1,10 @@
+
+
+#' @import utils
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VIF", "alpha.plot", "Model", "Frequency", "Var1", "Var2", "is"))
+
+
+
 #' @title Augmented Backward Elimination
 #'
 #' @description  Function \code{abe} performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
@@ -1018,38 +1025,7 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @seealso \code{\link{abe.resampling}}
 #' @export
-#' @examples
-#' # simulate some data and fit a model
 #'
-#' set.seed(1)
-#' n=100
-#' x1<-runif(n)
-#' x2<-runif(n)
-#' x3<-runif(n)
-#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
-#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
-#'
-#' # use ABE on 50 bootstrap re-samples considering different
-#' # change-in-estimate thresholds and significance levels
-#'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
-#'
-#' summary(fit.boot)
-#'
-#' # use ABE on 50 subsamples randomly selecting 50% of subjects
-#' # considering different change-in-estimate thresholds and
-#' # significance levels
-#'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="subsampling",prop.sampling=0.5)
-#'
-#' summary(fit.boot)
 
 abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
 warning("This function is obsolete, please use abe.resampling instead.")
@@ -1940,11 +1916,6 @@ cat("\n\n")
 print(mat)
 }
 
-
-
-
-#' @import utils
-if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VIF", "alpha.plot", "Model", "Frequency"))
 
 
 #' Plot Function
