@@ -1968,6 +1968,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #'
 #' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
+#'
+#' When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence.
 #' @import stats ggplot2 reshape2
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
@@ -2020,7 +2022,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
-plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability"),alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
+plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -2356,6 +2358,53 @@ if(type.plot == "stability"){
 
 
 }
+
+
+if(type.plot == "pairwise"){
+
+  sumobj <- summary(object)$pair.rel.frequencies
+
+  d.plot <- do.call(rbind, Map(function(resampling_pairfreq, model){
+
+    resampling_VIF <- as.numeric(diag(resampling_pairfreq))
+
+    expect_pairfreq <- NULL
+    pred_order <- colnames(resampling_pairfreq)
+    combis <- combn(pred_order, 2)
+
+    for (i in 1:dim(combis)[2]) {
+       expect_pairfreq[i] <- resampling_VIF[grepl(combis[1, i], pred_order)][1] * resampling_VIF[grepl(combis[2, i], pred_order)][1] / 100
+    }
+
+
+    m <- suppressWarnings(matrix(as.numeric(resampling_pairfreq),
+                                 ncol = ncol(resampling_pairfreq),
+                                 dimnames = dimnames(resampling_pairfreq)))
+    diag(m) <- NA
+    m[!is.na(m)] <- m[!is.na(m)] - expect_pairfreq
+    m[is.na(m)] <- 0
+    m <- m + t(m)
+
+    d.plot <- reshape2::melt(m)
+    d.plot$model <- model
+
+    return(d.plot)
+
+  }, sumobj, names(sumobj)))
+
+  p <- ggplot(d.plot) +
+    geom_tile(aes(x = Var1, y = Var2, fill = value)) +
+    facet_wrap(~ model, scales = "free") +
+    scale_fill_gradient() +
+    labs(x = "", y = "", fill = "Overselection") +
+    theme_bw()
+
+
+}
+
+
+
+
 
   return(p)
 
