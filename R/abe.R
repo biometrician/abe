@@ -2286,10 +2286,10 @@ if (type.plot=="models"){
 
 if(type.plot == "stability"){
 
-  if(object$criterion == "alpha") alphas <- object$alpha
+  if(object$criterion == "alpha") alphas <- sort(object$alpha)
   if(object$criterion == "AIC") alphas <- c("0.157")
   if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.or$x)), df=1))
-  taus <- object$tau
+  taus <- sort(object$tau)
 
   if(length(alphas) > 1 & length(taus) == 1){
     if(type.stability == "tau") warning("type.stability = 'tau' requires more than 1 tau value, type.stability = 'alpha' is used instead.")
@@ -2302,7 +2302,6 @@ if(type.plot == "stability"){
 
   grid <- expand.grid( "tau" = taus, "alpha" = alphas)
   var_rel_freqABE <- cbind(var_rel_freqABE, grid)
-
 
   data_longABE <- reshape2::melt(var_rel_freqABE, id.vars = c("alpha", "tau"))
 
@@ -2323,11 +2322,12 @@ if(type.plot == "stability"){
 
     if(length(taus) <= 1) stop("Stability plots require more than one tau value.")
 
+    if(object$criterion != "alpha") data_longABE$alpha <- paste0(object$criterion, " (Alpha = ", data_longABE$alpha, ")")
+    if(object$criterion == "alpha") data_longABE$alpha <- paste0("Alpha = ", data_longABE$alpha)
+
     p <- ggplot(data_longABE) +
       geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
-      facet_wrap(~ ifelse(object$criterion != "alpha",
-                          paste0(object$criterion, " (Alpha = ", alpha, ")"),
-                          paste0("Alpha = ", alpha))) +
+      facet_wrap(~ alpha) +
       scale_x_reverse() +
       theme_bw() +
       labs(x = expression(tau), y = "Inclusion Frequencies", col = "") +
