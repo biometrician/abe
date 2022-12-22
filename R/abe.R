@@ -273,6 +273,7 @@ bt
 #' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
 #' @param save.out String that specifies if only the minimal output of the refitted models (\code{save.out="minimal"}) or the entire object (\code{save.out="complete"}) is to be saved. Defaults to \code{"minimal"}
 #' @param parallel Logical, specifies if the calculations should be run in parallel \code{TRUE} or not \code{FALSE}. Defaults to \code{FALSE}. See details.
+#' @param seed Numeric, a random seed to be used to form re-sampled datasets. Defaults to \code{NULL}. Can be used to assure complete reproducibility of the results, see Examples.
 #' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
 #' A list with the following elements:
 #'
@@ -351,6 +352,31 @@ bt
 #'
 #' summary(fit.resample)
 #'
+#' #Assure reproducibility of the results
+#'
+#' fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021")
+#'
+#' fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021")
+#'
+#' #since different seed are used, fit.resample.1 and fit.resample.2 give different results
+#'
+#' fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021",seed=87982)
+#'
+#' fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#' num.resamples=50,type.resampling="Wallisch2021",seed=87982)
+#'
+#' #now fit.resample.1 and fit.resample.2 give exactly the same results
 #'
 #' #' Example to run parrallel computation on windows, using all but 2 cores
 #'
@@ -365,8 +391,8 @@ bt
 #' #stopCluster(cl)
 
 
-abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal", parallel=FALSE){
-
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal", parallel=FALSE,seed=NULL){
+if (!is.null(seed)) set.seed(seed)
 
   #save.out<-"minimal" #add as argument if needed!
   #added to reduce the size of the final object
