@@ -581,7 +581,7 @@ if (parallel==TRUE){
 
   foreach(t=tau,.combine="c") %do% {#for (t in tau){
     #boot.i<-
-    foreach(ii=1:num.boot,.packages="abe") %dopar% {#for (ii in 1:num.boot){
+    foreach(ii=1:num.boot,.packages=c("abe","survival")) %dopar% {#for (ii in 1:num.boot){
      #i=i+1
 
 
@@ -620,7 +620,7 @@ if (parallel==TRUE){
 
      boot<-foreach(t=tau,.combine="c") %do% {# for (t in tau){
         #boot.i<-
-       foreach(ii=1:num.boot,.packages="abe" ) %dopar% {#for (ii in 1:num.boot){
+       foreach(ii=1:num.boot,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
           #i=i+1
 
           data.boot<-data[ids[ii,],]
@@ -660,7 +660,7 @@ if (parallel==TRUE){
       if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
 
       #boot.i<-
-      foreach(ii=1:num.boot ,.packages="abe" ) %dopar% {#for (ii in 1:num.boot){
+      foreach(ii=1:num.boot ,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
         #i=i+1
 
         data.boot<-data[ids[ii,],]
@@ -721,7 +721,7 @@ boot2<-NULL
         if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
 
         foreach(t=tau,.combine="c") %do% {#for (t in tau){
-          foreach(ii=1:num.boot,.packages="abe" ) %dopar% {#for (ii in 1:num.boot){
+          foreach(ii=1:num.boot,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
            # i=i+1
 #source("R/abe.R") #used only to test is dopar works (since it looks for abe package on cran!)
 #library(survival)
@@ -760,7 +760,7 @@ boot2<-NULL
 
 
       boot<-foreach(t=tau,.combine="c") %do% {#for (t in tau){
-        foreach(ii=1:num.boot,.packages="abe" ) %dopar% {#for (ii in 1:num.boot){
+        foreach(ii=1:num.boot,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
           #i=i+1
 
           data.boot<-data[idsb[ii,],]
@@ -799,7 +799,7 @@ boot2<-NULL
 
         if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
 
-        foreach(ii=1:num.boot,.packages="abe" ) %dopar% {#for (ii in 1:num.boot){
+        foreach(ii=1:num.boot,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
           #i=i+1
 
           data.boot<-data[idsb[ii,],]
@@ -856,7 +856,7 @@ boot1<-boot
         if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
 
         foreach(t=tau,.combine="c") %do% {# for (t in tau){
-          foreach(ii=1:num.boot ,.packages="abe") %dopar% {#for (ii in 1:num.boot){
+          foreach(ii=1:num.boot ,.packages=c("abe","survival")) %dopar% {#for (ii in 1:num.boot){
            # i=i+1
 #source("R/abe.R") #used only to test is dopar works (since it looks for abe package on cran!)
 #library(survival)
@@ -895,7 +895,7 @@ boot1<-boot
 
 
       boot<-foreach(t=tau,.combine="c") %do% {#for (t in tau){
-        foreach(ii=1:num.boot,.packages="abe" ) %dopar% {#for (ii in 1:num.boot){
+        foreach(ii=1:num.boot,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
           #i=i+1
           data.boot<-data[idss[ii,],]
 
@@ -933,7 +933,7 @@ boot1<-boot
 
         if (criterion[1]=="alpha") k<-qchisq(1-a,df=1)
 
-        foreach(ii=1:num.boot ,.packages="abe") %dopar% {#for (ii in 1:num.boot){
+        foreach(ii=1:num.boot ,.packages=c("abe","survival")) %dopar% {#for (ii in 1:num.boot){
           #i=i+1
            data.boot<-data[idss[ii,],]
 
