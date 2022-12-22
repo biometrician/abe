@@ -1993,7 +1993,7 @@ print(mat)
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
-plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
+plot.abe<-function(x,type.plot="coefficients",alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -2126,6 +2126,7 @@ if (!is.null(alpha)|!is.null(tau)){
 
 
 }
+
 
 if (type.plot=="coefficients"){
 
@@ -2289,6 +2290,12 @@ if(type.plot == "stability"){
   if(object$criterion == "AIC") alphas <- c("0.157")
   if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.or$x)), df=1))
   taus <- object$tau
+
+  if(length(alphas) > 1 & length(taus) == 1){
+    if(type.stability == "tau") warning("type.stability = 'tau' requires more than 1 tau value, type.stability = 'alpha' is used instead.")
+    type.stability <- "alpha"
+  }
+  if(length(taus) > 1 & length(alphas) == 1) type.stability <- "tau"
 
   sum.obj <- summary(object)
   var_rel_freqABE <- data.frame(sum.obj$var.rel.frequencies)[, -1]

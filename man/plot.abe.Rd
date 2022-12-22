@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{abe}(
   x,
-  type.plot = c("coefficients", "models", "variables", "stability", "pairwise"),
+  type.plot = "coefficients",
   alpha = NULL,
   tau = NULL,
   variable = NULL,
