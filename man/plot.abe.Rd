@@ -42,7 +42,7 @@ When using \code{type.plot="models"} the function plots a barplot of the relativ
 
 When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 
-When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence.
+When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See \code{summary.abe} for more details.
 }
 \examples{
 set.seed(1)

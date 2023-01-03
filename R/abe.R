@@ -1940,8 +1940,8 @@ print(mat)
 #'
 #' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 #'
-#' When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence.
-#' @import stats ggplot2 reshape2
+#' When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See \code{summary.abe} for more details.
+#' @import stats ggplot2 reshape2 tidytext
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
@@ -2365,17 +2365,27 @@ if(type.plot == "pairwise"){
 
     d.plot <- reshape2::melt(m)
     d.plot$model <- model
+    d.plot$text <- melt(t(resampling_pairfreq))$value
 
     return(d.plot)
 
   }, sumobj, names(sumobj)))
 
-  p <- ggplot(d.plot) +
-    geom_tile(aes(x = Var1, y = Var2, fill = value)) +
+  d.plot$order <- 1:nrow(d.plot)
+  d.plot$model <- factor(d.plot$model)
+  d.plot$Var1 <- tidytext::reorder_within(d.plot$Var1, d.plot$order, d.plot$model)
+  d.plot$Var2 <- tidytext::reorder_within(d.plot$Var2, d.plot$order, d.plot$model)
+
+
+  p <- ggplot(d.plot, aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2)))))) +
+    geom_tile(aes(fill = value)) +
+    geom_text(aes(label = text)) +
     facet_wrap(~ model, scales = "free") +
-    scale_fill_gradient() +
+    scale_fill_gradient2(low = "red", mid = "white", high = "green") +
     labs(x = "", y = "", fill = "Overselection") +
-    theme_bw()
+    theme_bw() +
+    tidytext::scale_x_reordered() +
+    tidytext::scale_y_reordered()
 
 
 }
