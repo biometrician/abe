@@ -2128,6 +2128,8 @@ if (!is.null(alpha)|!is.null(tau)){
 }
 
 
+if(!(type.plot %in% c("coefficients", "variables", "models", "stability", "pairwise"))) stop("Invalid type.plot")
+
 if (type.plot=="coefficients"){
 
 
@@ -2238,10 +2240,14 @@ if (type.plot=="variables"){
       d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha="), "[[", 2))
     }
 
+    d.plot$Model <- factor(d.plot$Model)
+    d.plot$Variable <- tidytext::reorder_within(d.plot$Variable, d.plot$VIF, d.plot$Model)
+
     p <- ggplot(d.plot) +
       geom_col(aes(y = reorder(Variable, +VIF, max), x = VIF)) +
       geom_vline(data = d.plot, aes(xintercept = alpha.plot), col = 4) +
       facet_wrap( ~ Model, scales = "free") +
+      tidytext::scale_y_reordered() +
       labs(y = NULL, x = "VIF") +
       theme_bw()
 
