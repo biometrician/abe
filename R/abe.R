@@ -309,12 +309,13 @@ bt
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @details \code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement, where m is [prop.sampling*n]) and \code{"Wallisch2021"}. When using \code{"Wallisch2021"} the resampling is done twice: first time using bootstrap (these results are contained in \code{models}) and the second time using resampling with \code{prop.sampling} equal to 0.5 (these results are contained in \code{models.wallisch}); see Walisch et al. (2021).
-#' @details When using \code(parallel=TRUE) parallel backend must be registered before using \code{abe.resampling}. The parallel backends available will be system-specific; see \code{\link{foreach}} for more details.
+#' @details When using \code{parallel=TRUE} parallel backend must be registered before using \code{abe.resampling}. The parallel backends available will be system-specific; see \code{\link{foreach}} for more details.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso \code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
+#' @import survival foreach
 #' @examples
 #' # simulate some data and fit a model
 #'
@@ -1563,17 +1564,6 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @seealso \code{\link{abe.resampling}}
 #' @export
-#'
-#' # use ABE on 50 subsamples randomly selecting 50% of subjects
-#' # considering different change-in-estimate thresholds and
-#' # significance levels
-#'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="subsampling",prop.sampling=0.5)
-#'
-#' summary(fit.boot)
 #'
 
 

@@ -19,7 +19,9 @@ abe.resampling(
   num.resamples = 100,
   type.resampling = "Wallisch2021",
   prop.sampling = 0.5,
-  save.out = "minimal"
+  save.out = "minimal",
+  parallel = FALSE,
+  seed = NULL
 )
 }
 \arguments{
@@ -61,6 +63,10 @@ Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"
 \item{prop.sampling}{Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.}
 
 \item{save.out}{String that specifies if only the minimal output of the refitted models (\code{save.out="minimal"}) or the entire object (\code{save.out="complete"}) is to be saved. Defaults to \code{"minimal"}}
+
+\item{parallel}{Logical, specifies if the calculations should be run in parallel \code{TRUE} or not \code{FALSE}. Defaults to \code{FALSE}. See details.}
+
+\item{seed}{Numeric, a random seed to be used to form re-sampled datasets. Defaults to \code{NULL}. Can be used to assure complete reproducibility of the results, see Examples.}
 }
 \value{
 an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
@@ -93,6 +99,8 @@ Performs Augmented backward elimination on re-sampled datasets using different b
 }
 \details{
 \code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement, where m is [prop.sampling*n]) and \code{"Wallisch2021"}. When using \code{"Wallisch2021"} the resampling is done twice: first time using bootstrap (these results are contained in \code{models}) and the second time using resampling with \code{prop.sampling} equal to 0.5 (these results are contained in \code{models.wallisch}); see Walisch et al. (2021).
+
+When using \code{parallel=TRUE} parallel backend must be registered before using \code{abe.resampling}. The parallel backends available will be system-specific; see \code{\link{foreach}} for more details.
 }
 \examples{
 # simulate some data and fit a model
@@ -137,6 +145,44 @@ criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="subsampling",prop.sampling=0.5)
 
 summary(fit.resample)
+
+#Assure reproducibility of the results
+
+fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
+tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+num.resamples=50,type.resampling="Wallisch2021")
+
+fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
+tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+num.resamples=50,type.resampling="Wallisch2021")
+
+#since different seed are used, fit.resample.1 and fit.resample.2 give different results
+
+fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
+tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+num.resamples=50,type.resampling="Wallisch2021",seed=87982)
+
+fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
+tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+num.resamples=50,type.resampling="Wallisch2021",seed=87982)
+
+#now fit.resample.1 and fit.resample.2 give exactly the same results
+
+#' Example to run parrallel computation on windows, using all but 2 cores
+
+#library(doParallel)
+#N_CORES <- detectCores()
+#cl <- makeCluster(N_CORES-2)
+#registerDoParallel(cl)
+#fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
+#tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
+#num.resamples=50,type.resampling="Wallisch2021")
+#stopCluster(cl)
 }
 \references{
 Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
