@@ -22,7 +22,7 @@ abe.num.boot(
 ABE for model which include only numeric covariates, bootstrap version
 }
 \examples{
-\dontshow{
+\dontrun{
 set.seed(1)
 n=100
 x1<-runif(n)

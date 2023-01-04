@@ -10,7 +10,7 @@ my_grep(...)
 grep function changed
 }
 \examples{
-\dontshow{
+\dontrun{
 my_grep("x",c("xy","xz","ab"))
 }
 }

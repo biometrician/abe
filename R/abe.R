@@ -1,3 +1,10 @@
+
+
+#' @import utils
+if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VIF", "alpha.plot", "Model", "Frequency", "Var1", "Var2", "is"))
+
+
+
 #' @title Augmented Backward Elimination
 #'
 #' @description  Function \code{abe} performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
@@ -130,19 +137,19 @@ nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
   epv<-n/nm.var
-  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
 if (class(fit)[1]=="glm"){
   if (fit$family$family=="binomial"){
   n<-min(table(fit$y))
   epv<-n/nm.var
-  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
   epv<-n/nm.var
-  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 
 }
 
@@ -441,19 +448,19 @@ nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
   epv<-n/nm.var
-  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
 if (class(fit)[1]=="glm"){
   if (fit$family$family=="binomial"){
     n<-min(table(fit$y))
     epv<-n/nm.var
-    if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+    if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
   }
 }
 if (class(fit)[1]=="coxph"){
   n <-fit$nevent
   epv<-n/nm.var
-  if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 
 }
 
@@ -1485,7 +1492,7 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
   if(is.null(alpha)){
     grid <- expand.grid(1:num.resamples, "tau" = tau)
-    model.params <- grid[, c("tau")]
+    model.params <- grid[, c("tau"), drop = FALSE]
   }
 
 
@@ -1556,27 +1563,6 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @seealso \code{\link{abe.resampling}}
 #' @export
-#' @examples
-#' # simulate some data and fit a model
-#'
-#' set.seed(1)
-#' n=100
-#' x1<-runif(n)
-#' x2<-runif(n)
-#' x3<-runif(n)
-#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
-#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
-#'
-#' # use ABE on 50 bootstrap re-samples considering different
-#' # change-in-estimate thresholds and significance levels
-#'
-#' fit.boot<-abe.boot(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.boot=50,type.boot="bootstrap")
-#'
-#' summary(fit.boot)
 #'
 #' # use ABE on 50 subsamples randomly selecting 50% of subjects
 #' # considering different change-in-estimate thresholds and
@@ -1619,19 +1605,19 @@ warning("This function is obsolete, please use abe.resampling instead.")
   if (class(fit)[1]=="lm"){
     n<-nrow(model.matrix(fit))
     epv<-n/nm.var
-    if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+    if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
   }
   if (class(fit)[1]=="glm"){
     if (fit$family$family=="binomial"){
       n<-min(table(fit$y))
       epv<-n/nm.var
-      if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+      if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
     }
   }
   if (class(fit)[1]=="coxph"){
     n <-fit$nevent
     epv<-n/nm.var
-    if (epv<25) cat("Warning: Events per variable ratio is smaller than 25.")
+    if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 
   }
   if (criterion!="alpha") alpha=NULL
@@ -1944,6 +1930,7 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #'
 #' @param object an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
 #' @param conf.level the confidence level, defaults to 0.95, see \code{details}
+#' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.
 #' @param ... additional arguments affecting the summary produced.
 
 #' @return a list with the following elements:
@@ -1953,6 +1940,8 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' \code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
 #'
 #' \code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+#'
+#' \code{pair.rel.frequencies}: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -1977,7 +1966,7 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #' summary(fit.resample)
 
 
-summary.abe<-function(object,conf.level=0.95,...){
+summary.abe<-function(object,conf.level=0.95,pval=0.01,...){
 
 if (object$criterion!="alpha") alphas<-NULL else {
 
@@ -2323,7 +2312,63 @@ list<-list(var.rel.frequencies=list2$var.rel.frequencies,
      model.rel.frequencies=list2$model.rel.frequencies,
      var.coefs=list1$var.coefs)
 
-list
+
+ind <- 1:nrow(object$model.parameters)
+pair.rel.freqs <- Map(function(ind.models, r.names){
+
+  pred <- object$all.vars[-1]
+  pred_order <- order(gg1[r.names, pred], decreasing = T)
+
+  resampling_number <- object$num.boot
+
+
+  if(object$misc$type.boot != "Wallisch2021") coef_matrix <- t(sapply(object$models[ind.models], function(x) x$coef[pred[pred_order]]))
+  if(object$misc$type.boot == "Wallisch2021") coef_matrix <- t(sapply(object$models.wallisch[ind.models], function(x) x$coef[pred[pred_order]]))
+
+  coef_matrix_01 <- !is.na(coef_matrix)
+  colnames(coef_matrix_01) <- colnames(coef_matrix) <- pred[pred_order]
+
+  resampling_VIF <- gg1[r.names, pred[pred_order]] * 100
+
+  resampling_pairfreq <- matrix(100, ncol = length(pred), nrow = length(pred),
+                                dimnames = list(pred[pred_order],  pred[pred_order]))
+
+  expect_pairfreq <- NULL
+  combis <- combn(pred[pred_order], 2)
+
+
+  for (i in 1:dim(combis)[2]) {
+    resampling_pairfreq[combis[1, i], combis[2, i]] <- sum(apply(coef_matrix_01[, combis[, i]], 1, sum) == 2) / resampling_number * 100
+
+    expect_pairfreq[i] <- resampling_VIF[grepl(combis[1, i], pred)][1] * resampling_VIF[grepl(combis[2, i], pred)][1] / 100
+
+    resampling_pairfreq[combis[2, i], combis[1, i]] <-
+      ifelse(is(suppressWarnings(try(chisq.test(coef_matrix_01[, combis[1, i]],
+                                                coef_matrix_01[, combis[2, i]]),
+                                     silent = T)), "try-error"),
+             NA, ifelse(suppressWarnings(
+               chisq.test(coef_matrix_01[, combis[1, i]],
+                          coef_matrix_01[, combis[2, i]])$p.value) > pval,
+               "", ifelse(as.numeric(resampling_pairfreq[combis[1, i], combis[2, i]]) <
+                            expect_pairfreq[i], "-", "+")))
+  }
+
+
+
+  diag(resampling_pairfreq) <- resampling_VIF
+
+  resampling_pairfreq <-
+    resampling_pairfreq[!diag(resampling_pairfreq) == 100, !diag(resampling_pairfreq) == 100]
+
+  return(resampling_pairfreq)
+
+}, split(ind, ceiling(seq_along(ind) / object$num.boot)), rownames(gg1))
+
+
+names(pair.rel.freqs) <- names(gg)
+list <- c(list, pair.rel.frequencies = list(pair.rel.freqs))
+
+return(list)
 
 }
 
@@ -2421,6 +2466,8 @@ cat("\n\n")
 print(mat)
 }
 
+
+
 #' Plot Function
 #'
 #' Plot function for the resampled/bootstrapped version of ABE.
@@ -2442,7 +2489,9 @@ print(mat)
 #' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #'
 #' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
-#' @import ggplot2 reshape2
+#'
+#' When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See \code{summary.abe} for more details.
+#' @import stats ggplot2 reshape2 tidytext
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
 #' @examples
@@ -2494,8 +2543,7 @@ print(mat)
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
-
-plot.abe<-function(x,type.plot=c("coefficients","models","variables", "stability"),alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
+plot.abe<-function(x,type.plot="coefficients",alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
 object<-x
 
 ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
@@ -2599,8 +2647,6 @@ coefs.model<-lapply(1:length(vars.model.cf),function(i,x,y,z) {zz<-list();zz[[i]
 
 
 
-
-
 if (!is.null(alpha)|!is.null(tau)){
 
   if ( !is.null(alpha)&!is.null(tau)){
@@ -2631,6 +2677,9 @@ if (!is.null(alpha)|!is.null(tau)){
 
 }
 
+
+if(!(type.plot %in% c("coefficients", "variables", "models", "stability", "pairwise"))) stop("Invalid type.plot")
+
 if (type.plot=="coefficients"){
 
 
@@ -2638,20 +2687,13 @@ if (object$criterion=="alpha"&!is.null(object$tau)) {
  ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
+
  d.plot <- do.call(rbind, Map(function(x, y){
    d <- reshape2::melt(x)
+   d <- d[d$Var2 != "(Intercept)", ]
    d$Model <- y
    d
  }, ss, names(ss)))
-
- p <- qplot(value, data = d.plot) +
-   geom_vline( xintercept = 0, color = "blue") +
-   facet_wrap(~ Model + Var2, scales = "free") +
-   theme_bw() +
-   xlab("Coefficient values") +
-   ylab("Number of resamples")
-
-
 
 }
 
@@ -2661,16 +2703,10 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
 
   d.plot <- do.call(rbind, Map(function(x, y){
     d <- reshape2::melt(x)
+    d <- d[d$Var2 != "(Intercept)", ]
     d$Model <- y
     d
   }, ss, names(ss)))
-
-  p <- qplot(value, data = d.plot) +
-    geom_vline( xintercept = 0, color = "blue") +
-    facet_wrap(~ Model + Var2, scales = "free") +
-    theme_bw() +
-    xlab("Coefficient values") +
-    ylab("Number of resamples")
 
 }
 
@@ -2680,16 +2716,10 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
 
   d.plot <- do.call(rbind, Map(function(x, y){
     d <- reshape2::melt(x)
+    d <- d[d$Var2 != "(Intercept)", ]
     d$Model <- paste0(y, ", ", object$criterion)
     d
   }, ss, names(ss)))
-
-  p <- qplot(value, data = d.plot) +
-    geom_vline( xintercept = 0, color = "blue") +
-    facet_wrap(~ Model + Var2, scales = "free") +
-    theme_bw() +
-    xlab("Coefficient values") +
-    ylab("Number of resamples")
 
 }
 
@@ -2701,18 +2731,23 @@ if (object$criterion!="alpha"&is.null(object$tau)) {
 
   d.plot <- do.call(rbind, Map(function(x, y){
     d <- reshape2::melt(x)
+    d <- d[d$Var2 != "(Intercept)", ]
     d$Model <- paste0(y, ", ", object$criterion)
     d
   }, ss, names(ss)))
+
+
+
+}
 
   p <- qplot(value, data = d.plot) +
     geom_vline( xintercept = 0, color = "blue") +
     facet_wrap(~ Model + Var2, scales = "free") +
     theme_bw() +
-    xlab("Coefficient values") +
-    ylab("Number of resamples")
+    xlab("Regression coefficient values") +
+    ylab("Number of resamples") +
+    theme(strip.text.x = element_text(size = 11))
 
-}
 }
 
 if (type.plot=="variables"){
@@ -2747,16 +2782,22 @@ if (type.plot=="variables"){
     d.plot <- reshape2::melt(sum.obj)
     colnames(d.plot) <- c("Model", "Variable", "VIF")
 
+    d.plot <- d.plot[d.plot$Variable != "(Intercept)", ]
+
     if(object$criterion == "AIC") d.plot$alpha.plot <- 0.157
     if(object$criterion == "BIC") d.plot$alpha.plot <- 1-pchisq(log(nrow(object$fit.or$x)), df=1)
     if(object$criterion == "alpha"){
       d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha="), "[[", 2))
     }
 
+    d.plot$Model <- factor(d.plot$Model)
+    d.plot$Variable <- tidytext::reorder_within(d.plot$Variable, d.plot$VIF, d.plot$Model)
+
     p <- ggplot(d.plot) +
       geom_col(aes(y = reorder(Variable, +VIF, max), x = VIF)) +
       geom_vline(data = d.plot, aes(xintercept = alpha.plot), col = 4) +
       facet_wrap( ~ Model, scales = "free") +
+      tidytext::scale_y_reordered() +
       labs(y = NULL, x = "VIF") +
       theme_bw()
 
@@ -2801,17 +2842,22 @@ if (type.plot=="models"){
 
 if(type.plot == "stability"){
 
-  if(object$criterion != "alpha") stop("Stability plots are not available for criteria other than alpha.")
+  if(object$criterion == "alpha") alphas <- sort(object$alpha)
+  if(object$criterion == "AIC") alphas <- c("0.157")
+  if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.or$x)), df=1))
+  taus <- sort(object$tau)
 
-  alphas <- object$alpha
-  taus <- object$tau
+  if(length(alphas) > 1 & length(taus) == 1){
+    if(type.stability == "tau") warning("type.stability = 'tau' requires more than 1 tau value, type.stability = 'alpha' is used instead.")
+    type.stability <- "alpha"
+  }
+  if(length(taus) > 1 & length(alphas) == 1) type.stability <- "tau"
 
   sum.obj <- summary(object)
   var_rel_freqABE <- data.frame(sum.obj$var.rel.frequencies)[, -1]
 
   grid <- expand.grid( "tau" = taus, "alpha" = alphas)
   var_rel_freqABE <- cbind(var_rel_freqABE, grid)
-
 
   data_longABE <- reshape2::melt(var_rel_freqABE, id.vars = c("alpha", "tau"))
 
@@ -2824,7 +2870,7 @@ if(type.plot == "stability"){
       facet_wrap(~ paste0("Tau = ", tau)) +
       theme_bw() +
       geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
-      labs(x = "Alpha", y = "Inclusion Frequency", col = "") +
+      labs(x = expression(alpha), y = "Inclusion frequencies", col = "") +
       ylim(0, 1)
   }
 
@@ -2832,16 +2878,77 @@ if(type.plot == "stability"){
 
     if(length(taus) <= 1) stop("Stability plots require more than one tau value.")
 
+    if(object$criterion != "alpha") data_longABE$alpha <- paste0(object$criterion, " (Alpha = ", data_longABE$alpha, ")")
+    if(object$criterion == "alpha") data_longABE$alpha <- paste0("Alpha = ", data_longABE$alpha)
+
     p <- ggplot(data_longABE) +
       geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
-      facet_wrap(~ paste0("Alpha = ", alpha)) +
+      facet_wrap(~ alpha) +
+      scale_x_reverse() +
       theme_bw() +
-      labs(x = "Tau", y = "Inclusion Frequency", col = "") +
+      labs(x = expression(tau), y = "Inclusion Frequencies", col = "") +
       ylim(0, 1)
   }
 
 
 }
+
+
+if(type.plot == "pairwise"){
+
+  sumobj <- summary(object)$pair.rel.frequencies
+
+  d.plot <- do.call(rbind, Map(function(resampling_pairfreq, model){
+
+    resampling_VIF <- as.numeric(diag(resampling_pairfreq))
+
+    expect_pairfreq <- NULL
+    pred_order <- colnames(resampling_pairfreq)
+    combis <- combn(pred_order, 2)
+
+    for (i in 1:dim(combis)[2]) {
+       expect_pairfreq[i] <- resampling_VIF[grepl(combis[1, i], pred_order)][1] * resampling_VIF[grepl(combis[2, i], pred_order)][1] / 100
+    }
+
+
+    m <- suppressWarnings(matrix(as.numeric(resampling_pairfreq),
+                                 ncol = ncol(resampling_pairfreq),
+                                 dimnames = dimnames(resampling_pairfreq)))
+    diag(m) <- NA
+    m[!is.na(m)] <- m[!is.na(m)] - expect_pairfreq
+    m[is.na(m)] <- 0
+    m <- m + t(m)
+
+    d.plot <- reshape2::melt(m)
+    d.plot$model <- model
+    d.plot$text <- melt(t(resampling_pairfreq))$value
+
+    return(d.plot)
+
+  }, sumobj, names(sumobj)))
+
+  d.plot$order <- 1:nrow(d.plot)
+  d.plot$model <- factor(d.plot$model)
+  d.plot$Var1 <- tidytext::reorder_within(d.plot$Var1, d.plot$order, d.plot$model)
+  d.plot$Var2 <- tidytext::reorder_within(d.plot$Var2, d.plot$order, d.plot$model)
+
+
+  p <- ggplot(d.plot, aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2)))))) +
+    geom_tile(aes(fill = value)) +
+    geom_text(aes(label = text)) +
+    facet_wrap(~ model, scales = "free") +
+    scale_fill_gradient2(low = "red", mid = "white", high = "green") +
+    labs(x = "", y = "", fill = "Overselection") +
+    theme_bw() +
+    tidytext::scale_x_reordered() +
+    tidytext::scale_y_reordered()
+
+
+}
+
+
+
+
 
   return(p)
 
@@ -2862,6 +2969,7 @@ if(type.plot == "stability"){
 #' @details When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @import graphics
 #' @export
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
 #' @examples
@@ -3029,7 +3137,7 @@ if (object$misc$type.boot!="Wallisch2021"){
 #' ABE for models which include only numeric covariates
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3237,7 +3345,7 @@ fit
 #' ABE for model which include only numeric covariates, bootstrap version
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3389,7 +3497,7 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 #' ABE for model which includes categorical covariates, factor option
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3692,7 +3800,7 @@ fit
 #' ABE for model which includes categorical covariates, factor option, bootstrap version
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -3947,7 +4055,7 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 #' ABE for model which includes categorical covariates, individual option
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -4174,7 +4282,7 @@ fit
 #' ABE for model which includes categorical covariates, individual option, bootstrap version
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -4371,7 +4479,7 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 #' update function which searches for objects within the parent environment, gives a nicer output than my_update
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -4410,7 +4518,7 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
 #' update function which searches for objects within the parent environment
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -4448,7 +4556,7 @@ my_update <- function(mod, formula = NULL, data = NULL) {
 #' update function which searches for objects within the parent environment, bootstrap version, i.e. can only update the model based on a new dataset
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -4479,7 +4587,7 @@ my_update_boot <- function(mod, data = NULL) {
 #' grepl function changed
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' my_grepl("x",c("xy","xz","ab"))
 #' }
 my_grepl<-function(...) grepl(fixed=TRUE,...)
@@ -4488,7 +4596,7 @@ my_grepl<-function(...) grepl(fixed=TRUE,...)
 #' grep function changed
 #' @keywords internal
 #' @examples
-#' \dontshow{
+#' \dontrun{
 #' my_grep("x",c("xy","xz","ab"))
 #' }
 my_grep<-function(...) grep(fixed=TRUE,...)

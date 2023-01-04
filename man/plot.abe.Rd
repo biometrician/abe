@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{abe}(
   x,
-  type.plot = c("coefficients", "models", "variables", "stability"),
+  type.plot = "coefficients",
   alpha = NULL,
   tau = NULL,
   variable = NULL,
@@ -41,6 +41,8 @@ When using \code{type.plot="variables"} the function plots a barplot of the rela
 When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
 
 When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
+
+When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See \code{summary.abe} for more details.
 }
 \examples{
 set.seed(1)
