@@ -229,7 +229,7 @@ if (class(fit)[1]=="coxph"){
 
 }
 
-if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){ warning("The model contains a covariate which was fitted as matrix (splines etc.), treating it as a single covariate. Using type.factor=factor for factors. Using approximate change-in-estimate is inappropriate; using exact change in estimate instead.");bt<-abe.fact1(fit,data,include,active,tau,exp.beta,exact=TRUE,criterion,alpha,type.test,verbose)} else {
+if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){ warning("The model contains a covariate which was fitted as matrix (splines etc.), treating it as a single covariate. \n Using type.factor=factor for factors. \n Using approximate change-in-estimate is inappropriate; using exact change in estimate instead.");bt<-abe.fact1(fit,data,include,active,tau,exp.beta,exact=TRUE,criterion,alpha,type.test,verbose)} else {
 
 if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
