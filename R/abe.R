@@ -2927,7 +2927,7 @@ if(type.plot == "pairwise"){
     geom_tile(aes(fill = value)) +
     geom_text(aes(label = text)) +
     facet_wrap(~ model, scales = "free") +
-    scale_fill_gradient2(low = "red", mid = "white", high = "green") +
+    scale_fill_gradient2(low = "#FFC20A", mid = "white", high = "#0C7BDC") +
     labs(x = "", y = "", fill = "Overselection") +
     theme_bw() +
     tidytext::scale_x_reordered() +
