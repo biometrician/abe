@@ -2892,24 +2892,31 @@ if(type.plot == "pairwise"){
 
     resampling_VIF <- as.numeric(diag(resampling_pairfreq))
 
-    expect_pairfreq <- NULL
-    pred_order <- colnames(resampling_pairfreq)
-    combis <- combn(pred_order, 2)
-
-    for (i in 1:dim(combis)[2]) {
-       expect_pairfreq[i] <- resampling_VIF[grepl(combis[1, i], pred_order)][1] * resampling_VIF[grepl(combis[2, i], pred_order)][1] / 100
-    }
-
-
+    # matrix of actual selection frequencies
     m <- suppressWarnings(matrix(as.numeric(resampling_pairfreq),
                                  ncol = ncol(resampling_pairfreq),
                                  dimnames = dimnames(resampling_pairfreq)))
     diag(m) <- NA
-    m[!is.na(m)] <- m[!is.na(m)] - expect_pairfreq
+    m[!is.na(m)] <- m[!is.na(m)]
     m[is.na(m)] <- 0
     m <- m + t(m)
+    diag(m) <- resampling_VIF
 
-    d.plot <- reshape2::melt(m)
+    # compute expected selection frequencies under independence
+    m.expect <- matrix(NA, ncol = ncol(m), nrow = nrow(m))
+    for (i in 1:nrow(m)) {
+      for (j in 1:ncol(m)) {
+        m.expect[i, j] <- 100 * (m[i, i] / 100) * (m[j, j] / 100)
+      }
+    }
+
+    # overselection is difference of actual and expected frequency
+    m.diff <- m - m.expect
+
+    # set diagonal elements to 0
+    diag(m.diff) <- 0
+
+    d.plot <- reshape2::melt(m.diff)
     d.plot$model <- model
     d.plot$text <- melt(t(resampling_pairfreq))$value
 
@@ -2925,6 +2932,9 @@ if(type.plot == "pairwise"){
 
   p <- ggplot(d.plot, aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2)))))) +
     geom_tile(aes(fill = value)) +
+    geom_tile(d.plot[d.plot$Var1 == d.plot$Var2, ],
+              mapping = aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2))))),
+              fill = NA, color = "black") + # frame diagonal elements
     geom_text(aes(label = text)) +
     facet_wrap(~ model, scales = "free") +
     scale_fill_gradient2(low = "#FFC20A", mid = "white", high = "#0C7BDC") +
