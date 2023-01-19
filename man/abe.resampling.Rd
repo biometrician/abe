@@ -78,10 +78,6 @@ A list with the following elements:
 
 \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 
-\code{alpha} the vector of significance levels used
-
-\code{tau} the vector of threshold values for the change-in-estimate
-
 \code{num.boot} number of resampled datasets
 
 \code{criterion} criterion used when constructing the black-list

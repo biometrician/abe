@@ -290,10 +290,6 @@ bt
 #'
 #' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
 #'
-#' \code{alpha} the vector of significance levels used
-#'
-#' \code{tau} the vector of threshold values for the change-in-estimate
-#'
 #' \code{num.boot} number of resampled datasets
 #'
 #' \code{criterion} criterion used when constructing the black-list
@@ -1502,7 +1498,7 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
   misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot.or,prop.sampling=prop.sampling)
   id<-list(id.models=id1,id.wallisch=id2)
   res<-list(models=boot1,models.wallisch=boot2, model.parameters = model.params,
-            alpha=alpha,tau=tau,num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),
+            num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),
             fit.or=fit.or,misc=misc,id=id,call=match.call())
 
   class(res)<-"abe"
@@ -1960,25 +1956,25 @@ summary.abe<-function(object,conf.level=0.95,pval=0.01,...){
 
 if (object$criterion!="alpha") alphas<-NULL else {
 
-if (!is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=length(object$tau)*object$num.boot),sep="")
-if (is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=1*object$num.boot),sep="")
+if (!is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=length(object$misc$tau)*object$num.boot),sep="")
+if (is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=1*object$num.boot),sep="")
 
 }
 
 
-if (is.null(object$tau)) taus<-NULL else {
+if (is.null(object$misc$tau)) taus<-NULL else {
 
-if (is.null(object$alpha)) {taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),1), ", ", object$criterion, sep="")} else {
+if (is.null(object$misc$alpha)) {taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),1), ", ", object$criterion, sep="")} else {
 
-taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),length(object$alpha)),sep="")
+taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),length(object$misc$alpha)),sep="")
 }
 }
 
-if (!is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$alpha)*length(object$tau))
+if (!is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha)*length(object$misc$tau))
 
-if (is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$alpha))
+if (is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha))
 
-if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
+if (!is.null(object$misc$tau)&is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$tau))
 
 
 vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
@@ -2058,7 +2054,7 @@ vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl
 
 funk<-function(i,x,y) {(x[[i]]/y[i,]-1)*100}
 
-if (object$criterion=="alpha"&!is.null(object$tau)) {
+if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
     ss<-lapply(split(vars.model,list(taus,alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(split(vars.model.col,list(taus,alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
 
@@ -2082,7 +2078,7 @@ if (object$criterion=="alpha"&!is.null(object$tau)) {
 
     }
 
-if (object$criterion=="alpha"&is.null(object$tau)) {
+if (object$criterion=="alpha"&is.null(object$misc$tau)) {
     ss<-lapply(split(vars.model,list(alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(split(vars.model.col,list(alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
 
@@ -2107,7 +2103,7 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
 
     }
 
-if (object$criterion!="alpha"&!is.null(object$tau)){
+if (object$criterion!="alpha"&!is.null(object$misc$tau)){
     ss<-lapply(split(vars.model,list(taus)),function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(split(vars.model.col,list(taus)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
 
@@ -2131,7 +2127,7 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
     }
 
 
-if (object$criterion!="alpha"&is.null(object$tau)) {
+if (object$criterion!="alpha"&is.null(object$misc$tau)) {
 
     ss<-lapply(vars.model,function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(vars.model.col,function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
@@ -2190,7 +2186,7 @@ if (object$misc$type.boot=="Wallisch2021"){
   vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl("strata",attributes(object$fit.or$terms)$term.labels)])
 
 
-  if (object$criterion=="alpha"&!is.null(object$tau)) {
+  if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
     ss<-lapply(split(vars.model,list(taus,alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(split(vars.model.col,list(taus,alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
 
@@ -2214,7 +2210,7 @@ if (object$misc$type.boot=="Wallisch2021"){
 
   }
 
-  if (object$criterion=="alpha"&is.null(object$tau)) {
+  if (object$criterion=="alpha"&is.null(object$misc$tau)) {
     ss<-lapply(split(vars.model,list(alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(split(vars.model.col,list(alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
 
@@ -2239,7 +2235,7 @@ if (object$misc$type.boot=="Wallisch2021"){
 
   }
 
-  if (object$criterion!="alpha"&!is.null(object$tau)){
+  if (object$criterion!="alpha"&!is.null(object$misc$tau)){
     ss<-lapply(split(vars.model,list(taus)),function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(split(vars.model.col,list(taus)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
 
@@ -2263,7 +2259,7 @@ if (object$misc$type.boot=="Wallisch2021"){
   }
 
 
-  if (object$criterion!="alpha"&is.null(object$tau)) {
+  if (object$criterion!="alpha"&is.null(object$misc$tau)) {
 
     ss<-lapply(vars.model,function(x) table(unlist(x))[vars.num]/object$num.boot)
     ss.col<-lapply(vars.model.col,function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
@@ -2556,16 +2552,16 @@ object$all.vars<-ggff(object$all.vars)
 
   if (object$criterion!="alpha") alphas<-NULL else {
 
-    if (!is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=length(object$tau)*object$num.boot),sep="")
-    if (is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=1*object$num.boot),sep="")
+    if (!is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=length(object$misc$tau)*object$num.boot),sep="")
+    if (is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=1*object$num.boot),sep="")
   }
 
 
-  if (is.null(object$tau)) taus<-NULL else {
+  if (is.null(object$misc$tau)) taus<-NULL else {
 
-    if (is.null(object$alpha)) {taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),1),sep="")} else {
+    if (is.null(object$misc$alpha)) {taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),1),sep="")} else {
 
-      taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),length(object$alpha)),sep="")
+      taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),length(object$misc$alpha)),sep="")
     }
   }
 
@@ -2576,11 +2572,11 @@ object$all.vars<-ggff(object$all.vars)
 
 
 
-  if (!is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$alpha)*length(object$tau))
+  if (!is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha)*length(object$misc$tau))
 
-  if (is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$alpha))
+  if (is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha))
 
-  if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
+  if (!is.null(object$misc$tau)&is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$tau))
 
 if (object$misc$type.boot!="Wallisch2021"){
 vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
@@ -2673,7 +2669,7 @@ if(!(type.plot %in% c("coefficients", "variables", "models", "stability", "pairw
 if (type.plot=="coefficients"){
 
 
-if (object$criterion=="alpha"&!is.null(object$tau)) {
+if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
  ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
@@ -2687,7 +2683,7 @@ if (object$criterion=="alpha"&!is.null(object$tau)) {
 
 }
 
-if (object$criterion=="alpha"&is.null(object$tau)) {
+if (object$criterion=="alpha"&is.null(object$misc$tau)) {
   ss<-lapply(split(coefs.model,list(alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
@@ -2700,7 +2696,7 @@ if (object$criterion=="alpha"&is.null(object$tau)) {
 
 }
 
-if (object$criterion!="alpha"&!is.null(object$tau)){
+if (object$criterion!="alpha"&!is.null(object$misc$tau)){
   ss<-lapply(split(coefs.model,list(taus)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
 
@@ -2714,7 +2710,7 @@ if (object$criterion!="alpha"&!is.null(object$tau)){
 }
 
 
-if (object$criterion!="alpha"&is.null(object$tau)) {
+if (object$criterion!="alpha"&is.null(object$misc$tau)) {
 
   ss<-lapply(coefs.model,function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
   if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
@@ -2755,8 +2751,8 @@ if (type.plot=="variables"){
     if (!is.null(alphas)&!is.null(taus)) {
 
       if (!is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",alpha,sep="")
-      if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$tau,".alpha=",alpha,sep="")
-      if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$alpha,sep="")
+      if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$misc$tau,".alpha=",alpha,sep="")
+      if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$misc$alpha,sep="")
 
       } else {
     if (is.null(alphas)) cnm<-paste("tau=",tau,sep="")
@@ -2802,8 +2798,8 @@ if (type.plot=="models"){
     if (!is.null(alphas)&!is.null(taus)) {
 
       if (!is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",alpha,sep="")
-      if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$tau,".alpha=",alpha,sep="")
-      if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$alpha,sep="")
+      if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$misc$tau,".alpha=",alpha,sep="")
+      if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$misc$alpha,sep="")
 
     } else {
       if (is.null(alphas)) cnm<-paste("tau=",tau,sep="")
@@ -2832,10 +2828,10 @@ if (type.plot=="models"){
 
 if(type.plot == "stability"){
 
-  if(object$criterion == "alpha") alphas <- sort(object$alpha)
+  if(object$criterion == "alpha") alphas <- sort(object$misc$alpha)
   if(object$criterion == "AIC") alphas <- c("0.157")
   if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.or$x)), df=1))
-  taus <- sort(object$tau)
+  taus <- sort(object$misc$tau)
 
   if(length(alphas) > 1 & length(taus) == 1){
     if(type.stability == "tau") warning("type.stability = 'tau' requires more than 1 tau value, type.stability = 'alpha' is used instead.")
@@ -3010,16 +3006,16 @@ pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
 
   if (object$criterion!="alpha") alphas<-NULL else {
 
-    if (!is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=length(object$tau)*object$num.boot),sep="")
-    if (is.null(object$tau)) alphas<-paste("alpha=",rep(object$alpha,each=1*object$num.boot),sep="")
+    if (!is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=length(object$misc$tau)*object$num.boot),sep="")
+    if (is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=1*object$num.boot),sep="")
   }
 
 
-  if (is.null(object$tau)) taus<-NULL else {
+  if (is.null(object$misc$tau)) taus<-NULL else {
 
-    if (is.null(object$alpha)) {taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),1),sep="")} else {
+    if (is.null(object$misc$alpha)) {taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),1),sep="")} else {
 
-      taus<- paste("tau=",rep(rep( object$tau,each=object$num.boot  ),length(object$alpha)),sep="")
+      taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),length(object$misc$alpha)),sep="")
     }
   }
 
@@ -3030,11 +3026,11 @@ pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
 
 
 
-  if (!is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$alpha)*length(object$tau))
+  if (!is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha)*length(object$misc$tau))
 
-  if (is.null(object$tau)&!is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$alpha))
+  if (is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha))
 
-  if (!is.null(object$tau)&is.null(object$alpha)) boot.iter<- rep(1:object$num.boot,length(object$tau))
+  if (!is.null(object$misc$tau)&is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$tau))
 
 if (object$misc$type.boot!="Wallisch2021"){
   vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
@@ -3110,8 +3106,8 @@ if (object$misc$type.boot!="Wallisch2021"){
       if (!is.null(alphas)&!is.null(taus)) {
 
         if (!is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",alpha,sep="")
-        if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$tau,".alpha=",alpha,sep="")
-        if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$alpha,sep="")
+        if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$misc$tau,".alpha=",alpha,sep="")
+        if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$misc$alpha,sep="")
 
       } else {
         if (is.null(alphas)) cnm<-paste("tau=",tau,sep="")
