@@ -2319,32 +2319,34 @@ pair.rel.freqs <- Map(function(ind.models, r.names){
   resampling_pairfreq <- matrix(100, ncol = length(pred), nrow = length(pred),
                                 dimnames = list(pred[pred_order],  pred[pred_order]))
 
-  expect_pairfreq <- NULL
-  combis <- combn(pred[pred_order], 2)
+  expect_pairfreq <- matrix(NA, ncol = length(pred), nrow = length(pred))
 
-
-  for (i in 1:dim(combis)[2]) {
-    resampling_pairfreq[combis[1, i], combis[2, i]] <- sum(apply(coef_matrix_01[, combis[, i]], 1, sum) == 2) / resampling_number * 100
-
-    expect_pairfreq[i] <- resampling_VIF[grepl(combis[1, i], pred)][1] * resampling_VIF[grepl(combis[2, i], pred)][1] / 100
-
-    resampling_pairfreq[combis[2, i], combis[1, i]] <-
-      ifelse(is(suppressWarnings(try(chisq.test(coef_matrix_01[, combis[1, i]],
-                                                coef_matrix_01[, combis[2, i]]),
-                                     silent = T)), "try-error"),
-             NA, ifelse(suppressWarnings(
-               chisq.test(coef_matrix_01[, combis[1, i]],
-                          coef_matrix_01[, combis[2, i]])$p.value) > pval,
-               "", ifelse(as.numeric(resampling_pairfreq[combis[1, i], combis[2, i]]) <
-                            expect_pairfreq[i], "-", "+")))
-  }
-
-
-
+  # diagonal are individual selection frequencies
   diag(resampling_pairfreq) <- resampling_VIF
 
-  resampling_pairfreq <-
-    resampling_pairfreq[!diag(resampling_pairfreq) == 100, !diag(resampling_pairfreq) == 100]
+  for (i in 1:length(pred_order)){
+    for (j in 1:length(pred_order)){
+      # upper triangular matrix should be the pairwise selection frequencies
+      if(j > i){
+        # compute in how many of the models both variables appear together
+        resampling_pairfreq[i, j] <- mean(apply(coef_matrix_01[, c(i, j)], 1, sum) == 2) * 100
+        # compute expected selection frequency under independence (product of individual frequencies)
+        expect_pairfreq[i, j] <- (resampling_VIF[i] / 100) * (resampling_VIF[j] / 100) * 100
+
+        # lower triangular matrix should be the result of the chi-square test
+        cont.table <- table(coef_matrix_01[, i], coef_matrix_01[, j]) # get contingency table
+
+        if(ncol(cont.table) > 1 & nrow(cont.table) > 1){ # check if table has more than one row and column (i.e. dont test for variables with 100% selection frequency)
+          sig <- suppressWarnings(chisq.test(cont.table)$p.value < pval) # perform chi-squared test
+          text <- ifelse(!sig, "",
+                         ifelse(as.numeric(resampling_pairfreq[i, j]) - as.numeric(expect_pairfreq[i, j]) > 0, "+", "-"))
+        } else text <- ""
+
+
+        resampling_pairfreq[j, i] <- text
+      }
+    }
+  }
 
   return(resampling_pairfreq)
 
