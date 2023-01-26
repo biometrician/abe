@@ -2494,12 +2494,12 @@ print.abe<-function(x,type="coefficients",conf.level=0.95,alpha=NULL,tau=NULL,di
 
       # get counts
       res$Count <- sapply(res$Predictors, function(x) sum(x == model.preds))
-      res$Percent <- res$Count / length(model.preds)
+      res$Percent <- res$Count / length(model.preds) * 100
 
       # sort by count
       res <- res[order(res$Count, decreasing = TRUE), ]
       rownames(res) <- 1:nrow(res)
-      res$Cumulative <- cumsum(res$Percent)
+      res$"Cumulative Percent" <- cumsum(res$Percent)
 
 
       return(res[1:min(nrow(res), 20), ])
