@@ -2370,6 +2370,7 @@ return(list)
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see \code{details}.
 #'
 #' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
+#' @param type the type of the output. \code{type = "coefficients"} prints summary statistics for each coefficient. \code{type = "models"} reports model selection frequencies.
 #' @param conf.level the confidence level, defaults to 0.95, see \code{details}
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
@@ -2401,57 +2402,115 @@ return(list)
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe<-function(x,conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
+print.abe<-function(x,type="coefficients",conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
+
   object<-x
-  if (conf.level<0|conf.level>1) stop("Confidence level out of range")
-  if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
-  if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.resampling.")
+
+  # check if type is valid
+  if(!(type %in% c("coefficients", "models"))) stop("Invalid type.")
+
+  # coefficient table
+  if(type == "coefficients"){
+
+    if (conf.level<0|conf.level>1) stop("Confidence level out of range")
+    if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
+    if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.resampling.")
 
 
-  if (object$misc$criterion=="alpha") if(is.null(alpha)) alpha=object$misc$alpha[1]
+    if (object$misc$criterion=="alpha") if(is.null(alpha)) alpha=object$misc$alpha[1]
 
-  if (is.null(tau)) tau=object$misc$tau[1]
+    if (is.null(tau)) tau=object$misc$tau[1]
 
-  cat("Printing results of a call to abe.resampling for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
-  if (object$misc$criterion=="alpha" ) cat("  alpha=",alpha,sep="")
+    cat("Printing results of a call to abe.resampling for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
+    if (object$misc$criterion=="alpha" ) cat("  alpha=",alpha,sep="")
 
-  set<-paste("tau=",tau,sep="")
-  sea<-paste("alpha=",alpha,sep="")
+    set<-paste("tau=",tau,sep="")
+    sea<-paste("alpha=",alpha,sep="")
 
-  if (object$misc$criterion=="alpha") rs<-paste(set,sea,sep=".") else rs <- paste0(set, ", ", object$criterion)
+    if (object$misc$criterion=="alpha") rs<-paste(set,sea,sep=".") else rs <- paste0(set, ", ", object$criterion)
 
-  ss<-summary(object,conf.level = conf.level)
+    ss<-summary(object,conf.level = conf.level)
 
-vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl("strata",attributes(object$fit.or$terms)$term.labels)])
+    vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl("strata",attributes(object$fit.or$terms)$term.labels)])
 
-idv<-which(vars.num%in%object$all.vars==TRUE)
-idg<-which(vars.num%in%object$all.vars==FALSE)
-
-
-if (length(idv)!=length(vars.num)) {
-
-  pt<-paste(paste(names(ss$var.rel.frequencies[rs,])[idg],": ",ss$var.rel.frequencies[rs,idg],sep=""),collapse=",")
-  cat("\n\n Inclusion relative frequencies of the offset/stratification variable(s):",pt)
-
-}
+    idv<-which(vars.num%in%object$all.vars==TRUE)
+    idg<-which(vars.num%in%object$all.vars==FALSE)
 
 
- mat <- cbind(coef(object$fit.or),
-                                sqrt(diag(vcov(object$fit.or))),
-                                  c(ss$var.rel.frequencies[rs,idv]),
-                                  t(ss$var.coefs[[rs]][,idv]))
+    if (length(idv)!=length(vars.num)) {
 
-rownames(mat)<-names(ss$var.rel.frequencies[rs,])[idv]
+      pt<-paste(paste(names(ss$var.rel.frequencies[rs,])[idg],": ",ss$var.rel.frequencies[rs,idg],sep=""),collapse=",")
+      cat("\n\n Inclusion relative frequencies of the offset/stratification variable(s):",pt)
 
- colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
-                        "Incl. Freq.")
-colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
-colnames(mat)[7:8]<-c("Estimate, mean","Estimate, sd")
-colnames(mat)[9:10]<-c("RMSD ratio","RCB")
-mat<-round(mat,digits)
-cat("\n\n")
+    }
 
-print(mat)
+
+    mat <- cbind(coef(object$fit.or),
+                 sqrt(diag(vcov(object$fit.or))),
+                 c(ss$var.rel.frequencies[rs,idv]),
+                 t(ss$var.coefs[[rs]][,idv]))
+
+    rownames(mat)<-names(ss$var.rel.frequencies[rs,])[idv]
+
+    colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
+                            "Incl. Freq.")
+    colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
+    colnames(mat)[7:8]<-c("Estimate, mean","Estimate, sd")
+    colnames(mat)[9:10]<-c("RMSD ratio","RCB")
+    mat<-round(mat,digits)
+    cat("\n\n")
+
+    print(mat)
+
+  }
+
+  # model selection frequencies
+  if(type == "models"){
+
+    models <- object$models
+    if(object$misc$type.boot == "Wallisch2021") models <- object$models.wallisch
+
+
+    # loop over different criteria
+    names <- names(summary(object)$pair.rel.frequencies)
+    ind <- 1:nrow(object$model.parameters)
+
+    res.list <- Map(function(ind.int, name){
+      # only select models for this split
+      models.int <- models[ind.int]
+
+      # get frequencies
+      model.preds <- sapply(models.int, function(x){
+        # get predictors
+        preds <- names(x$coef)[-1] # -1 to exclude intercept
+
+        # paste the together and return string
+        res <- paste(preds, collapse = " ")
+        return(res)
+      })
+
+      # create output table
+      res <- data.frame("Predictors" = unique(model.preds))
+
+      # get counts
+      res$Count <- sapply(res$Predictors, function(x) sum(x == model.preds))
+      res$Percent <- res$Count / length(model.preds)
+
+      # sort by count
+      res <- res[order(res$Count, decreasing = TRUE), ]
+      rownames(res) <- 1:nrow(res)
+      res$Cumulative <- cumsum(res$Percent)
+
+
+      return(res[1:min(nrow(res), 20), ])
+
+    }, split(ind, ceiling(seq_along(ind) / object$num.boot)), names)
+
+    names(res.list) <- names
+    return(res.list)
+
+  }
+
 }
 
 

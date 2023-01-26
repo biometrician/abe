@@ -4,10 +4,20 @@
 \alias{print.abe}
 \title{Print Function}
 \usage{
-\method{print}{abe}(x, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 2, ...)
+\method{print}{abe}(
+  x,
+  type = "coefficients",
+  conf.level = 0.95,
+  alpha = NULL,
+  tau = NULL,
+  digits = 2,
+  ...
+)
 }
 \arguments{
 \item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
+
+\item{type}{the type of the output. \code{type = "coefficients"} prints summary statistics for each coefficient. \code{type = "models"} reports model selection frequencies.}
 
 \item{conf.level}{the confidence level, defaults to 0.95, see \code{details}}
 
