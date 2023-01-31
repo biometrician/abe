@@ -7,6 +7,7 @@
 \method{print}{abe}(
   x,
   type = "coefficients",
+  models.n = NULL,
   conf.level = 0.95,
   alpha = NULL,
   tau = NULL,
@@ -18,6 +19,8 @@
 \item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
 
 \item{type}{the type of the output. \code{type = "coefficients"} prints summary statistics for each coefficient. \code{type = "models"} reports model selection frequencies.}
+
+\item{models.n}{controls the number of models printed if \code{type = "models"}. See details.}
 
 \item{conf.level}{the confidence level, defaults to 0.95, see \code{details}}
 
@@ -40,6 +43,8 @@ root mean squared difference ratio (RMSD) and relative bias conditional on selec
 When using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}}, the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in \code{type.resampling}.
 
 Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+
+If \code{type = "models"}, the \code{models.n} parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if \code{models.n} is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (\code{models.n = NULL}), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 }
 \examples{
 set.seed(1)

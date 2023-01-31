@@ -2374,6 +2374,7 @@ return(list)
 #' @param conf.level the confidence level, defaults to 0.95, see \code{details}
 #' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
 #' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
+#' @param models.n controls the number of models printed if \code{type = "models"}. See details.
 #' @param digits integer, indicating the number of digits to display in the table. Defaults to 2
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
@@ -2381,6 +2382,8 @@ return(list)
 #' @details When using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}}, the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in \code{type.resampling}.
 #'
 #' Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+#'
+#' If \code{type = "models"}, the \code{models.n} parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if \code{models.n} is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (\code{models.n = NULL}), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
@@ -2402,7 +2405,7 @@ return(list)
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe<-function(x,type="coefficients",conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
+print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
 
   object<-x
 
@@ -2501,8 +2504,25 @@ print.abe<-function(x,type="coefficients",conf.level=0.95,alpha=NULL,tau=NULL,di
       rownames(res) <- 1:nrow(res)
       res$"Cumulative Percent" <- cumsum(res$Percent)
 
+      # use default values if models.n is not specified
+      if(is.null(models.n)){
+        ind.cum.freq <- which((res$"Cumulative Percent" / 100) >= 0.8)[1]
+        ind <- min(ind.cum.freq, 20) # return the shorter (=> min) of the two
+      }
 
-      return(res[1:min(nrow(res), 20), ])
+      # if models.n <= 1 use it as a cumulative frequency up until which to return
+      if(!is.null(models.n) && models.n <= 1){
+        ind.cum.freq <- which((res$"Cumulative Percent" / 100) >= models.n)[1]
+        ind <- ind.cum.freq
+      }
+
+      # if models.n > 1 use it as the absolute number to return
+      if(!is.null(models.n) && models.n > 1){
+        ind <- min(models.n, nrow(res)) # if models.n is larger than the number of models return that number instead
+      }
+
+      # only return the specified number of models
+      return(res[1:ind, ])
 
     }, split(ind, ceiling(seq_along(ind) / object$num.boot)), names)
 
