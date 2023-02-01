@@ -16,17 +16,17 @@
 )
 }
 \arguments{
-\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
+\item{x}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
 
-\item{type}{the type of the output. \code{type = "coefficients"} prints summary statistics for each coefficient. \code{type = "models"} reports model selection frequencies.}
+\item{type}{the type of the output. `type = "coefficients"` prints summary statistics for each coefficient. `type = "models"` reports model selection frequencies.}
 
-\item{models.n}{controls the number of models printed if \code{type = "models"}. See details.}
+\item{models.n}{controls the number of models printed if `type = "models"`. See details.}
 
-\item{conf.level}{the confidence level, defaults to 0.95, see \code{details}}
+\item{conf.level}{the confidence level, defaults to 0.95, see `details`}
 
-\item{alpha}{the alpha value for which the output is to be printed, defaults to \code{NULL}}
+\item{alpha}{the alpha value for which the output is to be printed, defaults to `NULL`}
 
-\item{tau}{the tau value for which the output is to be printed, defaults to \code{NULL}}
+\item{tau}{the tau value for which the output is to be printed, defaults to `NULL`}
 
 \item{digits}{integer, indicating the number of digits to display in the table. Defaults to 2}
 
@@ -37,14 +37,14 @@ Prints a summary table of a bootstrapped/resampled version of ABE.
 The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
 the relative inclusion frequencies of the covariates from the initial model,
 resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
-root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see \code{details}.
+root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see `details`.
 }
 \details{
-When using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}}, the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in \code{type.resampling}.
+When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
 
-Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 
-If \code{type = "models"}, the \code{models.n} parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if \code{models.n} is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (\code{models.n = NULL}), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+If `type = "models"`, the `models.n` parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 }
 \examples{
 set.seed(1)
@@ -67,7 +67,7 @@ print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 }
 \seealso{
-\code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+[abe.resampling()], [summary.abe()], [plot.abe()], [pie.abe()]
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

@@ -22,10 +22,10 @@ abe.boot(
 )
 }
 \arguments{
-\item{fit}{An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
-Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.}
+\item{fit}{An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
 
-\item{data}{data frame used when fitting the object \code{fit}.}
+\item{data}{data frame used when fitting the object `fit`.}
 
 \item{include}{a vector containing the names of variables that will be included in the final model. These variables are used as passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 They will never be dropped from the working model in the selection process,
@@ -43,50 +43,51 @@ but not as passive variables when evaluating the change-in-estimate criterion.}
 Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.}
 
 \item{criterion}{String that specifies the strategy to select variables for the blacklist.
-Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
-If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}). Default is set to \code{"alpha"}.}
+Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
+If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter `alpha`). Default is set to `"alpha"`.}
 
 \item{alpha}{Value that specifies the level of significance as explained above. Default is set to 0.2.}
 
-\item{type.test}{String that specifies which test should be performed in case the \code{criterion = "alpha"}.
-Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.}
+\item{type.test}{String that specifies which test should be performed in case the `criterion = "alpha"`.
+Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].}
 
-\item{type.factor}{String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.}
+\item{type.factor}{String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.}
 
 \item{num.boot}{number of bootstrap re-samples}
 
-\item{type.boot}{String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details}
+\item{type.boot}{String that specifies the type of bootstrap. Possible values are `"bootstrap"`, `"mn.bootstrap"`, `"subsampling"`,  see details}
 
-\item{prop.sampling}{Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.}
+\item{prop.sampling}{Sampling proportion. Only applicable for `type.boot="mn.bootstrap"` and `type.boot="subsampling"`, defaults to 0.5. See details.}
 }
 \value{
-an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
+an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
 A list with the following elements:
 
-\code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}
+`models` the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`
 
-\code{alpha} the vector of significance levels used
+`alpha` the vector of significance levels used
 
-\code{tau} the vector of threshold values for the change-in-estimate
+`tau` the vector of threshold values for the change-in-estimate
 
-\code{num.boot} number of re-sampled datasets
+`num.boot` number of re-sampled datasets
 
-\code{criterion} criterion used when constructing the black-list
+`criterion` criterion used when constructing the black-list
 
-\code{all.vars} a list of variables used when estimating \code{fit}
+`all.vars` a list of variables used when estimating `fit`
 
-\code{fit.or} the initial model
+`fit.or` the initial model
 
-\code{misc} the parameters of the call to \code{abe.boot}
+`misc` the parameters of the call to `abe.boot`
 }
 \description{
 `r lifecycle::badge("deprecated")`
-This function was deprecated, use \code{abe.resampling} instead.
+
+This function was deprecated, use `abe.resampling` instead.
 
 Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 }
 \details{
-Used only for compatibility with the previous versions and will be removed at some point; see/use \code{\link{abe.resampling}} instead.
+Used only for compatibility with the previous versions and will be removed at some point; see/use [abe.resampling()] instead.
 }
 \references{
 Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
@@ -94,7 +95,7 @@ Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backw
 Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 }
 \seealso{
-\code{\link{abe.resampling}}
+[abe.resampling()]
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

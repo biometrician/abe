@@ -7,13 +7,13 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 
 #' @title Augmented Backward Elimination
 #'
-#' @description  Function \code{abe} performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
+#' @description  Function `abe` performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
 #' It can also make a backward-selection based on significance or information criteria only by turning off the change-in-estimate criterion.
 #'
 #'
-#' @param fit An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
-#' Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.
-#' @param data data frame used when fitting the object \code{fit}.
+#' @param fit An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
+#' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 #' They will never be dropped from the working model in the selection process,
 #' but they will be used passively in evaluating change-in-estimate criteria of other variables.
@@ -25,30 +25,30 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' @param exact Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 #' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
 #' @param criterion String that specifies the strategy to select variables for the black list.
-#' Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
-#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}) and type of the test statistic (see parameter \code{type.test}). Default is set to \code{"alpha"}.
+#' Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
+#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter `alpha`) and type of the test statistic (see parameter `type.test`). Default is set to `"alpha"`.
 #' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
-#' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
-#' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
-#' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
+#' @param type.test String that specifies which test should be performed in case the `criterion = "alpha"`.
+#' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].
+#' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
 #' @param verbose Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.
 #'
 #' @details
 #' Using the default settings ABE will perform augmented backward elimination based on significance.
 #' The level of significance will be set to 0.2. All variables will be treated as "passive or active".
 #' Approximated change-in-estimate will be used. Threshold of the relative change-in-estimate criterion will be 0.05.
-#' Setting tau to a very large number (e.g. \code{Inf}) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
-#' Specifying \code{"alpha" = 0} will include variables only because of the change-in-estimate criterion,
+#' Setting tau to a very large number (e.g. `Inf`) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
+#' Specifying `"alpha" = 0` will include variables only because of the change-in-estimate criterion,
 #' as then variables are not safe from exclusion because of their p-values.
-#' Specifying \code{"alpha" = 1} will always include all variables.
+#' Specifying `"alpha" = 1` will always include all variables.
 #'
-#' When using \code{type.factor="individual"} each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
-#' Using \code{type.factor="factor"} will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
+#' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
+#' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
 #'
-#' @return An object of class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the model chosen by abe method.
+#' @return An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #'
-#' @seealso \code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
+#' @seealso [abe.resampling()], [lm()], [glm()] and [coxph()]
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @export
@@ -255,9 +255,9 @@ bt
 #' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 #'
 #'
-#' @param fit An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
-#' Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.
-#' @param data data frame used when fitting the object \code{fit}.
+#' @param fit An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
+#' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 #' They will never be dropped from the working model in the selection process,
 #' but they will be used passively in evaluating change-in-estimate criteria of other variables.
@@ -269,47 +269,47 @@ bt
 #' @param exact Logical, specifies if the method will use exact change-in-estimate or approximated. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 #' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
 #' @param criterion String that specifies the strategy to select variables for the blacklist.
-#' Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
-#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}). Default is set to \code{"alpha"}.
+#' Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
+#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter `alpha`). Default is set to `"alpha"`.
 #' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
-#' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
-#' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
-#' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
+#' @param type.test String that specifies which test should be performed in case the `criterion = "alpha"`.
+#' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].
+#' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
 #' @param num.resamples number of resamples.
-#' @param type.resampling String that specifies the type of resampling. Possible values are \code{"Wallisch2021"}, \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"}. Default is set to \code{"Wallisch2021"}. See details.
-#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
-#' @param save.out String that specifies if only the minimal output of the refitted models (\code{save.out="minimal"}) or the entire object (\code{save.out="complete"}) is to be saved. Defaults to \code{"minimal"}
-#' @param parallel Logical, specifies if the calculations should be run in parallel \code{TRUE} or not \code{FALSE}. Defaults to \code{FALSE}. See details.
-#' @param seed Numeric, a random seed to be used to form re-sampled datasets. Defaults to \code{NULL}. Can be used to assure complete reproducibility of the results, see Examples.
-#' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
+#' @param type.resampling String that specifies the type of resampling. Possible values are `"Wallisch2021"`, `"bootstrap"`, `"mn.bootstrap"`, `"subsampling"`. Default is set to `"Wallisch2021"`. See details.
+#' @param prop.sampling Sampling proportion. Only applicable for `type.boot="mn.bootstrap"` and `type.boot="subsampling"`, defaults to 0.5. See details.
+#' @param save.out String that specifies if only the minimal output of the refitted models (`save.out="minimal"`) or the entire object (`save.out="complete"`) is to be saved. Defaults to `"minimal"`
+#' @param parallel Logical, specifies if the calculations should be run in parallel `TRUE` or not `FALSE`. Defaults to `FALSE`. See details.
+#' @param seed Numeric, a random seed to be used to form re-sampled datasets. Defaults to `NULL`. Can be used to assure complete reproducibility of the results, see Examples.
+#' @return an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
 #' A list with the following elements:
 #'
-#' \code{models} if \code{save.out="minimal"} the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  \code{type.resampling="Wallisch2021"}, these models are obtained by using bootstrap; if \code{save.out="complete"} these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}.
+#' `models` if `save.out="minimal"` the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap; if `save.out="complete"` these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`.
 #'
-#' \code{models.wallisch} similar as \code{models}; if using \code{type.resampling="Wallisch2021"} the coefficients and terms of the final models obtained after performing ABE using resampling with \code{prop.sampling} equal to 0.5; \code{NULL} when using any other option in \code{type.resampling}
+#' `models.wallisch` similar as `models`; if using `type.resampling="Wallisch2021"` the coefficients and terms of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`
 #'
-#' \code{model.parameters} a dataframe of alpha and tau values corresponding to the resampled models.
+#' `model.parameters` a dataframe of alpha and tau values corresponding to the resampled models.
 #'
-#' \code{num.boot} number of resampled datasets
+#' `num.boot` number of resampled datasets
 #'
-#' \code{criterion} criterion used when constructing the black-list
+#' `criterion` criterion used when constructing the black-list
 #'
-#' \code{all.vars} a list of variables used when estimating \code{fit}
+#' `all.vars` a list of variables used when estimating `fit`
 #'
-#' \code{fit.or} the initial model
+#' `fit.or` the initial model
 #'
-#' \code{misc} the parameters of the call to \code{abe.resampling}
+#' `misc` the parameters of the call to `abe.resampling`
 #'
-#' \code{id} the rows of the data which were used when refitting the model; the list with elements \code{id1} (the rows used to refit the model; when \code{type.resampling="Wallisch2021"} these are based on bootstrap) and \code{id2} (\code{NULL} unless when \code{type.resampling="Wallisch2021"} in which case these are the rows used to refit the models based on subsampling)
+#' `id` the rows of the data which were used when refitting the model; the list with elements `id1` (the rows used to refit the model; when `type.resampling="Wallisch2021"` these are based on bootstrap) and `id2` (`NULL` unless when `type.resampling="Wallisch2021"` in which case these are the rows used to refit the models based on subsampling)
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details \code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement, where m is [prop.sampling*n]) and \code{"Wallisch2021"}. When using \code{"Wallisch2021"} the resampling is done twice: first time using bootstrap (these results are contained in \code{models}) and the second time using resampling with \code{prop.sampling} equal to 0.5 (these results are contained in \code{models.wallisch}); see Walisch et al. (2021).
-#' @details When using \code{parallel=TRUE} parallel backend must be registered before using \code{abe.resampling}. The parallel backends available will be system-specific; see \code{\link{foreach}} for more details.
+#' @details `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Walisch et al. (2021).
+#' @details When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
-#' @seealso \code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+#' @seealso [abe()], [summary.abe()], [print.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @import survival foreach
 #' @examples
@@ -1510,14 +1510,15 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #'
 #' @description
 #' `r lifecycle::badge("deprecated")`
-#' This function was deprecated, use \code{abe.resampling} instead.
+#'
+#' This function was deprecated, use `abe.resampling` instead.
 #'
 #' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 #'
 #'
-#' @param fit An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
-#' Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.
-#' @param data data frame used when fitting the object \code{fit}.
+#' @param fit An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
+#' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 #' They will never be dropped from the working model in the selection process,
 #' but they will be used passively in evaluating change-in-estimate criteria of other variables.
@@ -1529,44 +1530,43 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' @param exact Logical, specifies if the method will use exact change-in-estimate or approximated. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 #' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
 #' @param criterion String that specifies the strategy to select variables for the blacklist.
-#' Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
-#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}). Default is set to \code{"alpha"}.
+#' Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
+#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter `alpha`). Default is set to `"alpha"`.
 #' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
-#' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
-#' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
-#' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
+#' @param type.test String that specifies which test should be performed in case the `criterion = "alpha"`.
+#' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].
+#' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
 #' @param num.boot number of bootstrap re-samples
-#' @param type.boot String that specifies the type of bootstrap. Possible values are \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"},  see details
-#' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
-#' @return an object of class \code{abe} for which \code{summary}, \code{plot} and \code{pie.abe} functions are available.
+#' @param type.boot String that specifies the type of bootstrap. Possible values are `"bootstrap"`, `"mn.bootstrap"`, `"subsampling"`,  see details
+#' @param prop.sampling Sampling proportion. Only applicable for `type.boot="mn.bootstrap"` and `type.boot="subsampling"`, defaults to 0.5. See details.
+#' @return an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
 #' A list with the following elements:
 #'
-#' \code{models} the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as \code{fit}
+#' `models` the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`
 #'
-#' \code{alpha} the vector of significance levels used
+#' `alpha` the vector of significance levels used
 #'
-#' \code{tau} the vector of threshold values for the change-in-estimate
+#' `tau` the vector of threshold values for the change-in-estimate
 #'
-#' \code{num.boot} number of re-sampled datasets
+#' `num.boot` number of re-sampled datasets
 #'
-#' \code{criterion} criterion used when constructing the black-list
+#' `criterion` criterion used when constructing the black-list
 #'
-#' \code{all.vars} a list of variables used when estimating \code{fit}
+#' `all.vars` a list of variables used when estimating `fit`
 #'
-#' \code{fit.or} the initial model
+#' `fit.or` the initial model
 #'
-#' \code{misc} the parameters of the call to \code{abe.boot}
+#' `misc` the parameters of the call to `abe.boot`
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details Used only for compatibility with the previous versions and will be removed at some point; see/use \code{\link{abe.resampling}} instead.
+#' @details Used only for compatibility with the previous versions and will be removed at some point; see/use [abe.resampling()] instead.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
-#' @seealso \code{\link{abe.resampling}}
-#' @import lifecycle
+#' @seealso [abe.resampling()]
 #' @export
+#' @import lifecycle
 #' @keywords internal
-#'
 
 
 abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
@@ -1923,25 +1923,25 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' makes a summary of a resampled version of ABE
 #'
-#' @param object an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
-#' @param conf.level the confidence level, defaults to 0.95, see \code{details}
+#' @param object an object of class `"abe"`, an object returned by a call to [abe.resampling()]
+#' @param conf.level the confidence level, defaults to 0.95, see `details`
 #' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.
 #' @param ... additional arguments affecting the summary produced.
 
 #' @return a list with the following elements:
 #'
-#' \code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
+#' `var.rel.frequencies`: inclusion relative frequencies for all variables from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 #'
-#' \code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
+#' `model.rel.frequencies`: relative frequencies of the final models; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 #'
-#' \code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+#' `var.coefs`: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
 #'
-#' \code{pair.rel.frequencies}: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
+#' `pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
-#' @seealso \code{\link{abe.resampling}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+#' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+#' @seealso [abe.resampling()], [print.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @examples
 #' set.seed(1)
@@ -2376,25 +2376,25 @@ return(list)
 #' The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
 #' the relative inclusion frequencies of the covariates from the initial model,
 #' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
-#' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see \code{details}.
+#' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see `details`.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
-#' @param type the type of the output. \code{type = "coefficients"} prints summary statistics for each coefficient. \code{type = "models"} reports model selection frequencies.
-#' @param conf.level the confidence level, defaults to 0.95, see \code{details}
-#' @param alpha the alpha value for which the output is to be printed, defaults to \code{NULL}
-#' @param tau the tau value for which the output is to be printed, defaults to \code{NULL}
-#' @param models.n controls the number of models printed if \code{type = "models"}. See details.
+#' @param x an object of class `"abe"`, an object returned by a call to [abe.resampling()]
+#' @param type the type of the output. `type = "coefficients"` prints summary statistics for each coefficient. `type = "models"` reports model selection frequencies.
+#' @param conf.level the confidence level, defaults to 0.95, see `details`
+#' @param alpha the alpha value for which the output is to be printed, defaults to `NULL`
+#' @param tau the tau value for which the output is to be printed, defaults to `NULL`
+#' @param models.n controls the number of models printed if `type = "models"`. See details.
 #' @param digits integer, indicating the number of digits to display in the table. Defaults to 2
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details When using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}}, the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in \code{type.resampling}.
+#' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
 #'
-#' Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+#' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
-#' If \code{type = "models"}, the \code{models.n} parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if \code{models.n} is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (\code{models.n = NULL}), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+#' If `type = "models"`, the `models.n` parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
-#' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+#' @seealso [abe.resampling()], [summary.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @examples
 #' set.seed(1)
@@ -2548,7 +2548,7 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
 #'
 #' Plot function for the resampled/bootstrapped version of ABE.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
+#' @param x an object of class `"abe"`, an object returned by a call to [abe.resampling()]
 #' @param type.plot string which specifies the type of the plot. See details.
 #' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
@@ -2557,19 +2557,19 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
 #' @param ... Arguments to be passed to methods, such as graphical parameters.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details When using \code{type.plot="coefficients"} the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
-#' When the variable is not included in the final model, its regression coefficient is set to zero. When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
+#' @details When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
+#' When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
 #'
-#' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+#' When using `type.plot="variables"` the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 #'
-#' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+#' When using `type.plot="models"` the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 #'
-#' When using \code{type.plot="stability"} the function plots variable inclusion frequencies for each value of alpha. \code{type.stability} specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
+#' When using `type.plot="stability"` the function plots variable inclusion frequencies for each value of alpha. `type.stability` specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 #'
-#' When using \code{type.plot="pairwise"} the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See \code{summary.abe} for more details.
+#' When using `type.plot="pairwise"` the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See `summary.abe` for more details.
 #' @import stats ggplot2 reshape2 tidytext
 #' @export
-#' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
+#' @seealso [abe.resampling()], [summary.abe()], [pie.abe()]
 #' @examples
 #' set.seed(1)
 #' n=100
@@ -3045,19 +3045,19 @@ if(type.plot == "pairwise"){
 
 #' Pie Function
 #'
-#' Pie function for the resampled/bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of \code{alpha} and \code{tau}.
+#' Pie function for the resampled/bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of `alpha` and `tau`.
 #'
-#' @param x an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}
+#' @param x an object of class `"abe"`, an object returned by a call to [abe.resampling()]
 #' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param labels plot labels, defaults to NA, i.e. no labels are ploted
-#' @param ... Arguments to be passed to methods, such as graphical parameters (see \code{\link{pie}}, \code{\link{barplot}}, \code{\link{hist}}).
-#' @details When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+#' @param ... Arguments to be passed to methods, such as graphical parameters (see [pie()], [barplot()], [hist()]).
+#' @details When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @import graphics
 #' @export
-#' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
+#' @seealso [abe.resampling()], [summary.abe()], [plot.abe()]
 #' @examples
 #' set.seed(1)
 #' n=100

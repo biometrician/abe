@@ -7,7 +7,7 @@
 pie.abe(x, alpha = NULL, tau = NULL, labels = NA, ...)
 }
 \arguments{
-\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
+\item{x}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
 
 \item{alpha}{values of alpha for which the plot is to be made (can be a vector of length >1)}
 
@@ -15,13 +15,13 @@ pie.abe(x, alpha = NULL, tau = NULL, labels = NA, ...)
 
 \item{labels}{plot labels, defaults to NA, i.e. no labels are ploted}
 
-\item{...}{Arguments to be passed to methods, such as graphical parameters (see \code{\link{pie}}, \code{\link{barplot}}, \code{\link{hist}}).}
+\item{...}{Arguments to be passed to methods, such as graphical parameters (see [pie()], [barplot()], [hist()]).}
 }
 \description{
-Pie function for the resampled/bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of \code{alpha} and \code{tau}.
+Pie function for the resampled/bootstrapped version of ABE. Plots a pie chart of the model frequencies for specified values of `alpha` and `tau`.
 }
 \details{
-When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 }
 \examples{
 set.seed(1)
@@ -48,7 +48,7 @@ num.resamples=50,type.resampling="subsampling")
 pie.abe(fit.resample, alpha=0.2,tau=0.1)
 }
 \seealso{
-\code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
+[abe.resampling()], [summary.abe()], [plot.abe()]
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
