@@ -1508,6 +1508,10 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 
 #' Bootstrapped Augmented Backward Elimination
 #'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#' This function was deprecated, use \code{abe.resampling} instead.
+#'
 #' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 #'
 #'
@@ -1559,12 +1563,17 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @seealso \code{\link{abe.resampling}}
+#' @import lifecycle
 #' @export
+#' @keywords internal
 #'
 
 
 abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.boot=100,type.boot=c("bootstrap","mn.bootstrap","subsampling"),prop.sampling=0.5){
-warning("This function is obsolete, please use abe.resampling instead.")
+
+  # warn about deprecation
+  lifecycle::deprecate_warn("5.1.1", "abe.boot()", "abe.resampling()")
+
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
   if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")

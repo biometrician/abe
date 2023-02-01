@@ -80,6 +80,9 @@ A list with the following elements:
 \code{misc} the parameters of the call to \code{abe.boot}
 }
 \description{
+`r lifecycle::badge("deprecated")`
+This function was deprecated, use \code{abe.resampling} instead.
+
 Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 }
 \details{
@@ -98,3 +101,4 @@ Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
 Sladana Babic
 }
+\keyword{internal}
