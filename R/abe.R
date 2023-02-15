@@ -21,7 +21,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' @param active a vector containing the names of active variables. These less important explanatory variables will only be used as active,
 #' but not as passive variables when evaluating the change-in-estimate criterion.
 #' @param tau  Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.
-#' @param exp.beta Logical specifying if exponent is used in formula to standardize the criterion. Default is set to TRUE.
 #' @param exact Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 #' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
 #' @param criterion String that specifies the strategy to select variables for the black list.
@@ -32,7 +31,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].
 #' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
 #' @param verbose Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.
-#'
+#' @param ... Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.
 #' @details
 #' Using the default settings ABE will perform augmented backward elimination based on significance.
 #' The level of significance will be set to 0.2. All variables will be treated as "passive or active".
@@ -44,6 +43,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #'
 #' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
 #' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
+#'
+#' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
 #'
 #' @return An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
@@ -70,7 +71,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' # using the exact change in the estimate of 5% and significance
 #' # using 0.2 as a threshold
 #' abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 #' type.test="Chisq",verbose=TRUE)
 #'
 #' summary(abe.fit)
@@ -79,7 +80,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' # only backward elimination
 #'
 #' abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=Inf,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+#' tau=Inf,exact=TRUE,criterion="alpha",alpha=0.2,
 #' type.test="Chisq",verbose=TRUE)
 #'
 #' summary(abe.fit)
@@ -92,7 +93,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' # treat "x3" as a single covariate:
 #'
 #' abe.fit.fact<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 #' type.test="Chisq",verbose=TRUE,type.factor="factor")
 #'
 #' summary(abe.fit.fact)
@@ -100,26 +101,30 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' # treat each dummy of "x3" as a separate covariate:
 #'
 #' abe.fit.ind<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 #' type.test="Chisq",verbose=TRUE,type.factor="individual")
 #'
 #' summary(abe.fit.ind)
 
 
-abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,verbose=TRUE){
+abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,verbose=TRUE,...){
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 assign(as.character(substitute(data)),data)
+
+# check if user supplied the exp.beta argument and warn them if so
+if("exp.beta" %in% names(list(...))) warning("Using exp.beta is not supported anymore. It is now automatically set to FALSE for linear models and TRUE for logistic and Cox models.")
+
+# fix exp.beta depending on model type
+exp.beta <- FALSE
+if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
+if(class(fit)[1] == "coxph") exp.beta <- TRUE
 
 if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
 if (nrow(fit$x)!=nrow(data)) stop("Data object contains missing values. Remove all the missing values and refit the model.")
 
 if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
 
-if (class(fit)[1]=="coxph"&exp.beta==F) stop("setting exp.beta=F for the cox model is not supported")
-
 if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
-
-if (class(fit)[1]=="lm"&exp.beta==T&any(tau!=Inf)) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
 
 if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
@@ -265,7 +270,6 @@ bt
 #' @param active a vector containing the names of active variables. These less important explanatory variables will only be used as active,
 #' but not as passive variables when evaluating the change-in-estimate criterion.
 #' @param tau  Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.
-#' @param exp.beta Logical specifying if exponent is used in formula to standardize the criterion. Default is set to TRUE.
 #' @param exact Logical, specifies if the method will use exact change-in-estimate or approximated. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 #' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
 #' @param criterion String that specifies the strategy to select variables for the blacklist.
@@ -281,6 +285,7 @@ bt
 #' @param save.out String that specifies if only the minimal output of the refitted models (`save.out="minimal"`) or the entire object (`save.out="complete"`) is to be saved. Defaults to `"minimal"`
 #' @param parallel Logical, specifies if the calculations should be run in parallel `TRUE` or not `FALSE`. Defaults to `FALSE`. See details.
 #' @param seed Numeric, a random seed to be used to form re-sampled datasets. Defaults to `NULL`. Can be used to assure complete reproducibility of the results, see Examples.
+#' @param ... Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.
 #' @return an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
 #' A list with the following elements:
 #'
@@ -306,6 +311,7 @@ bt
 #' @author Sladana Babic
 #' @details `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Walisch et al. (2021).
 #' @details When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
+#' @details In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
@@ -328,7 +334,7 @@ bt
 #' # change-in-estimate thresholds and significance levels
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
@@ -339,7 +345,7 @@ bt
 #' # change-in-estimate thresholds and significance levels
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="bootstrap")
 #'
@@ -350,7 +356,7 @@ bt
 #' # significance levels
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="subsampling",prop.sampling=0.5)
 #'
@@ -359,24 +365,24 @@ bt
 #' #Assure reproducibility of the results
 #'
 #' fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
 #' fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
 #' #since different seed are used, fit.resample.1 and fit.resample.2 give different results
 #'
 #' fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021",seed=87982)
 #'
 #' fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021",seed=87982)
 #'
@@ -389,13 +395,13 @@ bt
 #' #cl <- makeCluster(N_CORES-2)
 #' #registerDoParallel(cl)
 #' #fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' #tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' #tau=c(0.05,0.1),exact=TRUE,
 #' #criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' #num.resamples=50,type.resampling="Wallisch2021")
 #' #stopCluster(cl)
 
 
-abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal", parallel=FALSE,seed=NULL){
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal", parallel=FALSE,seed=NULL,...){
 if (!is.null(seed)) set.seed(seed)
 
   #save.out<-"minimal" #add as argument if needed!
@@ -410,19 +416,24 @@ if (!is.null(seed)) set.seed(seed)
 
 
   type.boot<-type.resampling
-num.boot<-num.resamples
+  num.boot<-num.resamples
+
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
+
+  # check if user supplied the exp.beta argument and warn them if so
+  if("exp.beta" %in% names(list(...))) warning("Using exp.beta is not supported anymore. It is now automatically set to FALSE for linear models and TRUE for logistic and Cox models.")
+
+  # fix exp.beta depending on model type
+  exp.beta <- FALSE
+  if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
+  if(class(fit)[1] == "coxph") exp.beta <- TRUE
 
   if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
   if (nrow(fit$x)!=nrow(data)) stop("Data contains missing values. Remove all the missing values and refit the model.")
 
   if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
 
-  if (class(fit)[1]=="coxph"&exp.beta==F) stop("setting exp.beta=F for the cox model is not supported")
-
   if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
-
-  if (class(fit)[1]=="lm"&exp.beta==T&any(tau!=Inf)) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
 
   if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
@@ -1954,7 +1965,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
@@ -2407,7 +2418,7 @@ return(list)
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
@@ -2581,7 +2592,7 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
@@ -2598,7 +2609,7 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="bootstrap")
 #'
@@ -2607,7 +2618,7 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
 #' col="light blue")
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="subsampling")
 #'
@@ -3069,14 +3080,14 @@ if(type.plot == "pairwise"){
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="Wallisch2021")
 #'
 #' pie.abe(fit.resample, alpha=0.2,tau=0.1)
 #'
 #' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#' tau=c(0.05,0.1),exact=TRUE,
 #' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #' num.resamples=50,type.resampling="subsampling")
 #'
@@ -3234,7 +3245,7 @@ if (object$misc$type.boot!="Wallisch2021"){
 #' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 #'
 #' abe.fit<-abe.num(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 #' type.test="Chisq",verbose=FALSE)
 #' summary(abe.fit)
 #' }

@@ -10,13 +10,13 @@ abe(
   include = NULL,
   active = NULL,
   tau = 0.05,
-  exp.beta = TRUE,
   exact = FALSE,
   criterion = "alpha",
   alpha = 0.2,
   type.test = "Chisq",
   type.factor = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -35,8 +35,6 @@ but not as passive variables when evaluating the change-in-estimate criterion.}
 
 \item{tau}{Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.}
 
-\item{exp.beta}{Logical specifying if exponent is used in formula to standardize the criterion. Default is set to TRUE.}
-
 \item{exact}{Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.}
 
@@ -52,6 +50,8 @@ Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"L
 \item{type.factor}{String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.}
 
 \item{verbose}{Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.}
+
+\item{...}{Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.}
 }
 \value{
 An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
@@ -71,6 +71,8 @@ Specifying `"alpha" = 1` will always include all variables.
 
 When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
 Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
+
+In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
 }
 \examples{
 # simulate some data:
@@ -90,7 +92,7 @@ fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 # using the exact change in the estimate of 5\% and significance
 # using 0.2 as a threshold
 abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 type.test="Chisq",verbose=TRUE)
 
 summary(abe.fit)
@@ -99,7 +101,7 @@ summary(abe.fit)
 # only backward elimination
 
 abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-tau=Inf,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+tau=Inf,exact=TRUE,criterion="alpha",alpha=0.2,
 type.test="Chisq",verbose=TRUE)
 
 summary(abe.fit)
@@ -112,7 +114,7 @@ fit<-lm(y1~x1+x2+factor(x3),x=TRUE,y=TRUE,data=dd)
 # treat "x3" as a single covariate:
 
 abe.fit.fact<-abe(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 type.test="Chisq",verbose=TRUE,type.factor="factor")
 
 summary(abe.fit.fact)
@@ -120,7 +122,7 @@ summary(abe.fit.fact)
 # treat each dummy of "x3" as a separate covariate:
 
 abe.fit.ind<-abe(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 type.test="Chisq",verbose=TRUE,type.factor="individual")
 
 summary(abe.fit.ind)

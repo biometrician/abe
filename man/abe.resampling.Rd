@@ -10,7 +10,6 @@ abe.resampling(
   include = NULL,
   active = NULL,
   tau = 0.05,
-  exp.beta = TRUE,
   exact = FALSE,
   criterion = "alpha",
   alpha = 0.2,
@@ -21,7 +20,8 @@ abe.resampling(
   prop.sampling = 0.5,
   save.out = "minimal",
   parallel = FALSE,
-  seed = NULL
+  seed = NULL,
+  ...
 )
 }
 \arguments{
@@ -39,8 +39,6 @@ Note, variables which are not specified as include or active in the model fit ar
 but not as passive variables when evaluating the change-in-estimate criterion.}
 
 \item{tau}{Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.}
-
-\item{exp.beta}{Logical specifying if exponent is used in formula to standardize the criterion. Default is set to TRUE.}
 
 \item{exact}{Logical, specifies if the method will use exact change-in-estimate or approximated. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
 Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.}
@@ -67,6 +65,8 @@ Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"L
 \item{parallel}{Logical, specifies if the calculations should be run in parallel `TRUE` or not `FALSE`. Defaults to `FALSE`. See details.}
 
 \item{seed}{Numeric, a random seed to be used to form re-sampled datasets. Defaults to `NULL`. Can be used to assure complete reproducibility of the results, see Examples.}
+
+\item{...}{Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.}
 }
 \value{
 an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
@@ -97,6 +97,8 @@ Performs Augmented backward elimination on re-sampled datasets using different b
 `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Walisch et al. (2021).
 
 When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
+
+In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
 }
 \examples{
 # simulate some data and fit a model
@@ -114,7 +116,7 @@ fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 # change-in-estimate thresholds and significance levels
 
 fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="Wallisch2021")
 
@@ -125,7 +127,7 @@ print(fit.resample)
 # change-in-estimate thresholds and significance levels
 
 fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="bootstrap")
 
@@ -136,7 +138,7 @@ summary(fit.resample)
 # significance levels
 
 fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="subsampling",prop.sampling=0.5)
 
@@ -145,24 +147,24 @@ summary(fit.resample)
 #Assure reproducibility of the results
 
 fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="Wallisch2021")
 
 fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="Wallisch2021")
 
 #since different seed are used, fit.resample.1 and fit.resample.2 give different results
 
 fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="Wallisch2021",seed=87982)
 
 fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="Wallisch2021",seed=87982)
 
@@ -175,7 +177,7 @@ num.resamples=50,type.resampling="Wallisch2021",seed=87982)
 #cl <- makeCluster(N_CORES-2)
 #registerDoParallel(cl)
 #fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+#tau=c(0.05,0.1),exact=TRUE,
 #criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 #num.resamples=50,type.resampling="Wallisch2021")
 #stopCluster(cl)
