@@ -4,29 +4,33 @@
 \alias{summary.abe}
 \title{Summary Function}
 \usage{
-\method{summary}{abe}(object, conf.level = 0.95, ...)
+\method{summary}{abe}(object, conf.level = 0.95, pval = 0.01, ...)
 }
 \arguments{
-\item{object}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
+\item{object}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
 
-\item{conf.level}{the confidence level, defaults to 0.95, see \code{details}}
+\item{conf.level}{the confidence level, defaults to 0.95, see `details`}
+
+\item{pval}{significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.}
 
 \item{...}{additional arguments affecting the summary produced.}
 }
 \value{
 a list with the following elements:
 
-\code{var.rel.frequencies}: inclusion relative frequencies for all variables from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
+`var.rel.frequencies`: inclusion relative frequencies for all variables from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 
-\code{model.rel.frequencies}: relative frequencies of the final models; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by \code{type.sampling}
+`model.rel.frequencies`: relative frequencies of the final models; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 
-\code{var.coefs}: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using \code{type.resampling="Wallisch2021"} in a call to \code{\link{abe.resampling}} these results are based on bootstrap, otherwise by using the method as specified by \code{type.sampling}
+`var.coefs`: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
+
+`pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
 }
 \description{
 makes a summary of a resampled version of ABE
 }
 \details{
-Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 }
 \examples{
 set.seed(1)
@@ -46,7 +50,7 @@ num.resamples=50,type.resampling="Wallisch2021")
 summary(fit.resample)
 }
 \seealso{
-\code{\link{abe.resampling}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+[abe.resampling()], [print.abe()], [plot.abe()], [pie.abe()]
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

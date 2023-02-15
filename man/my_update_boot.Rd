@@ -10,7 +10,7 @@ my_update_boot(mod, data = NULL)
 update function which searches for objects within the parent environment, bootstrap version, i.e. can only update the model based on a new dataset
 }
 \examples{
-\dontshow{
+\dontrun{
 set.seed(1)
 n=100
 x1<-runif(n)

@@ -22,7 +22,7 @@ abe.fact2.boot(
 ABE for model which includes categorical covariates, individual option, bootstrap version
 }
 \examples{
-\dontshow{
+\dontrun{
 set.seed(1)
 n=100
 x1<-runif(n)

@@ -10,7 +10,7 @@ my_update2(mod, formula = NULL, data = NULL, data.n = NULL)
 update function which searches for objects within the parent environment, gives a nicer output than my_update
 }
 \examples{
-\dontshow{
+\dontrun{
 set.seed(1)
 n=100
 x1<-runif(n)

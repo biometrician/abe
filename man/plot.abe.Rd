@@ -6,15 +6,16 @@
 \usage{
 \method{plot}{abe}(
   x,
-  type.plot = c("coefficients", "models", "variables"),
+  type.plot = "coefficients",
   alpha = NULL,
   tau = NULL,
   variable = NULL,
+  type.stability = "alpha",
   ...
 )
 }
 \arguments{
-\item{x}{an object of class \code{"abe"}, an object returned by a call to \code{\link{abe.resampling}}}
+\item{x}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
 
 \item{type.plot}{string which specifies the type of the plot. See details.}
 
@@ -24,18 +25,24 @@
 
 \item{variable}{variables for which the plot is to be made (can be a vector of length >1)}
 
-\item{...}{Arguments to be passed to methods, such as graphical parameters (see \code{\link{barplot}}, \code{\link{hist}}).}
+\item{type.stability}{string which specifies the type of stability plot. See details.}
+
+\item{...}{Arguments to be passed to methods, such as graphical parameters.}
 }
 \description{
 Plot function for the resampled/bootstrapped version of ABE.
 }
 \details{
-When using \code{type.plot="coefficients"} the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
-When the variable is not included in the final model, its regression coefficient is set to zero. When using \code{type.resampling="Wallisch2021"} the plot is based on bootstrap, otherwise as specified in \code{type.resampling}.
+When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
+When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
 
-When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+When using `type.plot="variables"` the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 
-When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using \code{type.resampling="Wallisch2021"} the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in \code{type.resampling}.
+When using `type.plot="models"` the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+
+When using `type.plot="stability"` the function plots variable inclusion frequencies for each value of alpha. `type.stability` specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
+
+When using `type.plot="pairwise"` the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See `summary.abe` for more details.
 }
 \examples{
 set.seed(1)
@@ -87,7 +94,7 @@ plot(fit.resample,type.plot="models",
 alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 }
 \seealso{
-\code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
+[abe.resampling()], [summary.abe()], [pie.abe()]
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

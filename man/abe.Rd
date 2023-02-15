@@ -20,10 +20,10 @@ abe(
 )
 }
 \arguments{
-\item{fit}{An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
-Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.}
+\item{fit}{An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
 
-\item{data}{data frame used when fitting the object \code{fit}.}
+\item{data}{data frame used when fitting the object `fit`.}
 
 \item{include}{a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 They will never be dropped from the working model in the selection process,
@@ -41,36 +41,36 @@ but not as passive variables when evaluating the change-in-estimate criterion.}
 Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.}
 
 \item{criterion}{String that specifies the strategy to select variables for the black list.
-Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
-If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}) and type of the test statistic (see parameter \code{type.test}). Default is set to \code{"alpha"}.}
+Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
+If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter `alpha`) and type of the test statistic (see parameter `type.test`). Default is set to `"alpha"`.}
 
 \item{alpha}{Value that specifies the level of significance as explained above. Default is set to 0.2.}
 
-\item{type.test}{String that specifies which test should be performed in case the \code{criterion = "alpha"}.
-Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.}
+\item{type.test}{String that specifies which test should be performed in case the `criterion = "alpha"`.
+Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].}
 
-\item{type.factor}{String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.}
+\item{type.factor}{String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.}
 
 \item{verbose}{Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.}
 }
 \value{
-An object of class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the model chosen by abe method.
+An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
 }
 \description{
-Function \code{abe} performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
+Function `abe` performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
 It can also make a backward-selection based on significance or information criteria only by turning off the change-in-estimate criterion.
 }
 \details{
 Using the default settings ABE will perform augmented backward elimination based on significance.
 The level of significance will be set to 0.2. All variables will be treated as "passive or active".
 Approximated change-in-estimate will be used. Threshold of the relative change-in-estimate criterion will be 0.05.
-Setting tau to a very large number (e.g. \code{Inf}) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
-Specifying \code{"alpha" = 0} will include variables only because of the change-in-estimate criterion,
+Setting tau to a very large number (e.g. `Inf`) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
+Specifying `"alpha" = 0` will include variables only because of the change-in-estimate criterion,
 as then variables are not safe from exclusion because of their p-values.
-Specifying \code{"alpha" = 1} will always include all variables.
+Specifying `"alpha" = 1` will always include all variables.
 
-When using \code{type.factor="individual"} each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
-Using \code{type.factor="factor"} will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
+When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
+Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
 }
 \examples{
 # simulate some data:
@@ -129,7 +129,7 @@ summary(abe.fit.ind)
 Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 }
 \seealso{
-\code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
+[abe.resampling()], [lm()], [glm()] and [coxph()]
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
