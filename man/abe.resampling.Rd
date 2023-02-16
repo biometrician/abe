@@ -72,9 +72,13 @@ Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"L
 an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
 A list with the following elements:
 
-`models` if `save.out="minimal"` the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap; if `save.out="complete"` these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`.
+`coefficients` a matrix of coefficients of the final models obtained after performing ABE on re-sampled datasets; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap.
 
-`models.wallisch` similar as `models`; if using `type.resampling="Wallisch2021"` the coefficients and terms of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`
+`coefficients.wallisch` if using `type.resampling="Wallisch2021"` the coefficients of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`.
+
+`models` the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap. These are only returned if `save.out = "complete"`.
+
+`models.wallisch` similar as `models`; if using `type.resampling="Wallisch2021"` the coefficients and terms of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`. These are only returned if `save.out = "complete"`.
 
 `model.parameters` a dataframe of alpha and tau values corresponding to the resampled models.
 
@@ -84,7 +88,7 @@ A list with the following elements:
 
 `all.vars` a list of variables used when estimating `fit`
 
-`fit.or` the initial model
+`fit.global` the initial model. In earlier versions of the package this parameter was called `fit.or`.
 
 `misc` the parameters of the call to `abe.resampling`
 

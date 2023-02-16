@@ -289,9 +289,13 @@ bt
 #' @return an object of class `abe` for which `summary`, `plot` and `pie.abe` functions are available.
 #' A list with the following elements:
 #'
-#' `models` if `save.out="minimal"` the coefficients and terms of the final models obtained after performing ABE on re-sampled datasets; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap; if `save.out="complete"` these are the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`.
+#' `coefficients` a matrix of coefficients of the final models obtained after performing ABE on re-sampled datasets; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap.
 #'
-#' `models.wallisch` similar as `models`; if using `type.resampling="Wallisch2021"` the coefficients and terms of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`
+#' `coefficients.wallisch` if using `type.resampling="Wallisch2021"` the coefficients of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`.
+#'
+#' `models` the final models obtained after performing ABE on re-sampled datasets, each object in the list is of the same class as `fit`; if using  `type.resampling="Wallisch2021"`, these models are obtained by using bootstrap. These are only returned if `save.out = "complete"`.
+#'
+#' `models.wallisch` similar as `models`; if using `type.resampling="Wallisch2021"` the coefficients and terms of the final models obtained after performing ABE using resampling with `prop.sampling` equal to 0.5; `NULL` when using any other option in `type.resampling`. These are only returned if `save.out = "complete"`.
 #'
 #' `model.parameters` a dataframe of alpha and tau values corresponding to the resampled models.
 #'
@@ -301,7 +305,7 @@ bt
 #'
 #' `all.vars` a list of variables used when estimating `fit`
 #'
-#' `fit.or` the initial model
+#' `fit.global` the initial model. In earlier versions of the package this parameter was called `fit.or`.
 #'
 #' `misc` the parameters of the call to `abe.resampling`
 #'
@@ -403,16 +407,6 @@ bt
 
 abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal", parallel=FALSE,seed=NULL,...){
 if (!is.null(seed)) set.seed(seed)
-
-  #save.out<-"minimal" #add as argument if needed!
-  #added to reduce the size of the final object
-  my.sum.int<-function(x,save=save.out){
-    if (save=="minimal"){
-    xn<-list()
-    xn$terms<-x$terms
-    xn$coef<-coef(x)} else xn<-x
-    xn
-  }
 
 
   type.boot<-type.resampling
@@ -631,7 +625,7 @@ if (parallel==TRUE){
      fit.i<-my_update_boot(fit,data=data.boot)
     if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
       #boot[[i]]<-
-        my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+        abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
       } else {
     if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -639,17 +633,17 @@ if (parallel==TRUE){
 
 
                 #boot[[i]]<-
-                  my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                  abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                 #boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
 
                       }
 
 
     } else  #boot[[i]]<-
-        my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+        abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
 
     }}
    }
@@ -670,7 +664,7 @@ if (parallel==TRUE){
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             #boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
             } else {
 
           if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -679,15 +673,15 @@ if (parallel==TRUE){
 
 
               #boot[[i]]<-
-              my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
+              abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
 
                # boot[[i]]<-
-                my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
+                abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
                       }
 
 
           } else  #boot[[i]]<-
-            my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+            abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
 
         }}
 
@@ -710,7 +704,7 @@ if (parallel==TRUE){
 
         if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
           #boot[[i]]<-
-          my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+          abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
           } else {
 
         if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -719,16 +713,16 @@ if (parallel==TRUE){
 
 
             #boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
               #boot[[i]]<-
-              my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+              abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
                        }
 
 
         } else  #boot[[i]]<-
-          my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+          abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
 
       }}
 
@@ -772,7 +766,7 @@ boot2<-NULL
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
               #boot[[i]]<-
-              my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
               } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -780,17 +774,17 @@ boot2<-NULL
 
 
                   #boot[[i]]<-
-                  my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                  abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                     #boot[[i]]<-
-                    my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                    abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
 
                   }
 
 
               } else  #boot[[i]]<-
-                my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+                abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
 
             }}
         }
@@ -810,7 +804,7 @@ boot2<-NULL
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             #boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) )
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
             } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -819,15 +813,15 @@ boot2<-NULL
 
 
                 #boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
 
                   #boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
                 }
 
 
             } else  #boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
 
           }}
 
@@ -849,7 +843,7 @@ boot2<-NULL
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             #boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
             } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -858,16 +852,16 @@ boot2<-NULL
 
 
                 #boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                   #boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
                 }
 
 
             } else  #boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
 
           }}
 
@@ -907,7 +901,7 @@ boot1<-boot
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
              # boot[[i]]<-
-              my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
               } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -915,17 +909,17 @@ boot1<-boot
 
 
                   #boot[[i]]<-
-                  my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                  abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                     #boot[[i]]<-
-                    my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                    abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
 
                   }
 
 
               } else  #boot[[i]]<-
-                my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+                abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
 
             }}
         }
@@ -944,7 +938,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             #boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) )
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
             } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -953,15 +947,15 @@ boot1<-boot
 
 
                 #boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
 
                   #boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
                 }
 
 
             } else  #boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
 
           }}
 
@@ -982,7 +976,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
            # boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
             } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -991,16 +985,16 @@ boot1<-boot
 
 
                 #boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                   #boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
                 }
 
 
             } else  #boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
 
           }}
 
@@ -1011,16 +1005,6 @@ boot1<-boot
 
 
 #  }
-
-
-
-
-
-
-
-
-
-
 
 } else {
 
@@ -1061,7 +1045,7 @@ boot1<-boot
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
               boot[[i]]<-
-              my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
             } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -1069,17 +1053,17 @@ boot1<-boot
 
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                  abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                     boot[[i]]<-
-                    my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                    abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
 
                   }
 
 
               } else  boot[[i]]<-
-                my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+                abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
 
             }}
         }
@@ -1099,7 +1083,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
           } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -1108,15 +1092,15 @@ boot1<-boot
 
 
                 boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
 
                    boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
                 }
 
 
             } else  boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
 
           }}
 
@@ -1138,7 +1122,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
           } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -1147,16 +1131,16 @@ boot1<-boot
 
 
                 boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
                 }
 
 
             } else  boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
 
           }}
 
@@ -1200,7 +1184,7 @@ boot1<-boot
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
               boot[[i]]<-
-              my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
             } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -1208,17 +1192,17 @@ boot1<-boot
 
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                  abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                     boot[[i]]<-
-                    my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                    abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
 
                   }
 
 
               } else  boot[[i]]<-
-                my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+                abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
 
             }}
         }
@@ -1238,7 +1222,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) )
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
           } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -1247,15 +1231,15 @@ boot1<-boot
 
 
                 boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
                 }
 
 
             } else  boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
 
           }}
 
@@ -1277,7 +1261,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
           } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -1286,16 +1270,16 @@ boot1<-boot
 
 
                 boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
                 }
 
 
             } else  boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
 
           }}
 
@@ -1335,7 +1319,7 @@ boot1<-boot
             fit.i<-my_update_boot(fit,data=data.boot)
             if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
                boot[[i]]<-
-              my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
             } else {
               if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
 
@@ -1343,17 +1327,17 @@ boot1<-boot
 
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                  abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                     boot[[i]]<-
-                    my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                    abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
 
                   }
 
 
               } else  boot[[i]]<-
-                my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k))
+                abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=a,type.test,k)
 
             }}
         }
@@ -1372,7 +1356,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) )
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
           } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -1381,15 +1365,15 @@ boot1<-boot
 
 
                 boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k) } else  {
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)#,data=data.boot)
                 }
 
 
             } else  boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=t,exp.beta,exact,criterion,alpha=alpha,type.test,k)
 
           }}
 
@@ -1410,7 +1394,7 @@ boot1<-boot
 
           if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))!=0){
             boot[[i]]<-
-            my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+            abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
           } else {
 
             if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0)  {
@@ -1419,16 +1403,16 @@ boot1<-boot
 
 
                 boot[[i]]<-
-                my.sum.int(abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)) } else  {
+                abe.fact1.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k) } else  {
 
                   boot[[i]]<-
-                  my.sum.int(abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))#,data=data.boot)
+                  abe.fact2.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)#,data=data.boot)
 
                 }
 
 
             } else  boot[[i]]<-
-              my.sum.int(abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k))
+              abe.num.boot(fit.i,data.boot,include,active,tau=tau,exp.beta,exact,criterion,alpha=a,type.test,k)
 
           }}
 
@@ -1442,9 +1426,9 @@ boot1<-boot
   } #end if parallel
 
 
+  # add global fit
+  fit.global <- fit
 
-
-  fit.or<-fit
 if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0){
     if (type.factor=="individual") {
@@ -1488,12 +1472,13 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
 
       df<-cbind(df,model.frame(fit),data)
 
-      fit.or<-my_update(fit, updt.f   ,data=df)
+      fit.global<-my_update(fit, updt.f   ,data=df)
 
       }
   }
 }
 
+  # ad model parameters
   if(!is.null(alpha)){
     grid <- expand.grid(1:num.resamples, "tau" = tau, "alpha" = alpha)
     model.params <- grid[, c("alpha", "tau")]
@@ -1504,16 +1489,39 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
 
 
+  # create coefficient matrix
+  coefficients <- matrix(0, nrow = length(boot1), ncol = length(fit.global$coefficients),
+                         dimnames = list(1:length(boot1), names(fit.global$coefficients)))
+  if(type.resampling=="Wallisch2021"){
+    coefficients.wallisch <-  matrix(0, nrow = length(boot2), ncol = length(fit.global$coefficients),
+                                     dimnames = list(1:length(boot2), names(fit.global$coefficients)))
+  } else coefficients.wallisch <- NULL
+
+  for (i in 1:nrow(coefficients)) {
+    coefficients[i, names(boot1[[i]]$coefficients)] <- boot1[[i]]$coefficients
+    if(type.resampling=="Wallisch2021") coefficients.wallisch[i, names(boot2[[i]]$coefficients)] <- boot2[[i]]$coefficients
+  }
+
+
 if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 
   misc<-list(tau=tau,criterion=criterion,alpha=alpha,type.boot=type.boot.or,prop.sampling=prop.sampling)
   id<-list(id.models=id1,id.wallisch=id2)
-  res<-list(models=boot1,models.wallisch=boot2, model.parameters = model.params,
-            num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.or)),
-            fit.or=fit.or,misc=misc,id=id,call=match.call())
+
+  if(save.out == "minimal"){
+    res <- list(coefficients=coefficients,coefficients.wallisch=coefficients.wallisch, model.parameters = model.params,
+                num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.global)),
+                fit.global=fit.global,misc=misc,id=id,call=match.call())
+  } else {
+    res <- list(models=boot1,models.wallisch=boot2,coefficients=coefficients,
+                coefficients.wallisch=coefficients.wallisch, model.parameters = model.params,
+                num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.global)),
+                fit.global=fit.global,misc=misc,id=id,call=match.call())
+  }
+
 
   class(res)<-"abe"
-  res
+  return(res)
 }
 
 
@@ -2039,8 +2047,8 @@ sum
 
 
 
-rmsd<-lapply(1:length(mm),function(i,x,y) (x[[i]]-y)**2/diag(vcov(object$fit.or))  ,mm,  coef(object$fit.or))
-rel.bias<-lapply(1:length(mm),function(i,x,y) (x[[i]]/(y)  )  ,mm,  coef(object$fit.or))
+rmsd<-lapply(1:length(mm),function(i,x,y) (x[[i]]-y)**2/diag(vcov(object$fit.global))  ,mm,  coef(object$fit.global))
+rel.bias<-lapply(1:length(mm),function(i,x,y) (x[[i]]/(y)  )  ,mm,  coef(object$fit.global))
 
 
 
@@ -2070,7 +2078,7 @@ ff.relb<-function(x){
 }
 
 vars.model.col<-lapply(vars.model,function(x) paste(x,collapse="+"))
-vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl("strata",attributes(object$fit.or$terms)$term.labels)])
+vars.num<-c(object$all.vars,attributes(object$fit.global$terms)$term.labels[my_grepl("strata",attributes(object$fit.global$terms)$term.labels)])
 
 funk<-function(i,x,y) {(x[[i]]/y[i,]-1)*100}
 
@@ -2199,11 +2207,11 @@ if (object$misc$type.boot=="Wallisch2021"){
 
 
 
-  rmsd<-lapply(1:length(mm),function(i,x,y) (x[[i]]-y)**2/diag(vcov(object$fit.or))  ,mm,  coef(object$fit.or))
-  rel.bias<-lapply(1:length(mm),function(i,x,y) (x[[i]]/(y)  )  ,mm,  coef(object$fit.or))
+  rmsd<-lapply(1:length(mm),function(i,x,y) (x[[i]]-y)**2/diag(vcov(object$fit.global))  ,mm,  coef(object$fit.global))
+  rel.bias<-lapply(1:length(mm),function(i,x,y) (x[[i]]/(y)  )  ,mm,  coef(object$fit.global))
 
   vars.model.col<-lapply(vars.model,function(x) paste(x,collapse="+"))
-  vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl("strata",attributes(object$fit.or$terms)$term.labels)])
+  vars.num<-c(object$all.vars,attributes(object$fit.global$terms)$term.labels[my_grepl("strata",attributes(object$fit.global$terms)$term.labels)])
 
 
   if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
@@ -2318,7 +2326,7 @@ list<-list(var.rel.frequencies=list2$var.rel.frequencies,
      model.rel.frequencies=list2$model.rel.frequencies,
      var.coefs=list1$var.coefs)
 
-
+# pairwise selection frequencies
 ind <- 1:nrow(object$model.parameters)
 pair.rel.freqs <- Map(function(ind.models, r.names){
 
@@ -2341,7 +2349,7 @@ pair.rel.freqs <- Map(function(ind.models, r.names){
 
   expect_pairfreq <- matrix(NA, ncol = length(pred), nrow = length(pred))
 
-  # diagonal are individual selection frequencies
+  # diagonal elements are individual selection frequencies
   diag(resampling_pairfreq) <- resampling_VIF
 
   for (i in 1:length(pred_order)){
@@ -2454,7 +2462,7 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
 
     ss<-summary(object,conf.level = conf.level)
 
-    vars.num<-c(object$all.vars,attributes(object$fit.or$terms)$term.labels[my_grepl("strata",attributes(object$fit.or$terms)$term.labels)])
+    vars.num<-c(object$all.vars,attributes(object$fit.global$terms)$term.labels[my_grepl("strata",attributes(object$fit.global$terms)$term.labels)])
 
     idv<-which(vars.num%in%object$all.vars==TRUE)
     idg<-which(vars.num%in%object$all.vars==FALSE)
@@ -2468,8 +2476,8 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
     }
 
 
-    mat <- cbind(coef(object$fit.or),
-                 sqrt(diag(vcov(object$fit.or))),
+    mat <- cbind(coef(object$fit.global),
+                 sqrt(diag(vcov(object$fit.global))),
                  c(ss$var.rel.frequencies[rs,idv]),
                  t(ss$var.coefs[[rs]][,idv]))
 
@@ -2872,7 +2880,7 @@ if (type.plot=="variables"){
     d.plot <- d.plot[d.plot$Variable != "(Intercept)", ]
 
     if(object$criterion == "AIC") d.plot$alpha.plot <- 0.157
-    if(object$criterion == "BIC") d.plot$alpha.plot <- 1-pchisq(log(nrow(object$fit.or$x)), df=1)
+    if(object$criterion == "BIC") d.plot$alpha.plot <- 1-pchisq(log(nrow(object$fit.global$x)), df=1)
     if(object$criterion == "alpha"){
       d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha="), "[[", 2))
     }
@@ -2931,7 +2939,7 @@ if(type.plot == "stability"){
 
   if(object$criterion == "alpha") alphas <- sort(object$misc$alpha)
   if(object$criterion == "AIC") alphas <- c("0.157")
-  if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.or$x)), df=1))
+  if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.global$x)), df=1))
   taus <- sort(object$misc$tau)
 
   if(length(alphas) > 1 & length(taus) == 1){
