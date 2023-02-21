@@ -1964,7 +1964,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' @author Sladana Babic
 #' @author Gregor Steiner
 #' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
-#' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. It is possible to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+#' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 #' @seealso [abe.resampling()], [print.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @examples
@@ -2179,7 +2179,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #'
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
-#' If `type = "models"`, the `models.n` parameter controls the number of models printed. It is possible to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+#' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso [abe.resampling()], [summary.abe()], [plot.abe()], [pie.abe()]
 #' @export
@@ -2201,9 +2201,9 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alpha=NULL,tau=NULL,digits=2,...){
+print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 2,...){
 
-  object<-x
+  object <- x
 
   # check if type is valid
   if(!(type %in% c("coefficients", "models"))) stop("Invalid type.")
@@ -2211,124 +2211,21 @@ print.abe<-function(x,type="coefficients", models.n = NULL, conf.level=0.95,alph
   # coefficient table
   if(type == "coefficients"){
 
-    if (conf.level<0|conf.level>1) stop("Confidence level out of range")
-    if (!is.null(tau)) if(tau%in%object$misc$tau==FALSE) stop("This value of tau was not used in a call to abe.resampling.")
-    if (object$misc$criterion=="alpha") if(!is.null(alpha)) if(alpha%in%object$misc$alpha==FALSE) stop("This value of alpha was not used in a call to abe.resampling.")
-
-
-    if (object$misc$criterion=="alpha") if(is.null(alpha)) alpha=object$misc$alpha[1]
-
-    if (is.null(tau)) tau=object$misc$tau[1]
-
-    cat("Printing results of a call to abe.resampling for:\n  tau=",tau,"\n  criterion=\"",object$misc$criterion,"\"",sep="")
-    if (object$misc$criterion=="alpha" ) cat("  alpha=",alpha,sep="")
-
-    set<-paste("tau=",tau,sep="")
-    sea<-paste("alpha=",alpha,sep="")
-
-    if (object$misc$criterion=="alpha") rs<-paste(set,sea,sep=".") else rs <- paste0(set, ", ", object$criterion)
-
-    ss<-summary(object,conf.level = conf.level)
-
-    vars.num<-c(object$all.vars,attributes(object$fit.global$terms)$term.labels[my_grepl("strata",attributes(object$fit.global$terms)$term.labels)])
-
-    idv<-which(vars.num%in%object$all.vars==TRUE)
-    idg<-which(vars.num%in%object$all.vars==FALSE)
-
-
-    if (length(idv)!=length(vars.num)) {
-
-      pt<-paste(paste(names(ss$var.rel.frequencies[rs,])[idg],": ",ss$var.rel.frequencies[rs,idg],sep=""),collapse=",")
-      cat("\n\n Inclusion relative frequencies of the offset/stratification variable(s):",pt)
-
-    }
-
-
-    mat <- cbind(coef(object$fit.global),
-                 sqrt(diag(vcov(object$fit.global))),
-                 c(ss$var.rel.frequencies[rs,idv]),
-                 t(ss$var.coefs[[rs]][,idv]))
-
-    rownames(mat)<-names(ss$var.rel.frequencies[rs,])[idv]
-
-    colnames(mat)[1:3] <- c("Estimate init.", "Std. Error init.",
-                            "Incl. Freq.")
-    colnames(mat)[4:6]<-c("Estimate, 50%", paste("Estimate ",(1-conf.level)/2*100,"%",sep=""),paste("Estimate ",100-(1-conf.level)/2*100,"%",sep="") )
-    colnames(mat)[7:8]<-c("Estimate, mean","Estimate, sd")
-    colnames(mat)[9:10]<-c("RMSD ratio","RCB")
-    mat<-round(mat,digits)
-    cat("\n\n")
-
-    print(mat)
+    res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)$var.coefs
+    res <- lapply(res, round, digits = digits)
+    return(res)
 
   }
 
   # model selection frequencies
   if(type == "models"){
 
-    models <- object$models
-    if(object$misc$type.boot == "Wallisch2021") models <- object$models.wallisch
-
-
-    # loop over different criteria
-    names <- names(summary(object)$pair.rel.frequencies)
-    ind <- 1:nrow(object$model.parameters)
-
-    res.list <- Map(function(ind.int, name){
-      # only select models for this split
-      models.int <- models[ind.int]
-
-      # get frequencies
-      model.preds <- sapply(models.int, function(x){
-        # get predictors
-        preds <- names(x$coef)[-1] # -1 to exclude intercept
-
-        # paste the together and return string
-        res <- paste(preds, collapse = " ")
-        return(res)
-      })
-
-      # create output table
-      res <- data.frame("Predictors" = unique(model.preds))
-
-      # get counts
-      res$Count <- sapply(res$Predictors, function(x) sum(x == model.preds))
-      res$Percent <- res$Count / length(model.preds) * 100
-
-      # sort by count
-      res <- res[order(res$Count, decreasing = TRUE), ]
-      rownames(res) <- 1:nrow(res)
-      res$"Cumulative Percent" <- cumsum(res$Percent)
-
-      # use default values if models.n is not specified
-      if(is.null(models.n)){
-        ind.cum.freq <- which((res$"Cumulative Percent" / 100) >= 0.8)[1]
-        ind <- min(ind.cum.freq, 20) # return the shorter (=> min) of the two
-      }
-
-      # if models.n <= 1 use it as a cumulative frequency up until which to return
-      if(!is.null(models.n) && models.n <= 1){
-        ind.cum.freq <- which((res$"Cumulative Percent" / 100) >= models.n)[1]
-        ind <- ind.cum.freq
-      }
-
-      # if models.n > 1 use it as the absolute number to return
-      if(!is.null(models.n) && models.n > 1){
-        ind <- min(models.n, nrow(res)) # if models.n is larger than the number of models return that number instead
-      }
-
-      # only return the specified number of models
-      return(res[1:ind, ])
-
-    }, split(ind, ceiling(seq_along(ind) / object$num.boot)), names)
-
-    names(res.list) <- names
-    return(res.list)
+    res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau, models.n = models.n)$model.frequency
+    return(res)
 
   }
 
 }
-
 
 
 #' Plot Function

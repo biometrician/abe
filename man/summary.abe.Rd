@@ -46,7 +46,7 @@ makes a summary of a resampled version of ABE
 \details{
 Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 
-The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. It is possible to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 }
 \examples{
 set.seed(1)
