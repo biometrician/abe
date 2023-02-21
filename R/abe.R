@@ -1945,6 +1945,9 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' @param object an object of class `"abe"`, an object returned by a call to [abe.resampling()]
 #' @param conf.level the confidence level, defaults to 0.95, see `details`
 #' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.
+#' @param alpha the alpha value for which the output is to be printed. If `NULL`, the output is printed for all alpha values.
+#' @param tau the tau value for which the output is to be printed. If `NULL`, the output is printed for all tau values.
+#' @param models.n controls the number of models printed for `model.rel.frequencies`. See details.
 #' @param ... additional arguments affecting the summary produced.
 
 #' @return a list with the following elements:
@@ -1959,7 +1962,9 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Gregor Steiner
 #' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+#' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. It is possible to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 #' @seealso [abe.resampling()], [print.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @examples
@@ -1980,411 +1985,174 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' summary(fit.resample)
 
 
-summary.abe<-function(object,conf.level=0.95,pval=0.01,...){
-
-if (object$criterion!="alpha") alphas<-NULL else {
-
-if (!is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=length(object$misc$tau)*object$num.boot),sep="")
-if (is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=1*object$num.boot),sep="")
-
-}
-
-
-if (is.null(object$misc$tau)) taus<-NULL else {
-
-if (is.null(object$misc$alpha)) {taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),1), ", ", object$criterion, sep="")} else {
-
-taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),length(object$misc$alpha)),sep="")
-}
-}
-
-if (!is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha)*length(object$misc$tau))
-
-if (is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha))
-
-if (!is.null(object$misc$tau)&is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$tau))
-
-
-vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-  if (is.null(coef(x))) c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])}
-  )
-vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-  if (is.null(coef(x))) names(x$coef) else  names(coef(x))}
-)
-
-
-ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
-
-
-vars.model<-lapply(vars.model,ggff  )
-vars.model.cf<-lapply(vars.model.cf,ggff   )
-
-coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  if (!is.null(coef(x)) ) coef(x) else x$coef)
-
-
-object$all.vars<-ggff(object$all.vars)
-
-
-mm<-lapply(1:length(vars.model.cf),function(i,x,y,z) {zz<-list();zz[[i]]<-rep(0,length(y));zz[[i]][y%in%x[[i]]==T]<-z[[i]];names(zz[[i]])<-y;zz[[i]]},  vars.model.cf,object$all.vars,coefs.model  )
-
-
-ff<-function(x){
-
-gg<-matrix(unlist(x),nrow=length(x),ncol=length(object$all.vars),byrow=T)
-
-sum<-apply(gg,2,function(x)  c(median(x,na.rm=T),
-                               quantile(x,na.rm=T,
-                                        probs=c((1-conf.level)/2,conf.level+(1-conf.level)/2)),
-           mean(x,na.rm=TRUE),sd(x,na.rm=T))
-)
-
-colnames(sum)<-object$all.vars
-
-rownames(sum)<-c("median","lower quantile","upper quantile","mean","sd")
-sum
-
-}
-
-
-
-rmsd<-lapply(1:length(mm),function(i,x,y) (x[[i]]-y)**2/diag(vcov(object$fit.global))  ,mm,  coef(object$fit.global))
-rel.bias<-lapply(1:length(mm),function(i,x,y) (x[[i]]/(y)  )  ,mm,  coef(object$fit.global))
-
-
-
-ff1<-function(x){
-
-  if (length(x)!=1) gg<-matrix(unlist(x),nrow=length(x),ncol=length(object$all.vars),byrow=T) else gg<-matrix(unlist(x),nrow=length(unlist(x))/length(object$all.vars),ncol=length(object$all.vars),byrow=T)
-
-  sum<-apply(gg,2,function(x)  sqrt(mean(x,na.rm=T)))
-
-names(sum)<-object$all.vars
-
-sum
-
-}
-
-
-ff.relb<-function(x){
-
-  if (length(x)!=1) gg<-matrix(unlist(x),nrow=length(x),ncol=length(object$all.vars),byrow=T) else gg<-matrix(unlist(x),nrow=length(unlist(x))/length(object$all.vars),ncol=length(object$all.vars),byrow=T)
-
-  sum<-apply(gg,2,function(x)  mean(x,na.rm=T))
-
-  names(sum)<-object$all.vars
-
-  sum
-
-}
-
-vars.model.col<-lapply(vars.model,function(x) paste(x,collapse="+"))
-vars.num<-c(object$all.vars,attributes(object$fit.global$terms)$term.labels[my_grepl("strata",attributes(object$fit.global$terms)$term.labels)])
-
-funk<-function(i,x,y) {(x[[i]]/y[i,]-1)*100}
-
-if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
-    ss<-lapply(split(vars.model,list(taus,alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(split(vars.model.col,list(taus,alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
-
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
-
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    colnames(gg1)<-vars.num
-    rownames(gg1)<-names(ss)
-
-    ss1<-lapply(split(mm,list(taus,alphas)),ff)
-    ss2<-lapply(split(rmsd,list(taus,alphas)),ff1)
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
-
-    ss3<-lapply(split(rel.bias,list(taus,alphas)),ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
-    }
-
-if (object$criterion=="alpha"&is.null(object$misc$tau)) {
-    ss<-lapply(split(vars.model,list(alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(split(vars.model.col,list(alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
-
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
-
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    colnames(gg1)<-vars.num
-    rownames(gg1)<-names(ss)
-
-    ss1<-lapply(split(mm,list(alphas)),ff)
-    ss2<-lapply(split(rmsd,list(alphas)),ff1)
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
-
-
-    ss3<-lapply(split(rel.bias,list(alphas)),ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
-    }
-
-if (object$criterion!="alpha"&!is.null(object$misc$tau)){
-    ss<-lapply(split(vars.model,list(taus)),function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(split(vars.model.col,list(taus)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
-
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
-
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    colnames(gg1)<-vars.num
-    rownames(gg1)<-names(ss)
-    ss1<-lapply(split(mm,list(taus)),ff)
-    ss2<-lapply(split(rmsd,list(taus)),ff1)
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
-
-    ss3<-lapply(split(rel.bias,list(taus)),ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
-    }
-
-
-if (object$criterion!="alpha"&is.null(object$misc$tau)) {
-
-    ss<-lapply(vars.model,function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(vars.model.col,function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
-
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
-
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    rownames(gg1)<-names(ss)
-    colnames(gg1)<-vars.num
-    ss1<-lapply(mm,ff)
-    ss1<-lapply(mm,ff)
-    ss2<-lapply(rmsd,ff1)
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
-
-    ss3<-lapply( rel.bias,ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
-    }
-
-list1<-list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
-
-if (object$misc$type.boot=="Wallisch2021"){
-
-  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
-   if (!is.null(coef(x))) c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
-  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
-    if (!is.null(coef(x))) names(coef(x)) else names(x$coef)})
-
-
-
-
-  vars.model<-lapply(vars.model,ggff  )
-  vars.model.cf<-lapply(vars.model.cf,ggff   )
-
-  coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  {
-    if (!is.null(coef(x))) coef(x) else x$coef})
-
-
-  object$all.vars<-ggff(object$all.vars)
-
-
-  mm<-lapply(1:length(vars.model.cf),function(i,x,y,z) {zz<-list();zz[[i]]<-rep(0,length(y));zz[[i]][y%in%x[[i]]==T]<-z[[i]];names(zz[[i]])<-y;zz[[i]]},  vars.model.cf,object$all.vars,coefs.model  )
-
-
-
-
-  rmsd<-lapply(1:length(mm),function(i,x,y) (x[[i]]-y)**2/diag(vcov(object$fit.global))  ,mm,  coef(object$fit.global))
-  rel.bias<-lapply(1:length(mm),function(i,x,y) (x[[i]]/(y)  )  ,mm,  coef(object$fit.global))
-
-  vars.model.col<-lapply(vars.model,function(x) paste(x,collapse="+"))
-  vars.num<-c(object$all.vars,attributes(object$fit.global$terms)$term.labels[my_grepl("strata",attributes(object$fit.global$terms)$term.labels)])
-
-
-  if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
-    ss<-lapply(split(vars.model,list(taus,alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(split(vars.model.col,list(taus,alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
-
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
-
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    colnames(gg1)<-vars.num
-    rownames(gg1)<-names(ss)
-
-    ss1<-lapply(split(mm,list(taus,alphas)),ff)
-    ss2<-lapply(split(rmsd,list(taus,alphas)),ff1)
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
-
-    ss3<-lapply(split(rel.bias,list(taus,alphas)),ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
+summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, tau = NULL, models.n = NULL,...){
+
+  # get different criterion combinations
+  if(object$criterion != "alpha") names <- paste0(object$criterion, ", tau = ", unique(object$model.parameters[, "tau"]))
+  if(object$criterion == "alpha") {
+    uniq.comb <- unique(object$model.parameters)
+    names <- paste0("alpha = ", uniq.comb[, "alpha"], ", ", "tau = ", uniq.comb[, "tau"])
   }
 
-  if (object$criterion=="alpha"&is.null(object$misc$tau)) {
-    ss<-lapply(split(vars.model,list(alphas)),function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(split(vars.model.col,list(alphas)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
+  ind <- 1:nrow(object$model.parameters) # index vector
+  ind.split <- split(ind, ceiling(seq_along(ind) / object$num.boot)) # split index for different alpha/tau combinations (useful later)
 
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
-
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    colnames(gg1)<-vars.num
-    rownames(gg1)<-names(ss)
-
-    ss1<-lapply(split(mm,list(alphas)),ff)
-    ss2<-lapply(split(rmsd,list(alphas)),ff1)
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
-
-
-    ss3<-lapply(split(rel.bias,list(alphas)),ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
+  # if alpha or tau is specified only compute for those values
+  if(!is.null(alpha) | !is.null(tau)){
+    if(!(alpha %in% object$misc$alpha & tau %in% object$misc$tau)) stop("alpha and tau values have to match those in call to the abe.resampling object")
+    bool <- grepl(paste0("tau = ", tau), names) & grepl(paste0("alpha = ", alpha), names)
+    ind.split <- ind.split[bool]
+    names <- names[bool]
   }
 
-  if (object$criterion!="alpha"&!is.null(object$misc$tau)){
-    ss<-lapply(split(vars.model,list(taus)),function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(split(vars.model.col,list(taus)),function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
+  # get relevant coef matrix depending on resampling type
+  if(object$misc$type.boot != "Wallisch2021") coef_matrix <- object$coefficients
+  if(object$misc$type.boot == "Wallisch2021") coef_matrix <- object$coefficients.wallisch
 
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
+  # Relative selection frequency for each variable
+  var.rel.frequency <- mapply(function(ind.models){
+    # extract relevant models
+    coef_matrix_int <- coef_matrix[ind.models, -1]
 
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    colnames(gg1)<-vars.num
-    rownames(gg1)<-names(ss)
-    ss1<-lapply(split(mm,list(taus)),ff)
-    ss2<-lapply(split(rmsd,list(taus)),ff1)
+    # compute relative selection frequencies
+    res <- colMeans(coef_matrix_int != 0)
+    return(res)
 
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
+  }, ind.split) |> t()
 
-    ss3<-lapply(split(rel.bias,list(taus)),ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
-
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
-
-  }
+  rownames(var.rel.frequency) <- names
 
 
-  if (object$criterion!="alpha"&is.null(object$misc$tau)) {
+  # Model selection frequencies
+  model.frequency <- Map(function(ind.int, name){
 
-    ss<-lapply(vars.model,function(x) table(unlist(x))[vars.num]/object$num.boot)
-    ss.col<-lapply(vars.model.col,function(x) table(unlist(x))[order(-table(unlist(x)))]/object$num.boot)
+    # get frequencies
+    model.preds <- apply(coef_matrix[ind.int, ], 1, function(x){
+      # get predictors
+      preds <- names(x[x != 0])[-1] # -1 to exclude intercept
 
-    gg<-lapply(ss,function(x) {z<-ifelse(vars.num%in%names(x)==F,0,x);names(z)<-vars.num;z} )
+      # paste the together and return string
+      res <- paste(preds, collapse = " ")
+      return(res)
+    })
 
-    gg1<-matrix(unlist(gg),byrow=T,ncol=length(vars.num))
-    rownames(gg1)<-names(ss)
-    colnames(gg1)<-vars.num
-    ss1<-lapply(mm,ff)
-    ss1<-lapply(mm,ff)
-    ss2<-lapply(rmsd,ff1)
+    # create output table
+    res <- data.frame("Predictors" = unique(model.preds))
 
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"RMSD ratio") ;rr   }, ss1,ss2)
-    names(ss1)<-names(ss2)
+    # get counts
+    res$Count <- sapply(res$Predictors, function(x) sum(x == model.preds))
+    res$Percent <- res$Count / length(model.preds) * 100
 
-    ss3<-lapply( rel.bias,ff.relb)
-    ss3<-lapply(1:length(ss3),funk,ss3,matrix(gg1[,!my_grepl("strata",colnames(gg1))],ncol=sum(!my_grepl("strata",colnames(gg1)))))
+    # sort by count
+    res <- res[order(res$Count, decreasing = TRUE), ]
+    rownames(res) <- 1:nrow(res)
+    res$"Cumulative Percent" <- cumsum(res$Percent)
 
-    ss1<-lapply(1:length(ss1),function(i,x,y) {rr<-rbind(x[[i]],y[[i]]);colnames(rr)<-colnames(x[[i]]); rownames(rr)<-c(rownames(x[[i]]),"Relative Cond. Bias") ;rr   }, ss1,ss3)
-    names(ss1)<-names(ss2)
+    # use default values if models.n is not specified
+    if(is.null(models.n)){
+      ind.cum.freq <- which((res$"Cumulative Percent" / 100) >= 0.8)[1]
+      ind <- min(ind.cum.freq, 20) # return the shorter (=> min) of the two
+    }
 
-  }
+    # if models.n <= 1 use it as a cumulative frequency up until which to return
+    if(!is.null(models.n) && models.n <= 1){
+      ind.cum.freq <- which((res$"Cumulative Percent" / 100) >= models.n)[1]
+      ind <- ind.cum.freq
+    }
 
-  list2<-list(var.rel.frequencies=gg1,model.rel.frequencies=ss.col,var.coefs=ss1)
+    # if models.n > 1 use it as the absolute number to return
+    if(!is.null(models.n) && models.n > 1){
+      ind <- min(models.n, nrow(res)) # if models.n is larger than the number of models return that number instead
+    }
 
+    # only return the specified number of models
+    return(res[1:ind, ])
 
-
-
-}
-
-if (object$misc$type.boot!="Wallisch2021") list<-list1 else
-
-
-list<-list(var.rel.frequencies=list2$var.rel.frequencies,
-     model.rel.frequencies=list2$model.rel.frequencies,
-     var.coefs=list1$var.coefs)
-
-# pairwise selection frequencies
-ind <- 1:nrow(object$model.parameters)
-pair.rel.freqs <- Map(function(ind.models, r.names){
-
-  pred <- object$all.vars[-1]
-  pred_order <- order(gg1[r.names, pred], decreasing = T)
-
-  resampling_number <- object$num.boot
-
-
-  if(object$misc$type.boot != "Wallisch2021") coef_matrix <- t(sapply(object$models[ind.models], function(x) x$coef[pred[pred_order]]))
-  if(object$misc$type.boot == "Wallisch2021") coef_matrix <- t(sapply(object$models.wallisch[ind.models], function(x) x$coef[pred[pred_order]]))
-
-  coef_matrix_01 <- !is.na(coef_matrix)
-  colnames(coef_matrix_01) <- colnames(coef_matrix) <- pred[pred_order]
-
-  resampling_VIF <- gg1[r.names, pred[pred_order]] * 100
-
-  resampling_pairfreq <- matrix(100, ncol = length(pred), nrow = length(pred),
-                                dimnames = list(pred[pred_order],  pred[pred_order]))
-
-  expect_pairfreq <- matrix(NA, ncol = length(pred), nrow = length(pred))
-
-  # diagonal elements are individual selection frequencies
-  diag(resampling_pairfreq) <- resampling_VIF
-
-  for (i in 1:length(pred_order)){
-    for (j in 1:length(pred_order)){
-      # upper triangular matrix should be the pairwise selection frequencies
-      if(j > i){
-        # compute in how many of the models both variables appear together
-        resampling_pairfreq[i, j] <- mean(apply(coef_matrix_01[, c(i, j)], 1, sum) == 2) * 100
-        # compute expected selection frequency under independence (product of individual frequencies)
-        expect_pairfreq[i, j] <- (resampling_VIF[i] / 100) * (resampling_VIF[j] / 100) * 100
-
-        # lower triangular matrix should be the result of the chi-square test
-        cont.table <- table(coef_matrix_01[, i], coef_matrix_01[, j]) # get contingency table
-
-        if(ncol(cont.table) > 1 & nrow(cont.table) > 1){ # check if table has more than one row and column (i.e. dont test for variables with 100% selection frequency)
-          sig <- suppressWarnings(chisq.test(cont.table)$p.value < pval) # perform chi-squared test
-          text <- ifelse(!sig, "",
-                         ifelse(as.numeric(resampling_pairfreq[i, j]) - as.numeric(expect_pairfreq[i, j]) > 0, "+", "-"))
-        } else text <- ""
+  }, ind.split) |> setNames(names)
 
 
-        resampling_pairfreq[j, i] <- text
+  # variable coefficient table
+  var.coefs <- Map(function(ind.models, r.names){
+    # extract relevant models
+    coef_matrix_int <- coef_matrix[ind.models, ]
+
+    # compute quantities of interest column wise
+    res <- mapply(function(x, i){
+      quantiles <- quantile(x, probs = c((1-conf.level)/2, conf.level+(1-conf.level)/2))
+      vif <- mean(x != 0)
+
+      return(c("Median" = median(x),
+               "Lower quantile" = unname(quantiles[1]),
+               "Upper quantile" = unname(quantiles[2]),
+               "Mean" = mean(x),
+               "Sd" = sd(x),
+               "RMSD Ratio" = unname(sqrt( sum((x - object$fit.global$coefficients[i])^2 / length(x)) / diag(vcov(object$fit.global))[i])),
+               "Rel. cond. Bias" = unname(sum(x) / (object$fit.global$coefficients[i] * vif * length(x)) - 1)))
+
+    }, as.data.frame(coef_matrix_int), 1:ncol(coef_matrix_int))
+
+    return(res)
+
+  }, ind.split, names) |> setNames(names)
+
+
+
+  # pairwise selection frequencies
+  pair.rel.freqs <- Map(function(ind.models, r.names){
+
+    pred <- colnames(var.rel.frequency)
+    pred_order <- order(var.rel.frequency[r.names, ], decreasing = T)
+
+    resampling_number <- object$num.boot
+
+    coef_matrix_int <- coef_matrix[ind.models, pred[pred_order]]
+    coef_matrix_01 <- coef_matrix_int != 0
+
+    resampling_VIF <- var.rel.frequency[r.names, pred[pred_order]] * 100
+
+    resampling_pairfreq <- matrix(100, ncol = length(pred), nrow = length(pred),
+                                  dimnames = list(pred[pred_order],  pred[pred_order]))
+
+    expect_pairfreq <- matrix(NA, ncol = length(pred), nrow = length(pred))
+
+    # diagonal elements are individual selection frequencies
+    diag(resampling_pairfreq) <- resampling_VIF
+
+    for (i in 1:length(pred_order)){
+      for (j in 1:length(pred_order)){
+        # upper triangular matrix should be the pairwise selection frequencies
+        if(j > i){
+          # compute in how many of the models both variables appear together
+          resampling_pairfreq[i, j] <- mean(apply(coef_matrix_01[, c(i, j)], 1, sum) == 2) * 100
+          # compute expected selection frequency under independence (product of individual frequencies)
+          expect_pairfreq[i, j] <- (resampling_VIF[i] / 100) * (resampling_VIF[j] / 100) * 100
+
+          # lower triangular matrix should be the result of the chi-square test
+          cont.table <- table(coef_matrix_01[, i], coef_matrix_01[, j]) # get contingency table
+
+          if(ncol(cont.table) > 1 & nrow(cont.table) > 1){ # check if table has more than one row and column (i.e. dont test for variables with 100% selection frequency)
+            sig <- suppressWarnings(chisq.test(cont.table)$p.value < pval) # perform chi-squared test
+            text <- ifelse(!sig, "",
+                           ifelse(as.numeric(resampling_pairfreq[i, j]) - as.numeric(expect_pairfreq[i, j]) > 0, "+", "-"))
+          } else text <- ""
+
+
+          resampling_pairfreq[j, i] <- text
+        }
       }
     }
-  }
 
-  return(resampling_pairfreq)
+    return(resampling_pairfreq)
 
-}, split(ind, ceiling(seq_along(ind) / object$num.boot)), rownames(gg1))
+  }, ind.split, names) |> setNames(names)
 
 
-names(pair.rel.freqs) <- names(gg)
-list <- c(list, pair.rel.frequencies = list(pair.rel.freqs))
 
-return(list)
+  # return everything
+  return(list(var.rel.frequency = var.rel.frequency,
+              model.frequency = model.frequency,
+              var.coefs = var.coefs,
+              pair.rel.freqs = pair.rel.freqs))
 
 }
 

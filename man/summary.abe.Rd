@@ -4,7 +4,15 @@
 \alias{summary.abe}
 \title{Summary Function}
 \usage{
-\method{summary}{abe}(object, conf.level = 0.95, pval = 0.01, ...)
+\method{summary}{abe}(
+  object,
+  conf.level = 0.95,
+  pval = 0.01,
+  alpha = NULL,
+  tau = NULL,
+  models.n = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
@@ -12,6 +20,12 @@
 \item{conf.level}{the confidence level, defaults to 0.95, see `details`}
 
 \item{pval}{significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.}
+
+\item{alpha}{the alpha value for which the output is to be printed. If `NULL`, the output is printed for all alpha values.}
+
+\item{tau}{the tau value for which the output is to be printed. If `NULL`, the output is printed for all tau values.}
+
+\item{models.n}{controls the number of models printed for `model.rel.frequencies`. See details.}
 
 \item{...}{additional arguments affecting the summary produced.}
 }
@@ -31,6 +45,8 @@ makes a summary of a resampled version of ABE
 }
 \details{
 Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+
+The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. It is possible to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
 }
 \examples{
 set.seed(1)
@@ -56,4 +72,6 @@ summary(fit.resample)
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
 Sladana Babic
+
+Gregor Steiner
 }
