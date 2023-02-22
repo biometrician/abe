@@ -1429,6 +1429,7 @@ boot1<-boot
   # add global fit
   fit.global <- fit
 
+
 if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0){
     if (type.factor=="individual") {
@@ -1478,7 +1479,7 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   }
 }
 
-  # ad model parameters
+  # add model parameters
   if(!is.null(alpha)){
     grid <- expand.grid(1:num.resamples, "tau" = tau, "alpha" = alpha)
     model.params <- grid[, c("alpha", "tau")]
@@ -1487,6 +1488,22 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
     grid <- expand.grid(1:num.resamples, "tau" = tau)
     model.params <- grid[, c("tau"), drop = FALSE]
   }
+
+  # add selected fit
+  if(criterion != "alpha"){
+    fit.selected <- lapply(unique(model.params$tau), function(tau.int){
+      abe(fit, data = data, criterion = criterion, tau = tau.int, include = include,
+          active = active, exact = exact, type.test = type.test, type.factor = type.factor, verbose = FALSE)
+    })
+  }
+  if(criterion == "alpha"){
+    fit.selected <- apply(unique(model.params), 1, function(x){
+      abe(fit, data = data, criterion = criterion, alpha = x[1], tau = x[2], include = include,
+          active = active, exact = exact, type.test = type.test, type.factor = type.factor, verbose = FALSE)
+    })
+  }
+  names(fit.selected) <- 1:length(fit.selected)
+
 
 
   # create coefficient matrix
@@ -1511,12 +1528,12 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
   if(save.out == "minimal"){
     res <- list(coefficients=coefficients,coefficients.wallisch=coefficients.wallisch, model.parameters = model.params,
                 num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.global)),
-                fit.global=fit.global,misc=misc,id=id,call=match.call())
+                fit.global=fit.global, fit.selected = fit.selected,misc=misc,id=id,call=match.call())
   } else {
     res <- list(models=boot1,models.wallisch=boot2,coefficients=coefficients,
                 coefficients.wallisch=coefficients.wallisch, model.parameters = model.params,
                 num.boot=num.boot,criterion=criterion,all.vars=names(coef(fit.global)),
-                fit.global=fit.global,misc=misc,id=id,call=match.call())
+                fit.global=fit.global, fit.selected = fit.selected,misc=misc,id=id,call=match.call())
   }
 
 
@@ -1964,7 +1981,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' @author Sladana Babic
 #' @author Gregor Steiner
 #' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
-#' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+#' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
 #' @seealso [abe.resampling()], [print.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @examples
@@ -2024,7 +2041,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
 
   # Model selection frequencies
-  model.frequency <- Map(function(ind.int, name){
+  model.frequency <- Map(function(ind.int, fit.sel){
 
     # get frequencies
     model.preds <- apply(coef_matrix[ind.int, ], 1, function(x){
@@ -2065,10 +2082,26 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
       ind <- min(models.n, nrow(res)) # if models.n is larger than the number of models return that number instead
     }
 
-    # only return the specified number of models
-    return(res[1:ind, ])
+    # highlight the selected model
+    terms.selected <- paste(names(fit.sel$coefficients)[-1], collapse = " ")
+    ind.selected <- which(terms.selected == res$Predictors) # get index of selected model
+    res[ind.selected, "Predictors"] <- paste0(res[ind.selected, "Predictors"], " *") # add asterisk for selected model
 
-  }, ind.split) |> setNames(names)
+    # if selected model is not among the printed models add it as last model
+    if(length(ind.selected) == 0){
+      res <- res[1:ind, ]
+      res <- rbind(res, c("Predictors" = paste0(terms.selected, " *"),
+                          "Count" = 0, "Percent" = 0,
+                          "Cumulative Percent" = res[ind, "Cumulative Percent"]))
+    } else{
+      if(ind.selected <= ind) res <- res[1:ind, ]
+      if(ind.selected > ind) res <- res[c(1:ind, ind.selected), ]
+    }
+
+    # only return the specified number of models
+    return(res)
+
+  }, ind.split, object$fit.selected) |> setNames(names)
 
 
   # variable coefficient table
@@ -2179,7 +2212,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #'
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
-#' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned.
+#' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso [abe.resampling()], [summary.abe()], [plot.abe()], [pie.abe()]
 #' @export
