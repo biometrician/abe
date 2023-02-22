@@ -1973,7 +1973,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' `model.rel.frequencies`: relative frequencies of the final models; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 #'
-#' `var.coefs`: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
+#' `var.coefs`: coefficient estimates from the global and the selected model and medians, means, percentiles and standard deviations for the resampled estimates for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
 #'
 #' `pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
 #'
@@ -2019,10 +2019,12 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   if(!is.null(alpha)) if(!(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
   if(!is.null(tau)) if(!(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
   if(!is.null(alpha) | !is.null(tau)){
-    bool <- grepl(paste0("tau = ", tau), names) & grepl(paste0("alpha = ", alpha), names)
+    if(object$criterion != "alpha") bool <- grepl(paste0("tau = ", tau), names)
+    if(object$criterion == "alpha") bool <- grepl(paste0("tau = ", tau), names) & grepl(paste0("alpha = ", alpha), names)
     ind.split <- ind.split[bool]
     names <- names[bool]
   }
+
 
   # get relevant coef matrix depending on resampling type
   if(object$misc$type.boot != "Wallisch2021") coef_matrix <- object$coefficients
@@ -2107,7 +2109,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
 
   # variable coefficient table
-  var.coefs <- Map(function(ind.models, r.names){
+  var.coefs <- Map(function(ind.models, r.names, fit.sel){
     # extract relevant models
     coef_matrix_int <- coef_matrix[ind.models, ]
 
@@ -2126,9 +2128,17 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
     }, as.data.frame(coef_matrix_int), 1:ncol(coef_matrix_int))
 
+    # add global and selected estimates
+    coefs.selected <- rep(0, ncol(res)) |> setNames(colnames(res))
+    coefs.selected[names(fit.sel$coefficients)] <- fit.sel$coefficients
+    mat <- rbind(object$fit.global$coefficients, coefs.selected)
+    rownames(mat) <- c("Global estimate", "Selected estimate")
+
+    res <- rbind(mat, res)
+
     return(res)
 
-  }, ind.split, names) |> setNames(names)
+  }, ind.split, names, object$fit.selected[bool]) |> setNames(names)
 
 
 
@@ -2195,8 +2205,8 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' Print Function
 #'
 #' Prints a summary table of a bootstrapped/resampled version of ABE.
-#' The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
-#' the relative inclusion frequencies of the covariates from the initial model,
+#' The table displays the relative inclusion frequencies of the covariates from the initial model,
+#' the coefficient estimates and standard errors from the initial model (model with all covariates), the selected model,
 #' resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see `details`.
 #'
@@ -2246,8 +2256,25 @@ print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.
   # coefficient table
   if(type == "coefficients"){
 
-    res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)$var.coefs
+    sum.obj <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)
+
+    # ad VIF
+    res <- Map(function(freq.rows, coefs){
+
+      if(nrow(sum.obj$var.rel.frequencies) == 1){
+        rbind("VIF" = c("Intercept" = 1, sum.obj$var.rel.frequencies), coefs)
+      }
+      rbind("VIF" = c("Intercept" = 1, sum.obj$var.rel.frequencies[freq.rows, ]), coefs)
+
+    }, 1:nrow(sum.obj$var.rel.frequencies), sum.obj$var.coefs)
+
+    # order by vif
+    res <- lapply(res, function(x) x[, order(x["VIF", ], decreasing = TRUE)])
+
+    # round
     res <- lapply(res, round, digits = digits)
+
+    names(res) <- names(sum.obj$var.coefs)
     return(res)
 
   }

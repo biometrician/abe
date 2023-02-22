@@ -34,8 +34,8 @@
 }
 \description{
 Prints a summary table of a bootstrapped/resampled version of ABE.
-The table displays the coefficient estimates and standard errors from the initial model (model with all covariates),
-the relative inclusion frequencies of the covariates from the initial model,
+The table displays the relative inclusion frequencies of the covariates from the initial model,
+the coefficient estimates and standard errors from the initial model (model with all covariates), the selected model,
 resampled median and percentiles for the estimates of the regression coefficients for each variable from the initial model,
 root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see `details`.
 }
