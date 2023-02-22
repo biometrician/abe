@@ -2013,10 +2013,12 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
   ind <- 1:nrow(object$model.parameters) # index vector
   ind.split <- split(ind, ceiling(seq_along(ind) / object$num.boot)) # split index for different alpha/tau combinations (useful later)
+  bool <- rep(TRUE, length(ind.split))
 
   # if alpha or tau is specified only compute for those values
+  if(!is.null(alpha)) if(!(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
+  if(!is.null(tau)) if(!(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
   if(!is.null(alpha) | !is.null(tau)){
-    if(!(alpha %in% object$misc$alpha & tau %in% object$misc$tau)) stop("alpha and tau values have to match those in call to the abe.resampling object")
     bool <- grepl(paste0("tau = ", tau), names) & grepl(paste0("alpha = ", alpha), names)
     ind.split <- ind.split[bool]
     names <- names[bool]
@@ -2027,7 +2029,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   if(object$misc$type.boot == "Wallisch2021") coef_matrix <- object$coefficients.wallisch
 
   # Relative selection frequency for each variable
-  var.rel.frequency <- mapply(function(ind.models){
+  var.rel.frequencies <- mapply(function(ind.models){
     # extract relevant models
     coef_matrix_int <- coef_matrix[ind.models, -1]
 
@@ -2037,7 +2039,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
   }, ind.split) |> t()
 
-  rownames(var.rel.frequency) <- names
+  rownames(var.rel.frequencies) <- names
 
 
   # Model selection frequencies
@@ -2101,7 +2103,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     # only return the specified number of models
     return(res)
 
-  }, ind.split, object$fit.selected) |> setNames(names)
+  }, ind.split, object$fit.selected[bool]) |> setNames(names)
 
 
   # variable coefficient table
@@ -2133,15 +2135,15 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   # pairwise selection frequencies
   pair.rel.freqs <- Map(function(ind.models, r.names){
 
-    pred <- colnames(var.rel.frequency)
-    pred_order <- order(var.rel.frequency[r.names, ], decreasing = T)
+    pred <- colnames(var.rel.frequencies)
+    pred_order <- order(var.rel.frequencies[r.names, ], decreasing = T)
 
     resampling_number <- object$num.boot
 
     coef_matrix_int <- coef_matrix[ind.models, pred[pred_order]]
     coef_matrix_01 <- coef_matrix_int != 0
 
-    resampling_VIF <- var.rel.frequency[r.names, pred[pred_order]] * 100
+    resampling_VIF <- var.rel.frequencies[r.names, pred[pred_order]] * 100
 
     resampling_pairfreq <- matrix(100, ncol = length(pred), nrow = length(pred),
                                   dimnames = list(pred[pred_order],  pred[pred_order]))
@@ -2182,10 +2184,10 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
 
   # return everything
-  return(list(var.rel.frequency = var.rel.frequency,
-              model.frequency = model.frequency,
+  return(list(var.rel.frequencies = var.rel.frequencies,
+              model.rel.frequencies = model.frequency,
               var.coefs = var.coefs,
-              pair.rel.freqs = pair.rel.freqs))
+              pair.rel.frequencies = pair.rel.freqs))
 
 }
 
@@ -2253,7 +2255,7 @@ print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.
   # model selection frequencies
   if(type == "models"){
 
-    res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau, models.n = models.n)$model.frequency
+    res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau, models.n = models.n)$model.rel.frequencies
     return(res)
 
   }
@@ -2337,250 +2339,77 @@ print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
 plot.abe<-function(x,type.plot="coefficients",alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
-object<-x
-
-ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
-
-
-object$all.vars<-ggff(object$all.vars)
-
-
-  if (!is.null(variable)){
-      for (i in 1:length(variable)) if(sum(my_grepl(variable[i],object$all.vars))==0) stop("At least one specified variable was not included in the initial model.")
-
-       variable.l<-list()
-      for (i in 1:length(variable)) {
-        variable.l[[i]]<-object$all.vars[my_grep(variable[i],object$all.vars)]
-      }
-      variable<-unlist(variable.l)
-     }
+  object<-x
+  if(!(type.plot %in% c("coefficients", "variables", "models", "stability", "pairwise"))) stop("Invalid type.plot")
 
 
 
-  if (object$criterion!="alpha") alphas<-NULL else {
-
-    if (!is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=length(object$misc$tau)*object$num.boot),sep="")
-    if (is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=1*object$num.boot),sep="")
-  }
-
-
-  if (is.null(object$misc$tau)) taus<-NULL else {
-
-    if (is.null(object$misc$alpha)) {taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),1),sep="")} else {
-
-      taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),length(object$misc$alpha)),sep="")
-    }
-  }
-
-
-  if (!is.null(alpha)) if (sum(paste("alpha=",alpha,sep="")%in%unique(alphas))!=length(alpha)) stop("This value of alpha was not considered when using abe.resampling.")
-  if (!is.null(tau)) if (sum(paste("tau=",tau,sep="")%in%unique(taus))!=length(tau)) stop("This value of tau was not considered when using abe.resampling.")
-
-
-
-
-  if (!is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha)*length(object$misc$tau))
-
-  if (is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha))
-
-  if (!is.null(object$misc$tau)&is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$tau))
-
-if (object$misc$type.boot!="Wallisch2021"){
-vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
- if (!is.null(coef(x))) c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
-
-
-vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-  if (!is.null(coef(x))) names(coef(x)) else names(x$coef)
-  })
-} else {
   if (type.plot=="coefficients"){
-    vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-      if (!is.null(coef(x)))  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])
-      })
-    vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-      if (!is.null(coef(x))) names(coef(x)) else names(x$coef)})
-
-  } else {
-    vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
-      if (!is.null(coef(x)))  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
-
-    vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
-      if (!is.null(coef(x))) names(coef(x)) else names(x$coef)   } )
-
-  }
-
-}
-
-ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
 
 
-vars.model<-lapply(vars.model,ggff  )
-vars.model.cf<-lapply(vars.model.cf,ggff   )
+    if(object$misc$type.boot != "Wallisch2021") coef_matrix <- object$coefficients
+    if(object$misc$type.boot == "Wallisch2021") coef_matrix <- object$coefficients.wallisch
 
-
-if (object$misc$type.boot!="Wallisch2021"){
-coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  {
-  if (!is.null(coef(x))) coef(x) else x$coef})
-} else {
-  if (type.plot=="coefficients"){
-    coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  {
-      if (!is.null(coef(x))) coef(x) else x$coef})
-  } else {
-    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  {
-      if (!is.null(coef(x))) coef(x) else x$coef})
-  }
-}
-
-
-object$all.vars<-ggff(object$all.vars)
-
-
-coefs.model<-lapply(1:length(vars.model.cf),function(i,x,y,z) {zz<-list();zz[[i]]<-rep(0,length(y));zz[[i]][y%in%x[[i]]==T]<-z[[i]];names(zz[[i]])<-y;zz[[i]]},  vars.model.cf,object$all.vars,coefs.model  )
-
-
-
-if (!is.null(alpha)|!is.null(tau)){
-
-  if ( !is.null(alpha)&!is.null(tau)){
-    tau.i<-paste("tau=",tau,sep="")
-    alpha.i<-paste("alpha=",alpha,sep="")
-    coefs.model<-coefs.model[alphas%in%alpha.i&taus%in%tau.i]
-    alphas.ii<-alphas[alphas%in%alpha.i&taus%in%tau.i]
-    taus<-taus[alphas%in%alpha.i&taus%in%tau.i]
-    alphas<-alphas.ii
-  }
-
-  if ( !is.null(alpha)&is.null(tau)){
-    alpha.i<-paste("alpha=",alpha,sep="")
-    coefs.model<-coefs.model[alphas%in%alpha.i]
-    alphas.ii<-alphas[alphas%in%alpha.i]
-    taus<-taus[alphas%in%alpha.i]
-    alphas<-alphas.ii
+    # filter specified alpha and tau values if not NULL
+    model.parameters <- object$model.parameters
+    if(!is.null(alpha)){
+      if(!all(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
+      coef_matrix <- coef_matrix[model.parameters$alpha %in% alpha, ]
+      model.parameters <- model.parameters[model.parameters$alpha %in% alpha, ]
+    }
+    if(!is.null(tau)){
+      if(!all(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
+      coef_matrix <- coef_matrix[model.parameters$tau %in% tau, ]
+      model.parameters <- model.parameters[model.parameters$tau %in% tau, ]
     }
 
-
-  if ( is.null(alpha)&!is.null(tau)){
-    tau.i<-paste("tau=",tau,sep="")
-    coefs.model<-coefs.model[taus%in%tau.i]
-    taus.ii<-taus[taus%in%tau.i]
-    alphas<-alphas[taus%in%tau.i]
-    taus<-taus.ii}
-
-
-}
-
-
-if(!(type.plot %in% c("coefficients", "variables", "models", "stability", "pairwise"))) stop("Invalid type.plot")
-
-if (type.plot=="coefficients"){
-
-
-if (object$criterion=="alpha"&!is.null(object$misc$tau)) {
- ss<-lapply(split(coefs.model,list(taus,alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
- if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-
-
- d.plot <- do.call(rbind, Map(function(x, y){
-   d <- reshape2::melt(x)
-   d <- d[d$Var2 != "(Intercept)", ]
-   d$Model <- y
-   d
- }, ss, names(ss)))
-
-}
-
-if (object$criterion=="alpha"&is.null(object$misc$tau)) {
-  ss<-lapply(split(coefs.model,list(alphas)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
-  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-
-  d.plot <- do.call(rbind, Map(function(x, y){
-    d <- reshape2::melt(x)
-    d <- d[d$Var2 != "(Intercept)", ]
-    d$Model <- y
-    d
-  }, ss, names(ss)))
-
-}
-
-if (object$criterion!="alpha"&!is.null(object$misc$tau)){
-  ss<-lapply(split(coefs.model,list(taus)),function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
-  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-
-  d.plot <- do.call(rbind, Map(function(x, y){
-    d <- reshape2::melt(x)
-    d <- d[d$Var2 != "(Intercept)", ]
-    d$Model <- paste0(y, ", ", object$criterion)
-    d
-  }, ss, names(ss)))
-
-}
-
-
-if (object$criterion!="alpha"&is.null(object$misc$tau)) {
-
-  ss<-lapply(coefs.model,function(x) {mm<-matrix(unlist(x),ncol=length(object$all.vars),nrow=object$num.boot,byrow=T);colnames(mm)<-object$all.vars;mm})
-  if (!is.null(variable)) ss<-lapply(ss,function(x) {xi<-matrix(x[,colnames(x)%in%variable],ncol=sum(colnames(x)%in%variable),nrow=object$num.boot);colnames(xi)=object$all.vars[colnames(x)%in%variable] ;xi})
-
-  d.plot <- do.call(rbind, Map(function(x, y){
-    d <- reshape2::melt(x)
-    d <- d[d$Var2 != "(Intercept)", ]
-    d$Model <- paste0(y, ", ", object$criterion)
-    d
-  }, ss, names(ss)))
-
-
-
-}
-
-  p <- qplot(value, data = d.plot) +
-    geom_vline( xintercept = 0, color = "blue") +
-    facet_wrap(~ Model + Var2, scales = "free") +
-    theme_bw() +
-    xlab("Regression coefficient values") +
-    ylab("Number of resamples") +
-    theme(strip.text.x = element_text(size = 11))
-
-}
-
-if (type.plot=="variables"){
-  sum.obj<-summary(object)$var.rel.frequencies
-
-  if (!is.null(variable)){
-    sum.obji<-matrix(sum.obj[,colnames(sum.obj)%in%variable  ],ncol=sum(colnames(sum.obj)%in%variable),nrow=nrow(sum.obj))
-    colnames(sum.obji)<-colnames(sum.obj)[colnames(sum.obj)%in%variable]
-    rownames(sum.obji)<-rownames(sum.obj)
-      sum.obj<-sum.obji
-  }
-
-
-  if (is.null(alpha)&is.null(tau)) cnm<-rownames(sum.obj) else {
-    if (!is.null(alphas)&!is.null(taus)) {
-
-      if (!is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",alpha,sep="")
-      if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$misc$tau,".alpha=",alpha,sep="")
-      if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$misc$alpha,sep="")
-
-      } else {
-    if (is.null(alphas)) cnm<-paste("tau=",tau,sep="")
-    if (is.null(tau)) cnm<-paste("alpha=",alpha,sep="")
+    # filter for specified variables if not NULL
+    if(!is.null(variable)){
+      if(!(all(variable %in% colnames(coef_matrix)))) stop("At least one specified variable was not included in the initial model.")
+      coef_matrix <- coef_matrix[, variable]
     }
+
+    # get different criterion combinations
+    if(object$criterion != "alpha"){
+      coef.df <- data.frame(coef_matrix, "Model" = paste0(object$criterion, ", tau = ", model.parameters[, "tau"]))
+    }
+    if(object$criterion == "alpha") {
+      coef.df <- data.frame(coef_matrix, "Model" = paste0("alpha = ", model.parameters[, "alpha"], ", tau = ", model.parameters[, "tau"]))
+    }
+
+    # reshape
+    d.plot <- reshape2::melt(coef.df, id.vars = "Model")
+    d.plot <- d.plot[!grepl("Intercept", d.plot$variable), ]
+
+    # plot
+    p <- ggplot(d.plot) +
+      geom_histogram(aes(value), bins = 30) +
+      geom_vline( xintercept = 0, color = "blue") +
+      facet_wrap(~ Model + variable, scales = "free") +
+      theme_bw() +
+      xlab("Regression coefficient values") +
+      ylab("Number of resamples") +
+      theme(strip.text.x = element_text(size = 11))
+
   }
 
-    sum.obji<-matrix(sum.obj[ rownames(sum.obj)%in%cnm  ,  ],nrow=sum(rownames(sum.obj)%in%cnm),ncol=ncol(sum.obj))
-    colnames(sum.obji)<-colnames(sum.obj)
-    rownames(sum.obji)<-rownames(sum.obj)[rownames(sum.obj)%in%cnm]
-    sum.obj<-sum.obji
+  if (type.plot=="variables"){
 
-    d.plot <- reshape2::melt(sum.obj)
+
+    sum.obj <- data.frame(summary(object, alpha = alpha, tau = tau)$var.rel.frequencies)
+
+    if(!is.null(variable)){
+      if(!(all(variable %in% colnames(sum.obj)))) stop("At least one specified variable was not included in the initial model.")
+      sum.obj <- sum.obj[, variable]
+    }
+
+    d.plot <- reshape2::melt(data.frame(rownames(sum.obj), sum.obj), id.vars = 1)
     colnames(d.plot) <- c("Model", "Variable", "VIF")
-
-    d.plot <- d.plot[d.plot$Variable != "(Intercept)", ]
 
     if(object$criterion == "AIC") d.plot$alpha.plot <- 0.157
     if(object$criterion == "BIC") d.plot$alpha.plot <- 1-pchisq(log(nrow(object$fit.global$x)), df=1)
     if(object$criterion == "alpha"){
-      d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha="), "[[", 2))
+      d.plot$alpha.plot <- as.numeric(sapply(strsplit(as.character(d.plot$Model), "alpha = |[,]"), "[[", 2))
     }
 
     d.plot$Model <- factor(d.plot$Model)
@@ -2594,163 +2423,151 @@ if (type.plot=="variables"){
       labs(y = NULL, x = "VIF") +
       theme_bw()
 
-}
+  }
 
 
-if (type.plot=="models"){
-  if (!is.null(variable)) warning("Ploting relative frequencies of the final models but variable is not null. Ignoring the argument variable.")
-  sum.obj<-summary(object)$model.rel.frequencies
+  if (type.plot=="models"){
+    if (!is.null(variable)) warning("Ploting relative frequencies of the final models but variable is not null. Ignoring the argument variable.")
 
-  if (is.null(alpha)&is.null(tau)) cnm<-names(sum.obj) else {
-    if (!is.null(alphas)&!is.null(taus)) {
+    sum.obj<-summary(object, alpha = alpha, tau = tau)$model.rel.frequencies
 
-      if (!is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",alpha,sep="")
-      if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$misc$tau,".alpha=",alpha,sep="")
-      if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$misc$alpha,sep="")
+    d.plot <- do.call(rbind, Map(function(x, y){
+      d <- data.frame("Parameters" = y, "Model" = x$Predictors, "Frequency" = as.numeric(x$Percent) / 100)
+      d
+    }, sum.obj, names(sum.obj)))
 
-    } else {
-      if (is.null(alphas)) cnm<-paste("tau=",tau,sep="")
-      if (is.null(tau)) cnm<-paste("alpha=",alpha,sep="")
+    d.plot$Parameters <- factor(d.plot$Parameters)
+    d.plot$Model <- tidytext::reorder_within(d.plot$Model, d.plot$Frequency, d.plot$Parameters)
+
+    p <- ggplot(d.plot) +
+      geom_col(aes(y = reorder(Model, +Frequency, max), x = Frequency)) +
+      facet_wrap( ~ Parameters, scales = "free") +
+      labs(y = NULL, x = "Frequency") +
+      theme_bw() +
+      tidytext::scale_y_reordered()
+
+  }
+
+
+
+  if(type.plot == "stability"){
+
+    if(object$criterion == "alpha"){
+      alphas <- sort(object$misc$alpha)
+      if(!is.null(alpha)) alphas <- alpha
     }
-  }
+    if(object$criterion == "AIC") alphas <- c("0.157")
+    if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.global$x)), df=1))
+    taus <- sort(object$misc$tau)
+    if(!is.null(tau)) taus <- tau
 
-  sum.obj<-sum.obj[names(sum.obj)%in%cnm]
+    if(length(alphas) > 1 & length(taus) == 1){
+      if(type.stability == "tau") warning("type.stability = 'tau' requires more than 1 tau value, type.stability = 'alpha' is used instead.")
+      type.stability <- "alpha"
+    }
+    if(length(taus) > 1 & length(alphas) == 1) type.stability <- "tau"
 
-  d.plot <- do.call(rbind, Map(function(x, y){
-    d <- data.frame("Parameters" = y, "Model" = names(x), "Frequency" = as.vector(x))
-    d
-  }, sum.obj, names(sum.obj)))
+    sum.obj <- summary(object, alpha = alpha, tau = tau)
+    var_rel_freqABE <- data.frame(sum.obj$var.rel.frequencies)[, -1]
 
+    grid <- expand.grid( "tau" = taus, "alpha" = alphas)
+    var_rel_freqABE <- cbind(var_rel_freqABE, grid)
 
-  p <- ggplot(d.plot) +
-    geom_col(aes(y = reorder(Model, +Frequency, max), x = Frequency)) +
-    facet_wrap( ~ Parameters, scales = "free") +
-    labs(y = NULL, x = "Frequency") +
-    theme_bw()
+    data_longABE <- reshape2::melt(var_rel_freqABE, id.vars = c("alpha", "tau"))
 
+    if(type.stability == "alpha"){
 
-}
+      if(length(alphas) <= 1) stop("Stability plots require more than one alpha value.")
 
+      p <- ggplot(data_longABE) +
+        geom_line(aes(x = alpha, y = value, col = variable), linewidth = 0.75) +
+        facet_wrap(~ paste0("Tau = ", tau)) +
+        theme_bw() +
+        geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+        labs(x = expression(alpha), y = "Inclusion frequencies", col = "") +
+        ylim(0, 1)
+    }
 
+    if(type.stability == "tau"){
 
-if(type.plot == "stability"){
+      if(length(taus) <= 1) stop("Stability plots require more than one tau value.")
 
-  if(object$criterion == "alpha") alphas <- sort(object$misc$alpha)
-  if(object$criterion == "AIC") alphas <- c("0.157")
-  if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.global$x)), df=1))
-  taus <- sort(object$misc$tau)
+      if(object$criterion != "alpha") data_longABE$alpha <- paste0(object$criterion, " (Alpha = ", data_longABE$alpha, ")")
+      if(object$criterion == "alpha") data_longABE$alpha <- paste0("Alpha = ", data_longABE$alpha)
 
-  if(length(alphas) > 1 & length(taus) == 1){
-    if(type.stability == "tau") warning("type.stability = 'tau' requires more than 1 tau value, type.stability = 'alpha' is used instead.")
-    type.stability <- "alpha"
-  }
-  if(length(taus) > 1 & length(alphas) == 1) type.stability <- "tau"
+      p <- ggplot(data_longABE) +
+        geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
+        facet_wrap(~ alpha) +
+        scale_x_reverse() +
+        theme_bw() +
+        labs(x = expression(tau), y = "Inclusion Frequencies", col = "") +
+        ylim(0, 1)
+    }
 
-  sum.obj <- summary(object)
-  var_rel_freqABE <- data.frame(sum.obj$var.rel.frequencies)[, -1]
-
-  grid <- expand.grid( "tau" = taus, "alpha" = alphas)
-  var_rel_freqABE <- cbind(var_rel_freqABE, grid)
-
-  data_longABE <- reshape2::melt(var_rel_freqABE, id.vars = c("alpha", "tau"))
-
-  if(type.stability == "alpha"){
-
-    if(length(alphas) <= 1) stop("Stability plots require more than one alpha value.")
-
-    p <- ggplot(data_longABE) +
-      geom_line(aes(x = alpha, y = value, col = variable), linewidth = 0.75) +
-      facet_wrap(~ paste0("Tau = ", tau)) +
-      theme_bw() +
-      geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
-      labs(x = expression(alpha), y = "Inclusion frequencies", col = "") +
-      ylim(0, 1)
-  }
-
-  if(type.stability == "tau"){
-
-    if(length(taus) <= 1) stop("Stability plots require more than one tau value.")
-
-    if(object$criterion != "alpha") data_longABE$alpha <- paste0(object$criterion, " (Alpha = ", data_longABE$alpha, ")")
-    if(object$criterion == "alpha") data_longABE$alpha <- paste0("Alpha = ", data_longABE$alpha)
-
-    p <- ggplot(data_longABE) +
-      geom_line(aes(x = tau, y = value, col = variable), linewidth = 0.75) +
-      facet_wrap(~ alpha) +
-      scale_x_reverse() +
-      theme_bw() +
-      labs(x = expression(tau), y = "Inclusion Frequencies", col = "") +
-      ylim(0, 1)
   }
 
 
-}
+  if(type.plot == "pairwise"){
 
+    sumobj <- summary(object, alpha = alpha, tau = tau)$pair.rel.frequencies
 
-if(type.plot == "pairwise"){
+    d.plot <- do.call(rbind, Map(function(resampling_pairfreq, model){
 
-  sumobj <- summary(object)$pair.rel.frequencies
+      resampling_VIF <- as.numeric(diag(resampling_pairfreq))
 
-  d.plot <- do.call(rbind, Map(function(resampling_pairfreq, model){
+      # matrix of actual selection frequencies
+      m <- suppressWarnings(matrix(as.numeric(resampling_pairfreq),
+                                   ncol = ncol(resampling_pairfreq),
+                                   dimnames = dimnames(resampling_pairfreq)))
+      diag(m) <- NA
+      m[!is.na(m)] <- m[!is.na(m)]
+      m[is.na(m)] <- 0
+      m <- m + t(m)
+      diag(m) <- resampling_VIF
 
-    resampling_VIF <- as.numeric(diag(resampling_pairfreq))
-
-    # matrix of actual selection frequencies
-    m <- suppressWarnings(matrix(as.numeric(resampling_pairfreq),
-                                 ncol = ncol(resampling_pairfreq),
-                                 dimnames = dimnames(resampling_pairfreq)))
-    diag(m) <- NA
-    m[!is.na(m)] <- m[!is.na(m)]
-    m[is.na(m)] <- 0
-    m <- m + t(m)
-    diag(m) <- resampling_VIF
-
-    # compute expected selection frequencies under independence
-    m.expect <- matrix(NA, ncol = ncol(m), nrow = nrow(m))
-    for (i in 1:nrow(m)) {
-      for (j in 1:ncol(m)) {
-        m.expect[i, j] <- 100 * (m[i, i] / 100) * (m[j, j] / 100)
+      # compute expected selection frequencies under independence
+      m.expect <- matrix(NA, ncol = ncol(m), nrow = nrow(m))
+      for (i in 1:nrow(m)) {
+        for (j in 1:ncol(m)) {
+          m.expect[i, j] <- 100 * (m[i, i] / 100) * (m[j, j] / 100)
+        }
       }
-    }
 
-    # overselection is difference of actual and expected frequency
-    m.diff <- m - m.expect
+      # overselection is difference of actual and expected frequency
+      m.diff <- m - m.expect
 
-    # set diagonal elements to 0
-    diag(m.diff) <- 0
+      # set diagonal elements to 0
+      diag(m.diff) <- 0
 
-    d.plot <- reshape2::melt(m.diff)
-    d.plot$model <- model
-    d.plot$text <- melt(t(resampling_pairfreq))$value
+      d.plot <- reshape2::melt(m.diff)
+      d.plot$model <- model
+      d.plot$text <- melt(t(resampling_pairfreq))$value
 
-    return(d.plot)
+      return(d.plot)
 
-  }, sumobj, names(sumobj)))
+    }, sumobj, names(sumobj)))
 
-  d.plot$order <- 1:nrow(d.plot)
-  d.plot$model <- factor(d.plot$model)
-  d.plot$Var1 <- tidytext::reorder_within(d.plot$Var1, d.plot$order, d.plot$model)
-  d.plot$Var2 <- tidytext::reorder_within(d.plot$Var2, d.plot$order, d.plot$model)
-
-
-  p <- ggplot(d.plot, aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2)))))) +
-    geom_tile(aes(fill = value)) +
-    geom_tile(d.plot[d.plot$Var1 == d.plot$Var2, ],
-              mapping = aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2))))),
-              fill = NA, color = "black") + # frame diagonal elements
-    geom_text(aes(label = text)) +
-    facet_wrap(~ model, scales = "free") +
-    scale_fill_gradient2(low = "#FFC20A", mid = "white", high = "#0C7BDC") +
-    labs(x = "", y = "", fill = "Overselection") +
-    theme_bw() +
-    tidytext::scale_x_reordered() +
-    tidytext::scale_y_reordered()
+    d.plot$order <- 1:nrow(d.plot)
+    d.plot$model <- factor(d.plot$model)
+    d.plot$Var1 <- tidytext::reorder_within(d.plot$Var1, d.plot$order, d.plot$model)
+    d.plot$Var2 <- tidytext::reorder_within(d.plot$Var2, d.plot$order, d.plot$model)
 
 
-}
+    p <- ggplot(d.plot, aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2)))))) +
+      geom_tile(aes(fill = value)) +
+      geom_tile(d.plot[d.plot$Var1 == d.plot$Var2, ],
+                mapping = aes(x = Var1, y = ordered(factor(Var2), levels = rev(levels(factor(Var2))))),
+                fill = NA, color = "black") + # frame diagonal elements
+      geom_text(aes(label = text)) +
+      facet_wrap(~ model, scales = "free") +
+      scale_fill_gradient2(low = "#FFC20A", mid = "white", high = "#0C7BDC") +
+      labs(x = "", y = "", fill = "Overselection") +
+      theme_bw() +
+      tidytext::scale_x_reordered() +
+      tidytext::scale_y_reordered()
 
 
-
+  }
 
 
   return(p)
@@ -2802,134 +2619,20 @@ if(type.plot == "pairwise"){
 
 
 pie.abe<-function(x,alpha=NULL,tau=NULL,labels=NA,...){
-  object<-x
 
-  ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
+  # get model selection frequencies
+  sum.obj <- summary(x, alpha = alpha, tau = tau)$model.rel.frequencies
 
+  # plot
+  par(mfcol = c(length(sum.obj), 1), mar = c(1, 1, 4, 1))
+  invisible(
+    Map(function(x.int, i){
+      # drop zero entries
+      x.int <- x.int[x.int$Percent > 0, ]
 
-  object$all.vars<-ggff(object$all.vars)
-
-
-
-  if (object$criterion!="alpha") alphas<-NULL else {
-
-    if (!is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=length(object$misc$tau)*object$num.boot),sep="")
-    if (is.null(object$misc$tau)) alphas<-paste("alpha=",rep(object$misc$alpha,each=1*object$num.boot),sep="")
-  }
-
-
-  if (is.null(object$misc$tau)) taus<-NULL else {
-
-    if (is.null(object$misc$alpha)) {taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),1),sep="")} else {
-
-      taus<- paste("tau=",rep(rep( object$misc$tau,each=object$num.boot  ),length(object$misc$alpha)),sep="")
-    }
-  }
-
-
-  if (!is.null(alpha)) if (sum(paste("alpha=",alpha,sep="")%in%unique(alphas))!=length(alpha)) stop("This value of alpha was not considered when using abe.resampling.")
-  if (!is.null(tau)) if (sum(paste("tau=",tau,sep="")%in%unique(taus))!=length(tau)) stop("This value of tau was not considered when using abe.resampling.")
-
-
-
-
-  if (!is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha)*length(object$misc$tau))
-
-  if (is.null(object$misc$tau)&!is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$alpha))
-
-  if (!is.null(object$misc$tau)&is.null(object$misc$alpha)) boot.iter<- rep(1:object$num.boot,length(object$misc$tau))
-
-if (object$misc$type.boot!="Wallisch2021"){
-  vars.model<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-    if (!is.null(coef(x)))  c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)])})
-  vars.model.cf<-lapply(object$models,function(x) if (is.numeric(x)) "empty model" else {
-    if (!is.null(coef(x)))  names(coef(x)) else names(x$coef)})
-} else {
-  vars.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
-    if (!is.null(coef(x)))   c(names(coef(x)),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) else c(names(x$coef),attributes(x$terms)$term.labels[my_grepl("strata",attributes(x$terms)$term.labels)]) })
-  vars.model.cf<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) "empty model" else {
-    if (!is.null(coef(x))) names(coef(x)) else names(x$coef)})
-
-}
-
-  ggff<-function(x){ tbx<-table(x); {for (jj in which((tbx>1)==T)) {x[x==names(tbx[jj])]<-paste(x[x==names(tbx[jj])],1:sum(x==names(tbx[jj])),sep="")  }} ;x  }
-
-
-  vars.model<-lapply(vars.model,ggff  )
-  vars.model.cf<-lapply(vars.model.cf,ggff   )
-  if (object$misc$type.boot!="Wallisch2021"){
-  coefs.model<-lapply(object$models,function(x) if (is.numeric(x)) NULL else  {
-    if (!is.null(coef(x))) coef(x) else x$coef})
-  } else {
-    coefs.model<-lapply(object$models.wallisch,function(x) if (is.numeric(x)) NULL else  {
-      if (!is.null(coef(x))) coef(x) else x$coef})
-}
-
-  object$all.vars<-ggff(object$all.vars)
-
-
-  coefs.model<-lapply(1:length(vars.model.cf),function(i,x,y,z) {zz<-list();zz[[i]]<-rep(0,length(y));zz[[i]][y%in%x[[i]]==T]<-z[[i]];names(zz[[i]])<-y;zz[[i]]},  vars.model.cf,object$all.vars,coefs.model  )
-
-
-
-
-
-  if (!is.null(alpha)|!is.null(tau)){
-
-    if ( !is.null(alpha)&!is.null(tau)){
-      tau.i<-paste("tau=",tau,sep="")
-      alpha.i<-paste("alpha=",alpha,sep="")
-      coefs.model<-coefs.model[alphas%in%alpha.i&taus%in%tau.i]
-      alphas.ii<-alphas[alphas%in%alpha.i&taus%in%tau.i]
-      taus<-taus[alphas%in%alpha.i&taus%in%tau.i]
-      alphas<-alphas.ii
-    }
-
-    if ( !is.null(alpha)&is.null(tau)){
-      alpha.i<-paste("alpha=",alpha,sep="")
-      coefs.model<-coefs.model[alphas%in%alpha.i]
-      alphas.ii<-alphas[alphas%in%alpha.i]
-      taus<-taus[alphas%in%alpha.i]
-      alphas<-alphas.ii
-    }
-
-
-    if ( is.null(alpha)&!is.null(tau)){
-      tau.i<-paste("tau=",tau,sep="")
-      coefs.model<-coefs.model[taus%in%tau.i]
-      taus.ii<-taus[taus%in%tau.i]
-      alphas<-alphas[taus%in%tau.i]
-      taus<-taus.ii}
-
-
-  }
-
-
-
-
-    sum.obj<-summary(object)$model.rel.frequencies
-
-    if (is.null(alpha)&is.null(tau)) cnm<-names(sum.obj) else {
-      if (!is.null(alphas)&!is.null(taus)) {
-
-        if (!is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",alpha,sep="")
-        if (is.null(tau)&!is.null(alpha)) cnm<-paste("tau=",object$misc$tau,".alpha=",alpha,sep="")
-        if (!is.null(tau)&is.null(alpha)) cnm<-paste("tau=",tau,".alpha=",object$misc$alpha,sep="")
-
-      } else {
-        if (is.null(alphas)) cnm<-paste("tau=",tau,sep="")
-        if (is.null(tau)) cnm<-paste("alpha=",alpha,sep="")
-      }
-    }
-
-    sum.obj<-sum.obj[names(sum.obj)%in%cnm]
-
-    par(mfcol=c(length(sum.obj),1)   )
-    for (i in 1:length(sum.obj)) pie(sum.obj[[i]],main=names(sum.obj)[i],labels=labels )
-
-
-
-
+      pie(as.numeric(x.int$Percent), main = names(sum.obj)[i], labels=labels,...)
+    }, sum.obj, 1:length(sum.obj))
+  )
 
 }
 
