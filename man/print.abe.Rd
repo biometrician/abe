@@ -41,7 +41,7 @@ root mean squared difference ratio (RMSD) and relative bias conditional on selec
 }
 \details{
 When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
-
+s dem Subsampling und die
 Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 
 If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.

@@ -1973,7 +1973,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' `model.rel.frequencies`: relative frequencies of the final models; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 #'
-#' `var.coefs`: coefficient estimates from the global and the selected model and medians, means, percentiles and standard deviations for the resampled estimates for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
+#' `var.coefs`: coefficient estimates and standard errors from the global and the selected model and medians, means, percentiles and standard deviations for the resampled estimates for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
 #'
 #' `pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
 #'
@@ -2122,21 +2122,39 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
                "Lower quantile" = unname(quantiles[1]),
                "Upper quantile" = unname(quantiles[2]),
                "Mean" = mean(x),
-               "Sd" = sd(x),
+               "SE" = sd(x),
                "RMSD Ratio" = unname(sqrt( sum((x - object$fit.global$coefficients[i])^2 / length(x)) / diag(vcov(object$fit.global))[i])),
                "Rel. cond. Bias" = unname(sum(x) / (object$fit.global$coefficients[i] * vif * length(x)) - 1)))
 
     }, as.data.frame(coef_matrix_int), 1:ncol(coef_matrix_int))
 
+    # ad VIF
+    res <- rbind("VIF" = c("(Intercept)" = 1, var.rel.frequencies[r.names, ]), res)
+
+    # add resampling to names
+    if(object$misc$type.boot %in% c("bootstrap", "mn.bootstrap")) resamp <- "Bootstrap"
+    if(object$misc$type.boot == "subsampling") resamp <- "Subsampling"
+    if(object$misc$type.boot == "Wallisch2021") resamp <- c("Subsampling", rep("Bootstrap", length(rownames(res)) - 1))
+    rownames(res) <- paste(resamp, rownames(res))
+
     # add global and selected estimates
     coefs.selected <- rep(0, ncol(res)) |> setNames(colnames(res))
+    se.selected <- rep(NA, ncol(res)) |> setNames(colnames(res))
+
     coefs.selected[names(fit.sel$coefficients)] <- fit.sel$coefficients
-    mat <- rbind(object$fit.global$coefficients, coefs.selected)
-    rownames(mat) <- c("Global estimate", "Selected estimate")
+    se.selected[names(fit.sel$coefficients)] <- diag(vcov(fit.sel))
+
+    mat <- rbind(object$fit.global$coefficients, diag(vcov(object$fit.global)),
+                 coefs.selected, se.selected)
+    rownames(mat) <- c("Global estimate", "Global SE",
+                       "Selected estimate", "Selected SE")
 
     res <- rbind(mat, res)
 
-    return(res)
+    # order by vif
+    res <- res[, order(res[paste(resamp[1], "VIF"), ], decreasing = TRUE)]
+
+    return(t(res))
 
   }, ind.split, names, object$fit.selected[bool]) |> setNames(names)
 
@@ -2221,7 +2239,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
-#'
+#'s dem Subsampling und die
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
 #' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
@@ -2251,32 +2269,33 @@ print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.
   object <- x
 
   # check if type is valid
-  if(!(type %in% c("coefficients", "models"))) stop("Invalid type.")
+  if(!(type %in% c("coefficients", "coefficients reporting", "models"))) stop("Invalid type.")
 
   # coefficient table
   if(type == "coefficients"){
 
     sum.obj <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)
 
-    # ad VIF
-    res <- Map(function(freq.rows, coefs){
-
-      if(nrow(sum.obj$var.rel.frequencies) == 1){
-        rbind("VIF" = c("Intercept" = 1, sum.obj$var.rel.frequencies), coefs)
-      }
-      rbind("VIF" = c("Intercept" = 1, sum.obj$var.rel.frequencies[freq.rows, ]), coefs)
-
-    }, 1:nrow(sum.obj$var.rel.frequencies), sum.obj$var.coefs)
-
-    # order by vif
-    res <- lapply(res, function(x) x[, order(x["VIF", ], decreasing = TRUE)])
-
+    res <- sum.obj$var.coefs
     # round
     res <- lapply(res, round, digits = digits)
 
     names(res) <- names(sum.obj$var.coefs)
     return(res)
 
+  }
+
+  if(type == "coefficients reporting"){
+
+    sum.obj <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)
+
+    # only keep essential columns
+    res <- lapply(sum.obj$var.coefs, function(x) x[, c(1:5, 10)])
+    # round
+    res <- lapply(res, round, digits = digits)
+
+    names(res) <- names(sum.obj$var.coefs)
+    return(res)
   }
 
   # model selection frequencies
