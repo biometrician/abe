@@ -38,7 +38,7 @@ a list with the following elements:
 
 `var.coefs`: coefficient estimates and standard errors from the global and the selected model and medians, means, percentiles and standard deviations for the resampled estimates for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
 
-`pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
+`pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test. If using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 }
 \description{
 makes a summary of a resampled version of ABE

@@ -1975,7 +1975,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' `var.coefs`: coefficient estimates and standard errors from the global and the selected model and medians, means, percentiles and standard deviations for the resampled estimates for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
 #'
-#' `pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
+#' `pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test. If using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
@@ -2027,13 +2027,14 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
 
   # get relevant coef matrix depending on resampling type
-  if(object$misc$type.boot != "Wallisch2021") coef_matrix <- object$coefficients
-  if(object$misc$type.boot == "Wallisch2021") coef_matrix <- object$coefficients.wallisch
+  coef_matrix <- object$coefficients # if Wallisch, these are bootstrapped coefficients
+  coef_matrix_sub <- object$coefficients # Here the same object is assigned, this object should be identical to coef.matrix if type.boot != "Wallisch2021". Else we need two different coefficient matrices
+  if(object$misc$type.boot == "Wallisch2021") coef_matrix_sub <- object$coefficients.wallisch # if Wallisch, these are subsampled coefficients
 
   # Relative selection frequency for each variable
   var.rel.frequencies <- mapply(function(ind.models){
     # extract relevant models
-    coef_matrix_int <- coef_matrix[ind.models, -1]
+    coef_matrix_int <- coef_matrix_sub[ind.models, -1]
 
     # compute relative selection frequencies
     res <- colMeans(coef_matrix_int != 0)
@@ -2048,7 +2049,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   model.frequency <- Map(function(ind.int, fit.sel){
 
     # get frequencies
-    model.preds <- apply(coef_matrix[ind.int, ], 1, function(x){
+    model.preds <- apply(coef_matrix_sub[ind.int, ], 1, function(x){
       # get predictors
       preds <- names(x[x != 0])[-1] # -1 to exclude intercept
 
@@ -2168,7 +2169,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 
     resampling_number <- object$num.boot
 
-    coef_matrix_int <- coef_matrix[ind.models, pred[pred_order]]
+    coef_matrix_int <- coef_matrix_sub[ind.models, pred[pred_order]]
     coef_matrix_01 <- coef_matrix_int != 0
 
     resampling_VIF <- var.rel.frequencies[r.names, pred[pred_order]] * 100
@@ -2239,10 +2240,9 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
-#'s dem Subsampling und die
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
-#' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. a number larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
+#' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso [abe.resampling()], [summary.abe()], [plot.abe()], [pie.abe()]
 #' @export
@@ -2392,9 +2392,9 @@ plot.abe<-function(x,type.plot="coefficients",alpha=NULL,tau=NULL,variable=NULL,
 
   if (type.plot=="coefficients"){
 
-
-    if(object$misc$type.boot != "Wallisch2021") coef_matrix <- object$coefficients
-    if(object$misc$type.boot == "Wallisch2021") coef_matrix <- object$coefficients.wallisch
+    # get coefficient matrix
+    # if type.boot == "Wallisch2021", we want to use the bootstrapped coefficients here, so no need to use the coefficients wallisch
+    coef_matrix <- object$coefficients
 
     # filter specified alpha and tau values if not NULL
     model.parameters <- object$model.parameters
