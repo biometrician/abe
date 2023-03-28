@@ -2034,7 +2034,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   # Relative selection frequency for each variable
   var.rel.frequencies <- mapply(function(ind.models){
     # extract relevant models
-    coef_matrix_int <- coef_matrix_sub[ind.models, -1]
+    coef_matrix_int <- coef_matrix_sub[ind.models, ]
 
     # compute relative selection frequencies
     res <- colMeans(coef_matrix_int != 0)
@@ -2130,7 +2130,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     }, as.data.frame(coef_matrix_int), 1:ncol(coef_matrix_int))
 
     # ad VIF
-    res <- rbind("VIF" = c("(Intercept)" = 1, var.rel.frequencies[r.names, ]), res)
+    res <- rbind("VIF" = var.rel.frequencies[r.names, ], res)
 
     # add resampling to names
     if(object$misc$type.boot %in% c("bootstrap", "mn.bootstrap")) resamp <- "Bootstrap"
