@@ -11,7 +11,7 @@
   conf.level = 0.95,
   alpha = NULL,
   tau = NULL,
-  digits = 2,
+  digits = 3,
   ...
 )
 }

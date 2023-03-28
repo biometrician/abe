@@ -2264,7 +2264,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 2,...){
+print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
 
   object <- x
 
