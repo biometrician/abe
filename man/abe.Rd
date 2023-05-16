@@ -20,7 +20,7 @@ abe(
 )
 }
 \arguments{
-\item{fit}{An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+\item{fit}{An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
 Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
 
 \item{data}{data frame used when fitting the object `fit`.}
@@ -54,7 +54,7 @@ Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"L
 \item{...}{Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.}
 }
 \value{
-An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
+An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
 }
 \description{
 Function `abe` performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.

@@ -25,7 +25,7 @@ abe.resampling(
 )
 }
 \arguments{
-\item{fit}{An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+\item{fit}{An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
 Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
 
 \item{data}{data frame used when fitting the object `fit`.}

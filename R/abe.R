@@ -11,7 +11,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' It can also make a backward-selection based on significance or information criteria only by turning off the change-in-estimate criterion.
 #'
 #'
-#' @param fit An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+#' @param fit An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
 #' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
 #' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. These variables might be exposure variables of interest or known confounders.
@@ -46,7 +46,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #'
 #' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
 #'
-#' @return An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
+#' @return An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #'
 #' @seealso [abe.resampling()], [lm()], [glm()] and [coxph()]
@@ -124,7 +124,7 @@ if (nrow(fit$x)!=nrow(data)) stop("Data object contains missing values. Remove a
 
 if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
 
-if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
+if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit", "survreg")) stop("this model is not supported")
 
 if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
@@ -260,7 +260,7 @@ bt
 #' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 #'
 #'
-#' @param fit An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
+#' @param fit An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
 #' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
 #' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as passive variables during modeling. These variables might be exposure variables of interest or known confounders.
@@ -427,7 +427,7 @@ if (!is.null(seed)) set.seed(seed)
 
   if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
 
-  if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit")) stop("this model is not supported")
+  if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit", "survreg")) stop("this model is not supported")
 
   if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
