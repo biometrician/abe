@@ -33,7 +33,7 @@ dd<-data.frame(y,x1,x2,x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
 abe.fit<-abe.num(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
+tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
 type.test="Chisq",verbose=FALSE)
 summary(abe.fit)
 }

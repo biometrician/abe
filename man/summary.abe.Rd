@@ -4,7 +4,15 @@
 \alias{summary.abe}
 \title{Summary Function}
 \usage{
-\method{summary}{abe}(object, conf.level = 0.95, pval = 0.01, ...)
+\method{summary}{abe}(
+  object,
+  conf.level = 0.95,
+  pval = 0.01,
+  alpha = NULL,
+  tau = NULL,
+  models.n = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
@@ -12,6 +20,12 @@
 \item{conf.level}{the confidence level, defaults to 0.95, see `details`}
 
 \item{pval}{significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence.}
+
+\item{alpha}{the alpha value for which the output is to be printed. If `NULL`, the output is printed for all alpha values.}
+
+\item{tau}{the tau value for which the output is to be printed. If `NULL`, the output is printed for all tau values.}
+
+\item{models.n}{controls the number of models printed for `model.rel.frequencies`. See details.}
 
 \item{...}{additional arguments affecting the summary produced.}
 }
@@ -22,15 +36,17 @@ a list with the following elements:
 
 `model.rel.frequencies`: relative frequencies of the final models; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 
-`var.coefs`: medians, means, percentiles and standard deviations for the estimates of the regression coefficients for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
+`var.coefs`: coefficient estimates and standard errors from the global and the selected model and medians, means, percentiles and standard deviations for the resampled estimates for each variable from the initial model; if using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on bootstrap, otherwise by using the method as specified by `type.sampling`
 
-`pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test.
+`pair.rel.frequencies`: pairwise selection frequencies (in percent) for all pairs of variables. The significance of the deviation from the expected pairwise inclusion under independence is tested using a chi-squared test. If using `type.resampling="Wallisch2021"` in a call to [abe.resampling()] these results are based on subsampling with sampling proportion equal to 0.5, otherwise by using the method as specified by `type.sampling`
 }
 \description{
 makes a summary of a resampled version of ABE
 }
 \details{
 Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+
+The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
 }
 \examples{
 set.seed(1)
@@ -43,7 +59,7 @@ dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
 fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
 
 fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exp.beta=FALSE,exact=TRUE,
+tau=c(0.05,0.1),exact=TRUE,
 criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
 num.resamples=50,type.resampling="Wallisch2021")
 
@@ -56,4 +72,6 @@ summary(fit.resample)
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
 Sladana Babic
+
+Gregor Steiner
 }
