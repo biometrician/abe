@@ -11,8 +11,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' It can also make a backward-selection based on significance or information criteria only by turning off the change-in-estimate criterion.
 #'
 #'
-#' @param fit An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
-#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
+#' @param fit An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
+#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).
 #' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 #' They will never be dropped from the working model in the selection process,
@@ -119,18 +119,26 @@ exp.beta <- FALSE
 if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
 if(class(fit)[1] == "coxph") exp.beta <- TRUE
 
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  fit$x <- fit$model[, -1] # add x variables
+  attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+}
+
+# check if model matrix is included in the fit
 if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
 if (nrow(fit$x)!=nrow(data)) stop("Data object contains missing values. Remove all the missing values and refit the model.")
 
 if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
 
-if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit", "survreg")) stop("this model is not supported")
+if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit", "survreg", "logistf")) stop("this model is not supported")
 
-if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
+if (sum(unlist(lapply(strsplit(colnames(fit$x),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
 if (length(criterion)!=1) stop("you need to specify a single criterion")
 
-if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+if (colnames(fit$x)[1] == "(Intercept)") xm <- as.matrix(fit$x)[,-1] else xm <- as.matrix(fit$x)
 
 if (!is.matrix(xm) ) stop("performing variable selection with a single variable in the model is meaningless")
 if (sum(criterion%in%c("alpha","AIC","BIC"))==0) stop("valid criteria are alpha, AIC and BIC")
@@ -138,24 +146,29 @@ if (criterion=="alpha") if (alpha<0|alpha>1) stop("specify alpha between zero an
 if (is.null(tau)) stop("Specify tau.")
 if (tau<0) stop("Tau has to be >=0.")
 
-nm.var<-ncol(model.matrix(fit))
-if (class(fit)[1]=="lm"){
-  n<-nrow(model.matrix(fit))
+nm.var<-ncol(xm)
+if(class(fit)[1]=="lm"){
+  n<-nrow(xm)
   epv<-n/nm.var
   if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
-if (class(fit)[1]=="glm"){
+if(class(fit)[1]=="glm"){
   if (fit$family$family=="binomial"){
   n<-min(table(fit$y))
   epv<-n/nm.var
   if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
 }
-if (class(fit)[1]=="coxph"){
-  n <-fit$nevent
+if(class(fit)[1]=="coxph"){
+  n<-fit$nevent
   epv<-n/nm.var
   if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
+}
 
+if(class(fit)[1]=="logistf"){
+  n<-min(table(fit$y))
+  epv<-n/nm.var
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
 
 if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
@@ -260,8 +273,8 @@ bt
 #' Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
 #'
 #'
-#' @param fit An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
-#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.
+#' @param fit An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
+#' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).
 #' @param data data frame used when fitting the object `fit`.
 #' @param include a vector containing the names of variables that will be included in the final model. These variables are used as passive variables during modeling. These variables might be exposure variables of interest or known confounders.
 #' They will never be dropped from the working model in the selection process,
@@ -422,14 +435,22 @@ if (!is.null(seed)) set.seed(seed)
   if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
   if(class(fit)[1] == "coxph") exp.beta <- TRUE
 
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    fit$x <- fit$model[, -1] # add x variables
+    attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+    attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+  }
+
   if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
   if (nrow(fit$x)!=nrow(data)) stop("Data contains missing values. Remove all the missing values and refit the model.")
 
   if (class(fit)[1]=="lm") if (!"y"%in%names(fit)) stop("the model should be fitted with: y=T")
 
-  if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit", "survreg")) stop("this model is not supported")
+  if (!class(fit)[1]%in%c("lm","glm","coxph","brglmFit", "survreg", "logistf")) stop("this model is not supported")
 
-  if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
+  if (sum(unlist(lapply(strsplit(colnames(fit$x),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
   if (length(criterion)!=1) stop("you need to specify a single criterion")
   if (sum(criterion%in%c("alpha","AIC","BIC"))==0) stop("valid criteria are alpha, AIC and BIC")
@@ -441,12 +462,12 @@ if (!is.null(seed)) set.seed(seed)
 
   if (criterion!="alpha") alpha=NULL
 
-  if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+  if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
   if (!is.matrix(xm) ) stop("performing variable selection with a single variable in the model is meaningless")
 
 
-nm.var<-ncol(model.matrix(fit))
+nm.var<-ncol(fit$x)
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
   epv<-n/nm.var
@@ -2718,7 +2739,7 @@ if (criterion[1]=="BIC") k<-log(n)
 
 
 
- if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+ if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
 
 vcvx<-var(xm)
@@ -2749,10 +2770,10 @@ if (!is.null(active))  {
 if (sum(include%in%active)!=0) stop("at least one include variable is also specified as active")
 
 
-if ( sum(cnms%in%include)==length(cnms) ) stop("all variables are specified as pasive, cannot perform variable selection")
+if ( sum(cnms%in%include)==length(cnms) ) stop("all variables are specified as passive, cannot perform variable selection")
 if ( sum(cnms%in%active)==length(cnms) ) {
 		include=active=NULL
-		warning("all variables are specified as active, treating all variables as active or pasive")
+		warning("all variables are specified as active, treating all variables as active or passive")
 		}
 
 
@@ -2770,7 +2791,7 @@ while(stop==F){
 
 vcvm<-vcov(fit)
 
-if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
+if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
 if (is.null(dim(vcvm))) {
 		vcvm<-matrix(vcvm,ncol=1,nrow=1)
 		if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
@@ -2782,8 +2803,12 @@ if (verbose==TRUE) {
 	print(fit$call)
 	}
 
-
- if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
+if(class(fit)[1] == "logistf"){
+  scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+} else {
+  scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+}
+if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
 
 if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
@@ -2916,10 +2941,15 @@ fit
 
 abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",k){
 
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    fit$x <- fit$model[, -1] # add x variables
+    attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+    attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+  }
 
-
-
-  if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+  if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
 
   vcvx<-var(xm)
@@ -2941,7 +2971,7 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
     vcvm<-vcov(fit)
 
-    if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
+    if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
     if (is.null(dim(vcvm))) {
       vcvm<-matrix(vcvm,ncol=1,nrow=1)
       if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
@@ -2949,9 +2979,12 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
 
 
-
-      if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
-
+      if(class(fit)[1] == "logistf"){
+        scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+      } else {
+        scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+      }
+      if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
 
       if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
 
@@ -3371,8 +3404,15 @@ fit
 
 abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",k){
 
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    fit$x <- fit$model[, -1] # add x variables
+    attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+    attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+  }
 
-  if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+  if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
 
   var.mod<-attributes(fit$terms)$term.labels

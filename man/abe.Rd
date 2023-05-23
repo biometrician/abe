@@ -20,8 +20,8 @@ abe(
 )
 }
 \arguments{
-\item{fit}{An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the fit.
-Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
+\item{fit}{An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
+Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).}
 
 \item{data}{data frame used when fitting the object `fit`.}
 
