@@ -44,7 +44,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
 #' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
 #'
-#' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
+#' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic, Cox, and parametric survival models only.
 #'
 #' @return An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
@@ -118,6 +118,8 @@ if("exp.beta" %in% names(list(...))) warning("Using exp.beta is not supported an
 exp.beta <- FALSE
 if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
 if(class(fit)[1] == "coxph") exp.beta <- TRUE
+if(inherits(fit, "logistf")) exp.beta <- TRUE
+if(inherits(fit, "survreg")) exp.beta <- TRUE
 
 # some necessary adjustments for logistf objects
 if(inherits(fit, "logistf")){
@@ -434,6 +436,8 @@ if (!is.null(seed)) set.seed(seed)
   exp.beta <- FALSE
   if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
   if(class(fit)[1] == "coxph") exp.beta <- TRUE
+  if(inherits(fit, "logistf")) exp.beta <- TRUE
+  if(inherits(fit, "survreg")) exp.beta <- TRUE
 
   # some necessary adjustments for logistf objects
   if(inherits(fit, "logistf")){
