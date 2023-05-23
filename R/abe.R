@@ -107,9 +107,13 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' summary(abe.fit.ind)
 
 
-abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,verbose=TRUE,...){
+abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion=c("alpha", "AIC", "BIC"),alpha=0.2,type.test=c("Chisq", "F", "Rao", "LRT"),type.factor=NULL,verbose=TRUE,...){
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 assign(as.character(substitute(data)),data)
+
+# match arguments
+criterion <- match.arg(criterion)
+type.test <- match.arg(type.test)
 
 # check if user supplied the exp.beta argument and warn them if so
 if("exp.beta" %in% names(list(...))) warning("Using exp.beta is not supported anymore. It is now automatically set to FALSE for linear models and TRUE for logistic and Cox models.")
@@ -420,9 +424,15 @@ bt
 #' #stopCluster(cl)
 
 
-abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",type.factor=NULL,num.resamples=100,type.resampling="Wallisch2021",prop.sampling=0.5,save.out="minimal", parallel=FALSE,seed=NULL,...){
+abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criterion=c("alpha", "AIC", "BIC"),alpha=0.2,type.test=c("Chisq", "F", "Rao", "LRT"),type.factor=NULL,num.resamples=100,type.resampling=c("Wallisch2021", "bootstrap", "mn.bootstrap", "subsampling"),prop.sampling=0.5,save.out=c("minimal", "complete"), parallel=FALSE,seed=NULL,...){
 if (!is.null(seed)) set.seed(seed)
 
+
+  # match arguments
+  criterion <- match.arg(criterion)
+  type.test <- match.arg(type.test)
+  type.resampling <- match.arg(type.resampling)
+  save.out <- match.arg(save.out)
 
   type.boot<-type.resampling
   num.boot<-num.resamples
@@ -2255,7 +2265,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see `details`.
 #'
 #' @param x an object of class `"abe"`, an object returned by a call to [abe.resampling()]
-#' @param type the type of the output. `type = "coefficients"` prints summary statistics for each coefficient. `type = "models"` reports model selection frequencies.
+#' @param type the type of the output. `type = "coefficients"` prints summary statistics for each coefficient, `type = "coefficients reporting"` prints a reduced version of the coefficient statistics, and `type = "models"` reports model selection frequencies.
 #' @param conf.level the confidence level, defaults to 0.95, see `details`
 #' @param alpha the alpha value for which the output is to be printed, defaults to `NULL`
 #' @param tau the tau value for which the output is to be printed, defaults to `NULL`
@@ -2289,12 +2299,12 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 
 
-print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
+print.abe <- function(x, type = c("coefficients", "coefficients reporting", "models"), models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
+
+  # match arguments
+  type <- match.arg(type)
 
   object <- x
-
-  # check if type is valid
-  if(!(type %in% c("coefficients", "coefficients reporting", "models"))) stop("Invalid type.")
 
   # coefficient table
   if(type == "coefficients"){
@@ -2409,11 +2419,12 @@ print.abe <- function(x, type = "coefficients", models.n = NULL, conf.level = 0.
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
-plot.abe<-function(x,type.plot="coefficients",alpha=NULL,tau=NULL,variable=NULL, type.stability = "alpha", ...){
+plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), ...){
   object<-x
-  if(!(type.plot %in% c("coefficients", "variables", "models", "stability", "pairwise"))) stop("Invalid type.plot")
 
-
+  # match arguments
+  type.plot <- match.arg(type.plot)
+  type.stability <- match.arg(type.stability)
 
   if (type.plot=="coefficients"){
 

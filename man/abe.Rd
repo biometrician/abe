@@ -11,9 +11,9 @@ abe(
   active = NULL,
   tau = 0.05,
   exact = FALSE,
-  criterion = "alpha",
+  criterion = c("alpha", "AIC", "BIC"),
   alpha = 0.2,
-  type.test = "Chisq",
+  type.test = c("Chisq", "F", "Rao", "LRT"),
   type.factor = NULL,
   verbose = TRUE,
   ...
