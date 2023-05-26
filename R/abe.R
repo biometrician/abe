@@ -125,11 +125,15 @@ if(class(fit)[1] == "coxph") exp.beta <- TRUE
 if(inherits(fit, "logistf")) exp.beta <- TRUE
 if(inherits(fit, "survreg")) exp.beta <- TRUE
 
-# some necessary adjustments for logistf objects
+
+
+# some checks and adjustments for logistf objects
 if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
   if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
   fit$x <- fit$model[, -1] # add x variables
   attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+  attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
 }
 
 # check if model matrix is included in the fit
@@ -449,8 +453,9 @@ if (!is.null(seed)) set.seed(seed)
   if(inherits(fit, "logistf")) exp.beta <- TRUE
   if(inherits(fit, "survreg")) exp.beta <- TRUE
 
-  # some necessary adjustments for logistf objects
+  # some checks and adjustments for logistf objects
   if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     fit$x <- fit$model[, -1] # add x variables
     attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
@@ -2806,7 +2811,6 @@ while(stop==F){
 
 # some necessary adjustments for logistf objects
 if(inherits(fit, "logistf")){
-  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
   fit$x <- fit$model[, -1] # add x variables
   attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
   attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
@@ -2983,7 +2987,6 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
   # some necessary adjustments for logistf objects
   if(inherits(fit, "logistf")){
-    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     fit$x <- fit$model[, -1] # add x variables
     attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
     attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
@@ -3172,7 +3175,6 @@ if (exact==F) {warning("there are factors in the model, using approximate change
 
 # some necessary adjustments for logistf objects
 if(inherits(fit, "logistf")){
-  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
   fit$x <- fit$model[, -1] # add x variables
   attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
   attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
@@ -3504,7 +3506,6 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   # some necessary adjustments for logistf objects
   if(inherits(fit, "logistf")){
-    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     fit$x <- fit$model[, -1] # add x variables
     attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
     attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
@@ -3795,7 +3796,6 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
 
 # some necessary adjustments for logistf objects
 if(inherits(fit, "logistf")){
-  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
   fit$x <- fit$model[, -1] # add x variables
   attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
   attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
@@ -4061,7 +4061,6 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   # some necessary adjustments for logistf objects
   if(inherits(fit, "logistf")){
-    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     fit$x <- fit$model[, -1] # add x variables
     attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
     attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
