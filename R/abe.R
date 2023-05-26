@@ -1468,7 +1468,7 @@ boot1<-boot
 if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
   if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0){
     if (type.factor=="individual") {
-      df<-as.data.frame(model.matrix(fit))
+      df<-as.data.frame(fit$x)
 
       names(df)<-gsub("factor", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
                       fixed = FALSE, useBytes = FALSE)
@@ -1504,7 +1504,7 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
         active<-unlist(active.l)
       }
 
-        if ( colnames(model.matrix(fit))[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
+        if ( colnames(fit$x)[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
 
       df<-cbind(df,model.frame(fit),data)
 
@@ -1658,7 +1658,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 
   if (class(fit)[1]=="lm"&exp.beta==T&any(tau!=Inf)) warning("using change in estimate for exp(b) with linear model, try to use exp.beta=F")
 
-  if (sum(unlist(lapply(strsplit(colnames(model.matrix(fit)),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
+  if (sum(unlist(lapply(strsplit(colnames(fit$x),split=":"),function(x) length(x)!=1)))!=0) stop("interaction effects are not supported")
 
   if (length(criterion)!=1) stop("you need to specify a single criterion")
   if (sum(criterion%in%c("alpha","AIC","BIC"))==0) stop("valid criteria are alpha, AIC and BIC")
@@ -1667,7 +1667,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
   if (sum(tau<0)!=0) stop("Taus has to be >=0.")
 
   if (length(type.boot)!=1) stop("you need to specify a single resampling method")
-  nm.var<-ncol(model.matrix(fit))
+  nm.var<-ncol(fit$x)
   if (class(fit)[1]=="lm"){
     n<-nrow(model.matrix(fit))
     epv<-n/nm.var
@@ -1688,7 +1688,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
   }
   if (criterion!="alpha") alpha=NULL
 
-  if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+  if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
   if (!is.matrix(xm) ) stop("performing variable selection with a single variable in the model is meaningless")
 
@@ -1933,7 +1933,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
   if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
     if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fit$terms)$dataClasses))]=="factor")>0){
       if (type.factor=="individual") {
-        df<-as.data.frame(model.matrix(fit))
+        df<-as.data.frame(fit$x)
 
         names(df)<-gsub("factor", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
                         fixed = FALSE, useBytes = FALSE)
@@ -1969,7 +1969,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
           active<-unlist(active.l)
         }
 
-        if ( colnames(model.matrix(fit))[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
+        if ( colnames(fit$x)[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
 
         df<-cbind(df,model.frame(fit),data)
 
@@ -2804,12 +2804,20 @@ stop=F
 
 while(stop==F){
 
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  fit$x <- fit$model[, -1] # add x variables
+  attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+  attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+}
+
 vcvm<-vcov(fit)
 
 if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
 if (is.null(dim(vcvm))) {
 		vcvm<-matrix(vcvm,ncol=1,nrow=1)
-		if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
+		if (colnames(fit$x)[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
 		}
 
 
@@ -2818,7 +2826,7 @@ if (verbose==TRUE) {
 	print(fit$call)
 	}
 
-if(class(fit)[1] == "logistf"){
+if(inherits(fit, "logistf")){
   scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
 } else {
   scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
@@ -2828,15 +2836,21 @@ if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=
 if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
 
-if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
+if (criterion!="alpha"){
+  black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+}   else {
+  if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+  black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+}
 
 
 if (length(black.list.i)!=0){
 
 
   if (criterion=="alpha") {
-     black.list.i<-varnfix[order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
-    criterion.i<-bl[-1,pmatch("Pr",names(bl))][order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
+    if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+    black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+    criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
   } else {
     black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
@@ -2860,7 +2874,7 @@ if (length(black.list.i)!=0){
 		 		fit.i<-update(fit,xf,evaluate=FALSE)
 				fit.i<-eval.parent(fit.i)
 
-				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+				if (colnames(fit$x)[1]=="(Intercept)") {
 
 					change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
 					} else {
@@ -2869,7 +2883,7 @@ if (length(black.list.i)!=0){
 
 
 				} else {
-				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+				if (colnames(fit$x)[1]=="(Intercept)") {
 					change.in.estimate<- abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]==black.list.i[i])+1]*vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]] /vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)==black.list.i[i]])
 					names(change.in.estimate)<-colnames(vcvm)[colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]]
 					} else {
@@ -2984,12 +2998,21 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
   while(stop==F){
 
+    # some necessary adjustments for logistf objects
+    if(inherits(fit, "logistf")){
+      if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+      fit$x <- fit$model[, -1] # add x variables
+      attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+      attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+    }
+
+
     vcvm<-vcov(fit)
 
     if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
     if (is.null(dim(vcvm))) {
       vcvm<-matrix(vcvm,ncol=1,nrow=1)
-      if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
+      if (colnames(fit$x)[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
     }
 
 
@@ -3001,15 +3024,19 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
       }
       if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
 
-      if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
-
+      if (criterion!="alpha"){
+        black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+      }   else {
+        if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+        black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+      }
 
     if (length(black.list.i)!=0){
 
-
       if (criterion=="alpha") {
-         black.list.i<-varnfix[order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
-        criterion.i<-bl[-1,pmatch("Pr",names(bl))][order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
+        if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+        black.list.i<-varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+        criterion.i<-bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
       } else {
         black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
         criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
@@ -3031,7 +3058,7 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
            fit.i<-update(fit,xf,evaluate=FALSE)
           fit.i<-eval.parent(fit.i)
 
-          if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+          if (colnames(fit$x)[1]=="(Intercept)") {
 
             change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
           } else {
@@ -3040,7 +3067,7 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
 
         } else {
-          if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+          if (colnames(fit$x)[1]=="(Intercept)") {
             change.in.estimate<- abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]==black.list.i[i])+1]*vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]] /vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)==black.list.i[i]])
             names(change.in.estimate)<-colnames(vcvm)[colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]]
           } else {
@@ -3121,9 +3148,16 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
 
 if (exact==F) {warning("there are factors in the model, using approximate change-in-estimate with this type.factor is inappropriate; using exact change in estimate instead"); exact=T}
 
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  fit$x <- fit$model[, -1] # add x variables
+  attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+  attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+}
 
 
- if (criterion[1]=="AIC") k<-2
+if (criterion[1]=="AIC") k<-2
 
 n<-nrow(fit$x)
 
@@ -3131,7 +3165,7 @@ if (criterion[1]=="BIC") k<-log(n)
 
 
 
- if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+ if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
 
 var.mod<-attributes(fit$terms)$term.labels
@@ -3214,9 +3248,17 @@ stop=F
 
 while(stop==F){
 
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  fit$x <- fit$model[, -1] # add x variables
+  attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+  attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+}
+
 vcvm<-vcov(fit)
 
-if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
+if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
 
 
 if (is.null(dim(vcvm))) {
@@ -3230,27 +3272,35 @@ if (verbose==TRUE) {
 	print(fit$call)
 	}
 
+if(inherits(fit, "logistf")){
+  scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+} else {
+  scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+}
 
- if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),test=type.test)
+if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
 varnfixn<-unique(varnfix)
 if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
 
-if (criterion!="alpha") black.list.i<-varnfixn[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfixn[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
+if (criterion!="alpha"){
+  black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+}   else {
+  if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+  black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+}
 
 
 if (length(black.list.i)!=0){
 
-
   if (criterion=="alpha") {
-      black.list.i<-varnfixn[order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
-    criterion.i<-bl[-1,pmatch("Pr",names(bl))][order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
+    if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+    black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+    criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
   } else {
-    black.list.i<-varnfixn[order(bl$AIC[-1])][1:length(black.list.i)]
+    black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
   }
-
-
 
 
 
@@ -3299,7 +3349,7 @@ if (length(black.list.i)!=0){
 
 
 
-				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+				if (colnames(fit$x)[1]=="(Intercept)") {
 
 					change.in.estimate<-abs(fit$coef[which(rep(attributes(fit$terms)$term.labels[!my_grepl("strata",var.mod)],table(fit$assign[-1]))%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!rep(attributes(fit.i$terms)$term.labels[!my_grepl("strata",var.mod.i)],table(fit.i$assign[-1]))%in%active[!active%in%black.list.i[i]])+1])
 					} else {
@@ -3496,9 +3546,18 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   while(stop==F){
 
+    # some necessary adjustments for logistf objects
+    if(inherits(fit, "logistf")){
+      if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+      fit$x <- fit$model[, -1] # add x variables
+      attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+      attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+    }
+
+
     vcvm<-vcov(fit)
 
-    if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
+    if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
 
 
 
@@ -3573,7 +3632,7 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
         }
 
 
-        if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+        if (colnames(fit$x)[1]=="(Intercept)") {
 
           change.in.estimate<-abs(fit$coef[which(rep(attributes(fit$terms)$term.labels[!my_grepl("strata",var.mod)],table(fit$assign[-1]))%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!rep(attributes(fit.i$terms)$term.labels[!my_grepl("strata",var.mod.i)],table(fit.i$assign[-1]))%in%active[!active%in%black.list.i[i]])+1])
         } else {
@@ -3682,7 +3741,15 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=TRUE){
 
 
-df<-as.data.frame(model.matrix(fit))
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  fit$x <- fit$model[, -1] # add x variables
+  attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+  attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+}
+
+df<-as.data.frame(fit$x)
 
 names(df)<-gsub("factor", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
      fixed = FALSE, useBytes = FALSE)
@@ -3721,7 +3788,7 @@ if (!is.null(active))  {
 
 
 
-if ( colnames(model.matrix(fit))[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
+if ( colnames(fit$x)[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
 if ( class(fit)[1]=="coxph" )    updt.f<-as.formula(paste("~",paste(check.names,collapse="+")))
 
 df<-cbind(df,model.frame(fit),data)
@@ -3737,7 +3804,7 @@ n<-nrow(fit$x)
 if (criterion[1]=="BIC") k<-log(n)
 
 
- if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+ if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
 
  vcvx<-var(xm)
@@ -3763,12 +3830,21 @@ stop=F
 
 while(stop==F){
 
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  fit$x <- fit$model[, -1] # add x variables
+  attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+  attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+}
+
+
 vcvm<-vcov(fit)
 
-if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
+if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
 if (is.null(dim(vcvm))) {
 		vcvm<-matrix(vcvm,ncol=1,nrow=1)
-		if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
+		if (colnames(fit$x)[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
 		}
 
 
@@ -3778,23 +3854,34 @@ if (verbose==TRUE) {
 	}
 
 
- if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
+if(inherits(fit, "logistf")){
+  scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+} else {
+  scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+}
+
+if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
 
 if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
-if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
+ if (criterion!="alpha"){
+   black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+ }   else {
+   if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+   black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+ }
 
 
 if (length(black.list.i)!=0){
 
   if (criterion=="alpha") {
-     black.list.i<-varnfix[order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
-    criterion.i<-bl[-1,pmatch("Pr",names(bl))][order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
+    if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+    black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+    criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
   } else {
     black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
   }
-
 
 
 	if (verbose==TRUE) cat( "  ",paste("black list: ", paste(paste(black.list.i,round(criterion.i,4),sep=" : "),collapse =", ")),"\n" )
@@ -3811,7 +3898,7 @@ if (length(black.list.i)!=0){
 
 			 	fit.i<-my_update(fit,xf,data=df)
 
-				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+				if (colnames(fit$x)[1]=="(Intercept)") {
 
 					change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
 					} else {
@@ -3820,7 +3907,7 @@ if (length(black.list.i)!=0){
 
 
 				} else {
-				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+				if (colnames(fit$x)[1]=="(Intercept)") {
 					change.in.estimate<- abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]==black.list.i[i])+1]*vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]] /vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)==black.list.i[i]])
 					names(change.in.estimate)<-colnames(vcvm)[colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]]
 					} else {
@@ -3908,8 +3995,15 @@ fit
 
 abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",k){
 
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    fit$x <- fit$model[, -1] # add x variables
+    attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+    attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+  }
 
-  df<-as.data.frame(model.matrix(fit))
+  df<-as.data.frame(fit$x)
 
   names(df)<-gsub("factor", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
                   fixed = FALSE, useBytes = FALSE)
@@ -3944,7 +4038,7 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     active<-unlist(active.l)
   }
 
-  if ( colnames(model.matrix(fit))[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
+  if ( colnames(fit$x)[1]=="(Intercept)" )   updt.f<-as.formula(paste("~",paste(check.names[-1],collapse="+"))) else  updt.f<-as.formula(paste("~",paste(check.names,collapse="+"),"-1"))
   if ( class(fit)[1]=="coxph" )    updt.f<-as.formula(paste("~",paste(check.names,collapse="+")))
 
   df<-cbind(df,model.frame(fit),data)
@@ -3952,11 +4046,16 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
 
   fit<-my_update(fit, updt.f   ,data=df)
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    fit$x <- fit$model[, -1] # add x variables
+    attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+    attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+  }
 
 
-
-
-  if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
+  if (colnames(fit$x)[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
 
   vcvx<-var(xm)
@@ -3977,12 +4076,20 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   while(stop==F){
 
+    # some necessary adjustments for logistf objects
+    if(inherits(fit, "logistf")){
+      if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+      fit$x <- fit$model[, -1] # add x variables
+      attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute
+      attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute
+    }
+
     vcvm<-vcov(fit)
 
-    if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
+    if (colnames(fit$x)[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
     if (is.null(dim(vcvm))) {
       vcvm<-matrix(vcvm,ncol=1,nrow=1)
-      if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
+      if (colnames(fit$x)[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
     }
 
 
@@ -3991,7 +4098,12 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
      if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
 
 
-    if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
+     if (criterion!="alpha"){
+       black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+     }   else {
+       if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+       black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+     }
 
 
     if (length(black.list.i)!=0){
@@ -4019,7 +4131,7 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
             fit.i<-update(fit,xf,evaluate=FALSE)
           fit.i<-eval.parent(fit.i)
 
-          if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+          if (colnames(fit$x)[1]=="(Intercept)") {
 
             change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
           } else {
@@ -4028,7 +4140,7 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
 
         } else {
-          if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+          if (colnames(fit$x)[1]=="(Intercept)") {
             change.in.estimate<- abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]==black.list.i[i])+1]*vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]] /vcvm[rownames(vcvm)==black.list.i[i],colnames(vcvm)==black.list.i[i]])
             names(change.in.estimate)<-colnames(vcvm)[colnames(vcvm)%in%varpas[!varpas%in%black.list.i[i]]]
           } else {
