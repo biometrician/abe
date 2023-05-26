@@ -2838,19 +2838,30 @@ if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive vari
 
 if (criterion!="alpha"){
   black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
-}   else {
-  if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-  black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+}
+else {
+  if(inherits(fit, "logistf")){
+    ind <- pmatch("P",colnames(bl))
+    black.list.i<-varnfix[which(bl[, ind]>alpha)]
+  }  else {
+    ind <- pmatch("Pr", names(bl))
+    black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+  }
 }
 
 
 if (length(black.list.i)!=0){
 
-
   if (criterion=="alpha") {
-    if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-    black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
-    criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+    if(inherits(fit, "logistf")){
+       ind <- pmatch("P",colnames(bl))
+       black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+       criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
+    } else {
+      ind <- pmatch("Pr", names(bl))
+      black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+      criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+    }
   } else {
     black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
@@ -3024,19 +3035,30 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
       }
       if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
 
-      if (criterion!="alpha"){
-        black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
-      }   else {
-        if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
+    if (criterion!="alpha"){
+      black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+    }   else {
+      if(inherits(fit, "logistf")){
+        ind <- pmatch("P",colnames(bl))
+        black.list.i<-varnfix[which(bl[, ind]>alpha)]
+      }  else {
+        ind <- pmatch("Pr", names(bl))
         black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
       }
+    }
 
     if (length(black.list.i)!=0){
 
       if (criterion=="alpha") {
-        if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-        black.list.i<-varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
-        criterion.i<-bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+        if(inherits(fit, "logistf")){
+          ind <- pmatch("P",colnames(bl))
+          black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+          criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
+        } else {
+          ind <- pmatch("Pr", names(bl))
+          black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+          criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+        }
       } else {
         black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
         criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
@@ -3286,17 +3308,28 @@ if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive vari
 if (criterion!="alpha"){
   black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
 }   else {
-  if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-  black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+  if(inherits(fit, "logistf")){
+    ind <- pmatch("P",colnames(bl))
+    black.list.i<-varnfix[which(bl[, ind]>alpha)]
+  }  else {
+    ind <- pmatch("Pr", names(bl))
+    black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+  }
 }
 
 
 if (length(black.list.i)!=0){
 
   if (criterion=="alpha") {
-    if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-    black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
-    criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+    if(inherits(fit, "logistf")){
+      ind <- pmatch("P",colnames(bl))
+      black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+      criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
+    } else {
+      ind <- pmatch("Pr", names(bl))
+      black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+      criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+    }
   } else {
     black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
@@ -3567,26 +3600,45 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     }
 
 
+    if(inherits(fit, "logistf")){
+      scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+    } else {
+      scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+    }
 
-
-     if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),test=type.test)
+    if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
     varnfixn<-unique(varnfix)
 
 
-    if (criterion!="alpha") black.list.i<-varnfixn[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfixn[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
-
+    if (criterion!="alpha"){
+      black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+    }
+    else {
+      if(inherits(fit, "logistf")){
+        ind <- pmatch("P",colnames(bl))
+        black.list.i<-varnfix[which(bl[, ind]>alpha)]
+      }  else {
+        ind <- pmatch("Pr", names(bl))
+        black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+      }
+    }
 
     if (length(black.list.i)!=0){
 
       if (criterion=="alpha") {
-         black.list.i<-varnfixn[order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
-        criterion.i<-bl[-1,pmatch("Pr",names(bl))][order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
+        if(inherits(fit, "logistf")){
+          ind <- pmatch("P",colnames(bl))
+          black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+          criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
+        } else {
+          ind <- pmatch("Pr", names(bl))
+          black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+          criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+        }
       } else {
-        black.list.i<-varnfixn[order(bl$AIC[-1])][1:length(black.list.i)]
+        black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
         criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
       }
-
-
 
 
 
@@ -3864,20 +3916,32 @@ if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=
 
 if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
- if (criterion!="alpha"){
-   black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
- }   else {
-   if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-   black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
- }
+if (criterion!="alpha"){
+  black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+}
+else {
+  if(inherits(fit, "logistf")){
+    ind <- pmatch("P",colnames(bl))
+    black.list.i<-varnfix[which(bl[, ind]>alpha)]
+  }  else {
+    ind <- pmatch("Pr", names(bl))
+    black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+  }
+}
 
 
 if (length(black.list.i)!=0){
 
   if (criterion=="alpha") {
-    if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-    black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
-    criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+    if(inherits(fit, "logistf")){
+      ind <- pmatch("P",colnames(bl))
+      black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+      criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
+    } else {
+      ind <- pmatch("Pr", names(bl))
+      black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+      criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+    }
   } else {
     black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
@@ -4092,31 +4156,46 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
       if (colnames(fit$x)[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
     }
 
+    if(inherits(fit, "logistf")){
+      scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+    } else {
+      scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+    }
+
+    if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
+    varnfixn<-unique(varnfix)
 
 
-
-     if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
-
-
-     if (criterion!="alpha"){
-       black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
-     }   else {
-       if(inherits(fit, "logistf")) ind <- pmatch("P",colnames(bl)) else ind <- pmatch("Pr", names(bl))
-       black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
-     }
+    if (criterion!="alpha"){
+      black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+    }
+    else {
+      if(inherits(fit, "logistf")){
+        ind <- pmatch("P",colnames(bl))
+        black.list.i<-varnfix[which(bl[, ind]>alpha)]
+      }  else {
+        ind <- pmatch("Pr", names(bl))
+        black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+      }
+    }
 
 
     if (length(black.list.i)!=0){
 
       if (criterion=="alpha") {
-         black.list.i<-varnfix[order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
-        criterion.i<-bl[-1,pmatch("Pr",names(bl))][order(-bl[-1,pmatch("Pr",names(bl))])][1:length(black.list.i)]
+        if(inherits(fit, "logistf")){
+          ind <- pmatch("P",colnames(bl))
+          black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+          criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
+        } else {
+          ind <- pmatch("Pr", names(bl))
+          black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+          criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
+        }
       } else {
         black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
         criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
       }
-
-
 
        flag=T
       i=1
