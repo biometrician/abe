@@ -11,22 +11,22 @@ abe.resampling(
   active = NULL,
   tau = 0.05,
   exact = FALSE,
-  criterion = "alpha",
+  criterion = c("alpha", "AIC", "BIC"),
   alpha = 0.2,
-  type.test = "Chisq",
+  type.test = c("Chisq", "F", "Rao", "LRT"),
   type.factor = NULL,
   num.resamples = 100,
-  type.resampling = "Wallisch2021",
+  type.resampling = c("Wallisch2021", "bootstrap", "mn.bootstrap", "subsampling"),
   prop.sampling = 0.5,
-  save.out = "minimal",
+  save.out = c("minimal", "complete"),
   parallel = FALSE,
   seed = NULL,
   ...
 )
 }
 \arguments{
-\item{fit}{An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
-Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
+\item{fit}{An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
+Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).}
 
 \item{data}{data frame used when fitting the object `fit`.}
 

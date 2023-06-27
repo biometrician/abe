@@ -6,11 +6,11 @@
 \usage{
 \method{plot}{abe}(
   x,
-  type.plot = "coefficients",
+  type.plot = c("coefficients", "variables", "models", "stability", "pairwise"),
   alpha = NULL,
   tau = NULL,
   variable = NULL,
-  type.stability = "alpha",
+  type.stability = c("alpha", "tau"),
   ...
 )
 }

@@ -11,17 +11,17 @@ abe(
   active = NULL,
   tau = 0.05,
   exact = FALSE,
-  criterion = "alpha",
+  criterion = c("alpha", "AIC", "BIC"),
   alpha = 0.2,
-  type.test = "Chisq",
+  type.test = c("Chisq", "F", "Rao", "LRT"),
   type.factor = NULL,
   verbose = TRUE,
   ...
 )
 }
 \arguments{
-\item{fit}{An object of a class `"lm"`, `"glm"` or `"coxph"` representing the fit.
-Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE`.}
+\item{fit}{An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
+Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).}
 
 \item{data}{data frame used when fitting the object `fit`.}
 
@@ -54,7 +54,7 @@ Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"L
 \item{...}{Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.}
 }
 \value{
-An object of class `"lm"`, `"glm"` or `"coxph"` representing the model chosen by abe method.
+An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
 }
 \description{
 Function `abe` performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
@@ -72,7 +72,7 @@ Specifying `"alpha" = 1` will always include all variables.
 When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
 Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
 
-In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
+In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic, Cox, and parametric survival models only.
 }
 \examples{
 # simulate some data:

@@ -6,7 +6,7 @@
 \usage{
 \method{print}{abe}(
   x,
-  type = "coefficients",
+  type = c("coefficients", "coefficients reporting", "models"),
   models.n = NULL,
   conf.level = 0.95,
   alpha = NULL,
@@ -18,7 +18,7 @@
 \arguments{
 \item{x}{an object of class `"abe"`, an object returned by a call to [abe.resampling()]}
 
-\item{type}{the type of the output. `type = "coefficients"` prints summary statistics for each coefficient. `type = "models"` reports model selection frequencies.}
+\item{type}{the type of the output. `type = "coefficients"` prints summary statistics for each coefficient, `type = "coefficients reporting"` prints a reduced version of the coefficient statistics, and `type = "models"` reports model selection frequencies.}
 
 \item{models.n}{controls the number of models printed if `type = "models"`. See details.}
 
