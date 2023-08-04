@@ -7,33 +7,33 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 
 #' @title Augmented Backward Elimination
 #'
-#' @description  Function `abe` performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
-#' It can also make a backward-selection based on significance or information criteria only by turning off the change-in-estimate criterion.
+#' @description  Function `abe` performs Augmented Backward Elimination where variable selection is based on the change-in-estimate and significance or information criteria as presented in [Dunkler et al. (2014)](doi:10.1371/journal.pone.0113677).
+#' It can also make a backward elimination based on significance or information criteria only by turning off the change-in-estimate criterion.
 #'
 #'
 #' @param fit An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
 #' Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).
 #' @param data data frame used when fitting the object `fit`.
-#' @param include a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. These variables might be exposure variables of interest or known confounders.
+#' @param include a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. *These variables might be exposure variables of interest or known confounders.*
 #' They will never be dropped from the working model in the selection process,
 #' but they will be used passively in evaluating change-in-estimate criteria of other variables.
 #' Note, variables which are not specified as include or active in the model fit are assumed to be active and passive variables.
-#' @param active a vector containing the names of active variables. These less important explanatory variables will only be used as active,
+#' @param active a vector containing the names of active variables. These *less important explanatory variables* will only be used as active,
 #' but not as passive variables when evaluating the change-in-estimate criterion.
 #' @param tau  Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.
-#' @param exact Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
-#' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.
+#' @param exact Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use the approximation proposed by Dunkler et al. (2014).
+#' Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases, i.e., if dummy variables of a factor are evaluated together, lead to a poor approximation of the change-in-estimate criterion. See details.
 #' @param criterion String that specifies the strategy to select variables for the black list.
 #' Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
-#' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter `alpha`) and type of the test statistic (see parameter `type.test`). Default is set to `"alpha"`.
+#' If you are using significance level, you have to specify the value of 'alpha' (see parameter `alpha`) and the type of the test statistic (see parameter `type.test`). Default is set to `"alpha"`.
 #' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
 #' @param type.test String that specifies which test should be performed in case the `criterion = "alpha"`.
 #' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also [drop1()].
 #' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
-#' @param verbose Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.
+#' @param verbose Logical that specifies if the variable selection process should be printed. This can severely slow down the algorithm. Default is set to TRUE.
 #' @param ... Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.
 #' @details
-#' Using the default settings ABE will perform augmented backward elimination based on significance.
+#' Using the default settings `abe` will perform augmented backward elimination based on significance.
 #' The level of significance will be set to 0.2. All variables will be treated as "passive or active".
 #' Approximated change-in-estimate will be used. Threshold of the relative change-in-estimate criterion will be 0.05.
 #' Setting tau to a very large number (e.g. `Inf`) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
@@ -41,68 +41,68 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' as then variables are not safe from exclusion because of their p-values.
 #' Specifying `"alpha" = 1` will always include all variables.
 #'
-#' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
-#' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
+#' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group.
+#' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model. If `type.factor="factor"` then `exact` should be set to `TRUE` to avoid poor approximations.
 #'
-#' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic, Cox, and parametric survival models only.
-#'
+#' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change-in-estimate for logistic, Cox, and parametric survival models only.
 #' @return An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
-#' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
-#'
+#' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented Backward Elimination: A Pragmatic and Purposeful Way to Develop Statistical Models. PloS One, 9(11):e113677, 2014, [doi:](doi:10.1371/journal.pone.0113677).
 #' @seealso [abe.resampling()], [lm()], [glm()] and [coxph()]
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
+#' @author Daniela Dunkler
+#' @author Gregor Steiner
 #' @author Sladana Babic
 #' @export
 #' @examples
 #' # simulate some data:
 #'
 #' set.seed(1)
-#' n=100
-#' x1<-runif(n)
-#' x2<-runif(n)
-#' x3<-runif(n)
-#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' dd<-data.frame(y,x1,x2,x3)
+#' n = 100
+#' x1 <- runif(n)
+#' x2 <- runif(n)
+#' x3 <- runif(n)
+#' y <- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+#' dd <- data.frame(y, x1, x2, x3)
 #'
-#' # fit a simple model containing only numeric covariates
-#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#' # fit a simple model containing all variables
+#' fit1 <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data = dd)
 #'
 #' # perform ABE with "x1" as only passive and "x2" as only active
 #' # using the exact change in the estimate of 5% and significance
 #' # using 0.2 as a threshold
-#' abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
-#' type.test="Chisq",verbose=TRUE)
+#' abe.fit <- abe(fit, data = dd, include = "x1", active = "x2",
+#' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+#' type.test = "Chisq", verbose = TRUE)
 #'
 #' summary(abe.fit)
 #'
 #' # similar example, but turn off the change-in-estimate and perform
 #' # only backward elimination
 #'
-#' abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=Inf,exact=TRUE,criterion="alpha",alpha=0.2,
-#' type.test="Chisq",verbose=TRUE)
+#' be.fit <- abe(fit, data = dd, include = "x1", active = "x2",
+#' tau = Inf, exact = TRUE, criterion = "alpha", alpha = 0.2,
+#' type.test = "Chisq", verbose = TRUE)
 #'
-#' summary(abe.fit)
+#' summary(be.fit)
 #'
 #' # an example with the model containing categorical covariates:
-#' dd$x3<-rbinom(n,size=3,prob=1/3)
-#' dd$y1<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' fit<-lm(y1~x1+x2+factor(x3),x=TRUE,y=TRUE,data=dd)
+#' dd$x4 <- rbinom(n, size = 3, prob = 1/3)
+#' dd$y1 <- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+#' fit2 <- lm(y1 ~ x1 + x2 + factor(x4), x = TRUE, y = TRUE, data = dd)
 #'
-#' # treat "x3" as a single covariate:
+#' # treat "x4" as a single covariate: perform ABE as in abe.fit
 #'
-#' abe.fit.fact<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
-#' type.test="Chisq",verbose=TRUE,type.factor="factor")
+#' abe.fit.fact <- abe(fit, data = dd, include = "x1", active = "x2",
+#' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+#' type.test = "Chisq", verbose = TRUE, type.factor = "factor")
 #'
 #' summary(abe.fit.fact)
 #'
-#' # treat each dummy of "x3" as a separate covariate:
+#' # treat each dummy of "x3" as a separate covariate: perform ABE as in abe.fit
 #'
-#' abe.fit.ind<-abe(fit,data=dd,include="x1",active="x2",
-#' tau=0.05,exact=TRUE,criterion="alpha",alpha=0.2,
-#' type.test="Chisq",verbose=TRUE,type.factor="individual")
+#' abe.fit.ind <- abe(fit, data = dd, include = "x1", active = "x2",
+#' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+#' type.test = "Chisq", verbose = TRUE, type.factor = "individual")
 #'
 #' summary(abe.fit.ind)
 
