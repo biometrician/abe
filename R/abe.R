@@ -2129,7 +2129,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     }
 
     # highlight the selected model
-    terms.selected <- paste(names(fit.sel$coefficients)[-1], collapse = " ")
+    terms.selected <- paste(names(fit.sel$coefficients)[names(fit.sel$coefficients) != "(Intercept)"], collapse = " ")
     ind.selected <- which(terms.selected == res$Predictors) # get index of selected model
     res[ind.selected, "Predictors"] <- paste0(res[ind.selected, "Predictors"], " *") # add asterisk for selected model
 
