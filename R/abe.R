@@ -2091,7 +2091,8 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     # get frequencies
     model.preds <- apply(coef_matrix_sub[ind.int, ], 1, function(x){
       # get predictors
-      preds <- names(x[x != 0])[-1] # -1 to exclude intercept
+      preds <- names(x[x != 0])
+      preds <- preds[preds != "(Intercept)"] # exclude Intercept
 
       # paste the together and return string
       res <- paste(preds, collapse = " ")
