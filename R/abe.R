@@ -2184,9 +2184,9 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     se.selected <- rep(NA, ncol(res)) |> setNames(colnames(res))
 
     coefs.selected[names(fit.sel$coefficients)] <- fit.sel$coefficients
-    se.selected[names(fit.sel$coefficients)] <- diag(vcov(fit.sel))
+    se.selected[names(fit.sel$coefficients)] <- sqrt(diag(vcov(fit.sel)))
 
-    mat <- rbind(object$fit.global$coefficients, diag(vcov(object$fit.global)),
+    mat <- rbind(object$fit.global$coefficients, sqrt(diag(vcov(object$fit.global))),
                  coefs.selected, se.selected)
     rownames(mat) <- c("Global estimate", "Global SE",
                        "Selected estimate", "Selected SE")
