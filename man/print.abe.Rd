@@ -72,4 +72,6 @@ Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for m
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
 Sladana Babic
+
+Gregor Steiner
 }

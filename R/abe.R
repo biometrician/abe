@@ -2056,11 +2056,20 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   bool <- rep(TRUE, length(ind.split))
 
   # if alpha or tau is specified only compute for those values
-  if(!is.null(alpha)) if(!(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
-  if(!is.null(tau)) if(!(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
+  if(!is.null(alpha)) if(!all(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
+  if(!is.null(tau)) if(!all(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
   if(!is.null(alpha) | !is.null(tau)){
-    if(object$criterion != "alpha") bool <- grepl(paste0("tau = ", tau), names)
-    if(object$criterion == "alpha") bool <- grepl(paste0("tau = ", tau), names) & grepl(paste0("alpha = ", alpha), names)
+    if(object$criterion != "alpha"){
+      if(is.null(tau)) tau <- unique(object$model.parameters[, "tau"])
+      names.des <- paste0(object$criterion, ", tau = ", tau)
+    }
+    if(object$criterion == "alpha"){
+      if(is.null(tau)) tau <- unique(object$model.parameters[, "tau"])
+      if(is.null(alpha)) alpha <- unique(object$model.parameters[, "alpha"])
+      names.des <- paste0("alpha = ", alpha, ", tau = ", tau)
+    }
+
+    bool <- names %in% names.des
     ind.split <- ind.split[bool]
     names <- names[bool]
   }
@@ -2485,7 +2494,6 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
   }
 
   if (type.plot=="variables"){
-
 
     sum.obj <- data.frame(summary(object, alpha = alpha, tau = tau)$var.rel.frequencies)
 
