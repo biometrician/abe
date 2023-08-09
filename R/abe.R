@@ -2280,6 +2280,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Gregor Steiner
 #' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
@@ -2360,9 +2361,11 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param variable variables for which the plot is to be made (can be a vector of length >1)
 #' @param type.stability string which specifies the type of stability plot. See details.
+#' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence (default 0.01). Only relevant if `type.plot="pairwise"`.
 #' @param ... Arguments to be passed to methods, such as graphical parameters.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Gregor Steiner
 #' @details When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
 #' When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
 #'
@@ -2425,7 +2428,7 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
-plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), ...){
+plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), pval = 0.01, ...){
   object<-x
 
   # match arguments
@@ -2597,7 +2600,7 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
 
   if(type.plot == "pairwise"){
 
-    sumobj <- summary(object, alpha = alpha, tau = tau)$pair.rel.frequencies
+    sumobj <- summary(object, alpha = alpha, tau = tau, pval = pval)$pair.rel.frequencies
 
     d.plot <- do.call(rbind, Map(function(resampling_pairfreq, model){
 
