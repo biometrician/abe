@@ -4321,6 +4321,13 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
 
   fit<-eval(call, env, parent.frame())
   if (!is.null(data.n)) fit$call$data<-as.symbol(data.n)
+
+  #added to fix the issue with shrink, it would be probably be better to solve the issue with model.frame not working once we call upd2
+  if (class(fit)=="coxph"){
+  if (class(try(weights(fit),silent = TRUE))=="try-error") fit$weights<-rep(1L, fit$n) 
+  }
+  #end added
+	
   fit
 }
 
