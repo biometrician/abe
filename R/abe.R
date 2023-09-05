@@ -2453,7 +2453,7 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
     # filter for specified variables if not NULL
     if(!is.null(variable)){
       if(!(all(variable %in% colnames(coef_matrix)))) stop("At least one specified variable was not included in the initial model.")
-      coef_matrix <- coef_matrix[, variable]
+      coef_matrix <- coef_matrix[, variable, drop = FALSE]
     }
 
     # get different criterion combinations
