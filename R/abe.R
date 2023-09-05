@@ -2468,7 +2468,7 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
     # filter for specified variables if not NULL
     if(!is.null(variable)){
       if(!(all(variable %in% colnames(coef_matrix)))) stop("At least one specified variable was not included in the initial model.")
-      coef_matrix <- coef_matrix[, variable]
+      coef_matrix <- coef_matrix[, variable, drop = FALSE]
     }
 
     # get different criterion combinations
@@ -4326,10 +4326,10 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
 
   #added to fix the issue with shrink, it would be probably be better to solve the issue with model.frame not working once we call upd2
   if (class(fit)=="coxph"){
-  if (class(try(weights(fit),silent = TRUE))=="try-error") fit$weights<-rep(1L, fit$n) 
+  if (class(try(weights(fit),silent = TRUE))=="try-error") fit$weights<-rep(1L, fit$n)
   }
   #end added
-	
+
   fit
 }
 
