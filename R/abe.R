@@ -269,7 +269,7 @@ if (is.null(type.factor)) {type.factor="factor"; warning("There are factors in t
 	} else  bt<-abe.num(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
 }
 
-bt
+eval(bt$call)
 }
 
 
