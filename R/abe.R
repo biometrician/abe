@@ -270,7 +270,9 @@ if (is.null(type.factor)) {type.factor="factor"; warning("There are factors in t
 	} else  bt<-abe.num(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
 }
 
-bt
+bt0<-try(eval(bt$call),silent=TRUE)
+if (class(bt0)=="try-error") bt else bt0
+
 }
 
 
@@ -2058,11 +2060,20 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
   bool <- rep(TRUE, length(ind.split))
 
   # if alpha or tau is specified only compute for those values
-  if(!is.null(alpha)) if(!(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
-  if(!is.null(tau)) if(!(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
+  if(!is.null(alpha)) if(!all(alpha %in% object$misc$alpha)) stop("This value of alpha was not considered when using abe.resampling.")
+  if(!is.null(tau)) if(!all(tau %in% object$misc$tau)) stop("This value of tau was not considered when using abe.resampling.")
   if(!is.null(alpha) | !is.null(tau)){
-    if(object$criterion != "alpha") bool <- grepl(paste0("tau = ", tau), names)
-    if(object$criterion == "alpha") bool <- grepl(paste0("tau = ", tau), names) & grepl(paste0("alpha = ", alpha), names)
+    if(object$criterion != "alpha"){
+      if(is.null(tau)) tau <- unique(object$model.parameters[, "tau"])
+      names.des <- paste0(object$criterion, ", tau = ", tau)
+    }
+    if(object$criterion == "alpha"){
+      if(is.null(tau)) tau <- unique(object$model.parameters[, "tau"])
+      if(is.null(alpha)) alpha <- unique(object$model.parameters[, "alpha"])
+      names.des <- paste0("alpha = ", alpha, ", tau = ", tau)
+    }
+
+    bool <- names %in% names.des
     ind.split <- ind.split[bool]
     names <- names[bool]
   }
@@ -2093,7 +2104,8 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     # get frequencies
     model.preds <- apply(coef_matrix_sub[ind.int, ], 1, function(x){
       # get predictors
-      preds <- names(x[x != 0])[-1] # -1 to exclude intercept
+      preds <- names(x[x != 0])
+      preds <- preds[preds != "(Intercept)"] # exclude Intercept
 
       # paste the together and return string
       res <- paste(preds, collapse = " ")
@@ -2130,7 +2142,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     }
 
     # highlight the selected model
-    terms.selected <- paste(names(fit.sel$coefficients)[-1], collapse = " ")
+    terms.selected <- paste(names(fit.sel$coefficients)[names(fit.sel$coefficients) != "(Intercept)"], collapse = " ")
     ind.selected <- which(terms.selected == res$Predictors) # get index of selected model
     res[ind.selected, "Predictors"] <- paste0(res[ind.selected, "Predictors"], " *") # add asterisk for selected model
 
@@ -2185,9 +2197,9 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
     se.selected <- rep(NA, ncol(res)) |> setNames(colnames(res))
 
     coefs.selected[names(fit.sel$coefficients)] <- fit.sel$coefficients
-    se.selected[names(fit.sel$coefficients)] <- diag(vcov(fit.sel))
+    se.selected[names(fit.sel$coefficients)] <- sqrt(diag(vcov(fit.sel)))
 
-    mat <- rbind(object$fit.global$coefficients, diag(vcov(object$fit.global)),
+    mat <- rbind(object$fit.global$coefficients, sqrt(diag(vcov(object$fit.global))),
                  coefs.selected, se.selected)
     rownames(mat) <- c("Global estimate", "Global SE",
                        "Selected estimate", "Selected SE")
@@ -2281,6 +2293,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Gregor Steiner
 #' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
@@ -2361,9 +2374,11 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 #' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
 #' @param variable variables for which the plot is to be made (can be a vector of length >1)
 #' @param type.stability string which specifies the type of stability plot. See details.
+#' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence (default 0.01). Only relevant if `type.plot="pairwise"`.
 #' @param ... Arguments to be passed to methods, such as graphical parameters.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Gregor Steiner
 #' @details When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
 #' When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
 #'
@@ -2426,7 +2441,7 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 #' plot(fit.resample,type.plot="models",
 #' alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 
-plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), ...){
+plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stability", "pairwise"),alpha=NULL,tau=NULL,variable=NULL, type.stability = c("alpha", "tau"), pval = 0.01, ...){
   object<-x
 
   # match arguments
@@ -2483,7 +2498,6 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
   }
 
   if (type.plot=="variables"){
-
 
     sum.obj <- data.frame(summary(object, alpha = alpha, tau = tau)$var.rel.frequencies)
 
@@ -2598,7 +2612,7 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
 
   if(type.plot == "pairwise"){
 
-    sumobj <- summary(object, alpha = alpha, tau = tau)$pair.rel.frequencies
+    sumobj <- summary(object, alpha = alpha, tau = tau, pval = pval)$pair.rel.frequencies
 
     d.plot <- do.call(rbind, Map(function(resampling_pairfreq, model){
 
@@ -3315,14 +3329,14 @@ if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive vari
 
 
 if (criterion!="alpha"){
-  black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+  black.list.i<-varnfixn[which(bl$AIC[-1]<bl$AIC[1])]
 }   else {
   if(inherits(fit, "logistf")){
     ind <- pmatch("P",colnames(bl))
-    black.list.i<-varnfix[which(bl[, ind]>alpha)]
+    black.list.i<-varnfixn[which(bl[, ind]>alpha)]
   }  else {
     ind <- pmatch("Pr", names(bl))
-    black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+    black.list.i<-varnfixn[which(bl[-1, ind]>alpha)]
   }
 }
 
@@ -3332,15 +3346,15 @@ if (length(black.list.i)!=0){
   if (criterion=="alpha") {
     if(inherits(fit, "logistf")){
       ind <- pmatch("P",colnames(bl))
-      black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+      black.list.i <- varnfixn[order(-bl[, ind])][1:length(black.list.i)]
       criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
     } else {
       ind <- pmatch("Pr", names(bl))
-      black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+      black.list.i <- varnfixn[order(-bl[-1, ind])][1:length(black.list.i)]
       criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
     }
   } else {
-    black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
+    black.list.i<-varnfixn[order(bl$AIC[-1])][1:length(black.list.i)]
     criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
   }
 
@@ -3621,15 +3635,15 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
 
     if (criterion!="alpha"){
-      black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+      black.list.i<-varnfixn[which(bl$AIC[-1]<bl$AIC[1])]
     }
     else {
       if(inherits(fit, "logistf")){
         ind <- pmatch("P",colnames(bl))
-        black.list.i<-varnfix[which(bl[, ind]>alpha)]
+        black.list.i<-varnfixn[which(bl[, ind]>alpha)]
       }  else {
         ind <- pmatch("Pr", names(bl))
-        black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+        black.list.i<-varnfixn[which(bl[-1, ind]>alpha)]
       }
     }
 
@@ -3638,15 +3652,15 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
       if (criterion=="alpha") {
         if(inherits(fit, "logistf")){
           ind <- pmatch("P",colnames(bl))
-          black.list.i <- varnfix[order(-bl[, ind])][1:length(black.list.i)]
+          black.list.i <- varnfixn[order(-bl[, ind])][1:length(black.list.i)]
           criterion.i <- bl[, ind][order(-bl[, ind])][1:length(black.list.i)]
         } else {
           ind <- pmatch("Pr", names(bl))
-          black.list.i <- varnfix[order(-bl[-1, ind])][1:length(black.list.i)]
+          black.list.i <- varnfixn[order(-bl[-1, ind])][1:length(black.list.i)]
           criterion.i <- bl[-1, ind][order(-bl[-1, ind])][1:length(black.list.i)]
         }
       } else {
-        black.list.i<-varnfix[order(bl$AIC[-1])][1:length(black.list.i)]
+        black.list.i<-varnfixn[order(bl$AIC[-1])][1:length(black.list.i)]
         criterion.i<-bl$AIC[-1][order(bl$AIC[-1])][1:length(black.list.i)]-bl$AIC[1]
       }
 
@@ -4323,6 +4337,13 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
 
   fit<-eval(call, env, parent.frame())
   if (!is.null(data.n)) fit$call$data<-as.symbol(data.n)
+
+  #added to fix the issue with shrink, it would be probably be better to solve the issue with model.frame not working once we call upd2
+  if (class(fit)=="coxph"){
+  if (class(try(weights(fit),silent = TRUE))=="try-error") fit$weights<-rep(1L, fit$n)
+  }
+  #end added
+
   fit
 }
 

@@ -11,6 +11,7 @@
   tau = NULL,
   variable = NULL,
   type.stability = c("alpha", "tau"),
+  pval = 0.01,
   ...
 )
 }
@@ -26,6 +27,8 @@
 \item{variable}{variables for which the plot is to be made (can be a vector of length >1)}
 
 \item{type.stability}{string which specifies the type of stability plot. See details.}
+
+\item{pval}{significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence (default 0.01). Only relevant if `type.plot="pairwise"`.}
 
 \item{...}{Arguments to be passed to methods, such as graphical parameters.}
 }
@@ -100,4 +103,6 @@ alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
 Sladana Babic
+
+Gregor Steiner
 }
