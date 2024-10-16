@@ -12,7 +12,7 @@ dd <- data.frame(y, x1, x2, x3)
 test_that("correct model is selected", {
   # use abe on full model
   fit <- lm(y ~ ., data = dd, x = TRUE, y = TRUE)
-  abe.fit <- abe(fit, data = dd, include = "x1", active = "x2", tau = 0.05, exp.beta = FALSE,
+  abe.fit <- abe(fit, data = dd, include = "x1", active = "x2", tau = 0.05,
                  exact = TRUE, criterion = "alpha", alpha = 0.2, type.test = "Chisq", verbose = TRUE)
 
   # fit expected model (x3 dropped)

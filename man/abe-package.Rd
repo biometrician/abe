@@ -3,7 +3,6 @@
 \docType{package}
 \name{abe-package}
 \alias{abe-package}
-\alias{_PACKAGE}
 \alias{testduplicate-package}
 \title{abe: Augmented Backward Elimination}
 \description{

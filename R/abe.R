@@ -70,7 +70,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' # perform ABE with "x1" as only passive and "x2" as only active
 #' # using the exact change in the estimate of 5% and significance
 #' # using 0.2 as a threshold
-#' abe.fit <- abe(fit, data = dd, include = "x1", active = "x2",
+#' abe.fit <- abe(fit1, data = dd, include = "x1", active = "x2",
 #' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
 #' type.test = "Chisq", verbose = TRUE)
 #'
@@ -79,7 +79,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' # similar example, but turn off the change-in-estimate and perform
 #' # only backward elimination
 #'
-#' be.fit <- abe(fit, data = dd, include = "x1", active = "x2",
+#' be.fit <- abe(fit1, data = dd, include = "x1", active = "x2",
 #' tau = Inf, exact = TRUE, criterion = "alpha", alpha = 0.2,
 #' type.test = "Chisq", verbose = TRUE)
 #'
@@ -92,7 +92,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #'
 #' # treat "x4" as a single covariate: perform ABE as in abe.fit
 #'
-#' abe.fit.fact <- abe(fit, data = dd, include = "x1", active = "x2",
+#' abe.fit.fact <- abe(fit2, data = dd, include = "x1", active = "x2",
 #' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
 #' type.test = "Chisq", verbose = TRUE, type.factor = "factor")
 #'
@@ -100,7 +100,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #'
 #' # treat each dummy of "x3" as a separate covariate: perform ABE as in abe.fit
 #'
-#' abe.fit.ind <- abe(fit, data = dd, include = "x1", active = "x2",
+#' abe.fit.ind <- abe(fit2, data = dd, include = "x1", active = "x2",
 #' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
 #' type.test = "Chisq", verbose = TRUE, type.factor = "individual")
 #'
@@ -339,7 +339,7 @@ if (class(bt0)=="try-error") bt else bt0
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
-#' @details `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Walisch et al. (2021).
+#' @details `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Wallisch et al. (2021).
 #' @details When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
 #' @details In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented Backward Elimination: A Pragmatic and Purposeful Way to Develop Statistical Models. PloS One, 9(11):e113677, 2014, [doi:](doi:10.1371/journal.pone.0113677).
@@ -425,9 +425,8 @@ if (class(bt0)=="try-error") bt else bt0
 #' #cl <- makeCluster(N_CORES-2)
 #' #registerDoParallel(cl)
 #' #fit.resample <- abe.resampling(fit, data = dd, include = "x1", active = "x2",
-#' #tau = c(0.05, 0.1), exact = TRUE,
-#' #criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' #num.resamples = 50, type.resampling = "Wallisch2021")
+#' #tau = c(0.05, 0.1), exact = TRUE, criterion = "alpha", alpha = c(0.2, 0.05),
+#' #type.test = "Chisq", num.resamples = 50, type.resampling = "Wallisch2021")
 #' #stopCluster(cl)
 
 
@@ -2294,7 +2293,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @author Gregor Steiner
-#' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling propotion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
+#' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling proportion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #'
 #' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.

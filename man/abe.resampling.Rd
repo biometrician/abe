@@ -95,7 +95,7 @@ A list with the following elements:
 `id` the rows of the data which were used when refitting the model; the list with elements `id1` (the rows used to refit the model; when `type.resampling="Wallisch2021"` these are based on bootstrap) and `id2` (`NULL` unless when `type.resampling="Wallisch2021"` in which case these are the rows used to refit the models based on subsampling)
 }
 \description{
-Performs Augmented backward elimination on re-sampled datasets using different bootstrap and re-sampling techniques.
+Performs Augmented backward elimination on re-sampled data sets using different bootstrap and re-sampling techniques.
 }
 \details{
 `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Walisch et al. (2021).
@@ -108,90 +108,89 @@ In earlier versions, \code{abe} used to include an \code{exp.beta} argument. Thi
 # simulate some data and fit a model
 
 set.seed(1)
-n=100
-x1<-runif(n)
-x2<-runif(n)
-x3<-runif(n)
-y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
-fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+n = 100
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+y<- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+dd <- data.frame(y = y, x1 = x1, x2 = x2, x3 = x3)
+fit <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data = dd)
 
 # use ABE on 50 re-samples considering different
 # change-in-estimate thresholds and significance levels
 
-fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="Wallisch2021")
+fit.resample1 <- abe.resampling(fit, data = dd, include = "x1",
+active = "x2", tau = c(0.05, 0.1), exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "Wallisch2021")
 
-summary(fit.resample)
-print(fit.resample)
+summary(fit.resample1)
+print(fit.resample1)
 
 # use ABE on 50 bootstrap re-samples considering different
 # change-in-estimate thresholds and significance levels
 
-fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="bootstrap")
+fit.resample2 <- abe.resampling(fit, data = dd, include = "x1",
+active = "x2", tau = c(0.05, 0.1),exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "bootstrap")
 
-summary(fit.resample)
+summary(fit.resample2)
 
 # use ABE on 50 subsamples randomly selecting 50\% of subjects
 # considering different change-in-estimate thresholds and
 # significance levels
 
-fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="subsampling",prop.sampling=0.5)
+fit.resample3 <- abe.resampling(fit, data = dd, include = "x1",
+active = "x2", tau = c(0.05,0.1), exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "subsampling", prop.sampling = 0.5)
 
-summary(fit.resample)
+summary(fit.resample3)
 
 #Assure reproducibility of the results
 
-fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="Wallisch2021")
+fit.resample.1 <- abe.resampling(fit,  data = dd, include = "x1",
+active = "x2", tau = c(0.05, 0.1), exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "Wallisch2021")
 
-fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="Wallisch2021")
+fit.resample.2 <- abe.resampling(fit, data = dd, include = "x1",
+active = "x2", tau = c(0.05, 0.1), exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "Wallisch2021")
 
-#since different seed are used, fit.resample.1 and fit.resample.2 give different results
+#since different seeds are used, fit.resample.1 and fit.resample.2 give different results
 
-fit.resample.1<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="Wallisch2021",seed=87982)
+fit.resample.3 <- abe.resampling(fit, data = dd, include = "x1",
+active = "x2", tau = c(0.05, 0.1), exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "Wallisch2021", seed = 87982)
 
-fit.resample.2<-abe.resampling(fit,data=dd,include="x1",active="x2",
-tau=c(0.05,0.1),exact=TRUE,
-criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-num.resamples=50,type.resampling="Wallisch2021",seed=87982)
+fit.resample.4 <- abe.resampling(fit, data = dd, include = "x1",
+active = "x2", tau = c(0.05, 0.1), exact = TRUE,
+criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
+num.resamples = 50, type.resampling = "Wallisch2021", seed = 87982)
 
-#now fit.resample.1 and fit.resample.2 give exactly the same results
+#now fit.resample.3 and fit.resample.4 give exactly the same results
 
-#' Example to run parrallel computation on windows, using all but 2 cores
+#' Example to run parallel computation on windows, using all but 2 cores
 
 #library(doParallel)
 #N_CORES <- detectCores()
 #cl <- makeCluster(N_CORES-2)
 #registerDoParallel(cl)
-#fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#tau=c(0.05,0.1),exact=TRUE,
-#criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#num.resamples=50,type.resampling="Wallisch2021")
+#fit.resample <- abe.resampling(fit, data = dd, include = "x1", active = "x2",
+#tau = c(0.05, 0.1), exact = TRUE, criterion = "alpha", alpha = c(0.2, 0.05),
+#type.test = "Chisq", num.resamples = 50, type.resampling = "Wallisch2021")
 #stopCluster(cl)
 }
 \references{
-Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
+Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented Backward Elimination: A Pragmatic and Purposeful Way to Develop Statistical Models. PloS One, 9(11):e113677, 2014, [doi:](doi:10.1371/journal.pone.0113677).
 
-Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
+Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016, [doi:](doi:10.1111/biom.12381).
 
-Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
+Wallisch Christine, Dunkler Daniela, Rauch Geraldine, de Bin Ricardo, Heinze Georg. Selection of Variables for Multivariable Models: Opportunities and Limitations in Quantifying Model Stability by Resampling. Statistics in Medicine 40:369-381, 2021, [doi:](doi:10.1002/sim.8779).
 }
 \seealso{
 [abe()], [summary.abe()], [print.abe()], [plot.abe()], [pie.abe()]
