@@ -3,13 +3,17 @@ Type: Package
 Title: Augmented Backward Elimination
 Version: 5.1.1
 Date: 2022-11-30
-Authors@R: c(person(c("Rok","Blagus"),role=c("aut","cre"),email="rok.blagus@mf.uni-lj.si"),person("Sladana", "Babic", role = "ctb",
-             email = "sladja93babic@gmail.com"))
-Author: Rok Blagus [aut, cre],  Sladana Babic [ctb]
+Authors@R: c(person(c("Rok","Blagus"), role=c("aut","cre"), email = "rok.blagus@mf.uni-lj.si"), 
+             person("Sladana", "Babic", role = "ctb", email = "sladja93babic@gmail.com"), 
+             person("Daniela", "Dunkler", role = "ctb", email = "daniela.dunkler@meduniwien.ac.at"),
+             person("Georg", "Heinze", role = "ctb", email = "georg.heinze@meduniwien.ac.at"),
+             person("Gregor", "Steiner", role = "ctb", email = "gregor.steiner@warwick.ac.uk"))
+Author: Rok Blagus [aut, cre],  Sladana Babic [ctb], Daniela Dunkler [ctb], Gregor Steiner [ctb]
 Maintainer: Rok Blagus <rok.blagus@mf.uni-lj.si>
 Description: Performs augmented backward elimination and checks the stability of the obtained model. Augmented backward elimination combines significance or information based criteria with the change in estimate to either select the optimal model for prediction purposes or to serve as a tool to obtain a practically sound, highly interpretable model. More details can be found in Dunkler et al. (2014) <doi:10.1371/journal.pone.0113677>. 
 License: GPL-3 + file LICENSE
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
+Encoding: UTF-8
 Imports: ggplot2 (>= 3.4.0), reshape2 (>= 1.4.0), tidytext (>= 0.4.0), survival (>= 3.4-0), foreach (>= 1.5.0), lifecycle (>= 1.0.0)
 Suggests: 
     testthat (>= 3.0.0)

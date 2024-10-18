@@ -3,7 +3,6 @@
 \docType{package}
 \name{abe-package}
 \alias{abe-package}
-\alias{_PACKAGE}
 \alias{testduplicate-package}
 \title{abe: Augmented Backward Elimination}
 \description{
@@ -15,6 +14,9 @@ Performs augmented backward elimination and checks the stability of the obtained
 Other contributors:
 \itemize{
   \item Sladana Babic \email{sladja93babic@gmail.com} [contributor]
+  \item Daniela Dunkler \email{daniela.dunkler@meduniwien.ac.at} [contributor]
+  \item Georg Heinze \email{georg.heinze@meduniwien.ac.at} [contributor]
+  \item Gregor Steiner \email{gregor.steiner@warwick.ac.uk} [contributor]
 }
 
 }
