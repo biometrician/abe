@@ -98,7 +98,7 @@ A list with the following elements:
 Performs Augmented backward elimination on re-sampled data sets using different bootstrap and re-sampling techniques.
 }
 \details{
-`type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Walisch et al. (2021).
+`type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Wallisch et al. (2021).
 
 When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
 
@@ -124,7 +124,11 @@ active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
 num.resamples = 50, type.resampling = "Wallisch2021")
 
-summary(fit.resample1)
+names(summary(fit.resample1))
+summary(fit.resample1)$var.rel.frequencies
+summary(fit.resample1)$model.rel.frequencies
+summary(fit.resample1)$var.coefs[1]
+summary(fit.resample1)$pair.rel.frequencies[1]
 print(fit.resample1)
 
 # use ABE on 50 bootstrap re-samples considering different
@@ -197,6 +201,8 @@ Wallisch Christine, Dunkler Daniela, Rauch Geraldine, de Bin Ricardo, Heinze Geo
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
+
+Daniela Dunkler
 
 Sladana Babic
 }

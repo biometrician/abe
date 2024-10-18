@@ -338,6 +338,7 @@ if (class(bt0)=="try-error") bt else bt0
 #' `id` the rows of the data which were used when refitting the model; the list with elements `id1` (the rows used to refit the model; when `type.resampling="Wallisch2021"` these are based on bootstrap) and `id2` (`NULL` unless when `type.resampling="Wallisch2021"` in which case these are the rows used to refit the models based on subsampling)
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
+#' @author Daniela Dunkler
 #' @author Sladana Babic
 #' @details `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Wallisch et al. (2021).
 #' @details When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
@@ -368,7 +369,11 @@ if (class(bt0)=="try-error") bt else bt0
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
 #' num.resamples = 50, type.resampling = "Wallisch2021")
 #'
-#' summary(fit.resample1)
+#' names(summary(fit.resample1))
+#' summary(fit.resample1)$var.rel.frequencies
+#' summary(fit.resample1)$model.rel.frequencies
+#' summary(fit.resample1)$var.coefs[1]
+#' summary(fit.resample1)$pair.rel.frequencies[1]
 #' print(fit.resample1)
 #'
 #' # use ABE on 50 bootstrap re-samples considering different
@@ -1638,6 +1643,7 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' `misc` the parameters of the call to `abe.boot`
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
+#' @author Daniela Dunkler
 #' @author Sladana Babic
 #' @details Used only for compatibility with the previous versions and will be removed at some point; see/use [abe.resampling()] instead.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
@@ -2022,6 +2028,7 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Daniela Dunkler
 #' @author Gregor Steiner
 #' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
@@ -2292,6 +2299,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @param ... additional arguments affecting the summary produced.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Daniela Dunkler
 #' @author Gregor Steiner
 #' @details When using `type.resampling="Wallisch2021"` in a call to [abe.resampling()], the results for the relative inclusion frequencies of the covariates from the initial model are based on subsampling with sampling proportion equal to 0.5 and the other results are based on bootstrap as suggested by Wallisch et al. (2021); otherwise all the results are obtained by using the method as specified in `type.resampling`.
 #' Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
@@ -2301,21 +2309,20 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' @seealso [abe.resampling()], [summary.abe()], [plot.abe()], [pie.abe()]
 #' @export
 #' @examples
-#' set.seed(1)
-#' n=100
-#' x1<-runif(n)
-#' x2<-runif(n)
-#' x3<-runif(n)
-#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
-#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#' set.seed(100)
+#' n = 100
+#' x1 <- runif(n)
+#' x2 <- runif(n)
+#' x3 <- runif(n)
+#' y<- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+#' dd <- data.frame(y = y,x1 = x1, x2 = x2, x3 = x3)
+#' fit <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data= dd)
 #'
-#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.resamples=50,type.resampling="Wallisch2021")
+#' fit.resample <- abe.resampling(fit, data = dd, include = "x1", active = "x2",
+#' tau = c(0.05, 0.1), exact = TRUE, criterion = "alpha", alpha = c(0.2, 0.05),
+#' type.test = "Chisq", num.resamples = 50, type.resampling = "Wallisch2021")
 #'
-#' print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
+#' print(fit.resample, conf.level = 0.95, alpha = 0.2, tau = 0.05)
 
 
 print.abe <- function(x, type = c("coefficients", "coefficients reporting", "models"), models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
@@ -2377,13 +2384,14 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 #' @param ... Arguments to be passed to methods, such as graphical parameters.
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+#' @author Daniela Dunkler
 #' @author Gregor Steiner
 #' @details When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
 #' When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
 #'
-#' When using `type.plot="variables"` the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+#' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 #'
-#' When using `type.plot="models"` the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+#' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 #'
 #' When using `type.plot="stability"` the function plots variable inclusion frequencies for each value of alpha. `type.stability` specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 #'
@@ -2695,28 +2703,26 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
 #' @export
 #' @seealso [abe.resampling()], [summary.abe()], [plot.abe()]
 #' @examples
-#' set.seed(1)
-#' n=100
-#' x1<-runif(n)
-#' x2<-runif(n)
-#' x3<-runif(n)
-#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=x3)
-#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#' set.seed(10)
+#' n = 100
+#' x1 <- runif(n)
+#' x2 <- runif(n)
+#' x3 <- runif(n)
+#' y <- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+#' dd <- data.frame(y = y, x1 = x1, x2 = x2, x3 = x3)
+#' fit <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data = dd)
 #'
-#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.resamples=50,type.resampling="Wallisch2021")
+#' fit.resample <- abe.resampling(fit, data = dd, include = "x1", active = "x2",
+#' tau = c(0.05, 0.1), exact = TRUE, criterion = "alpha", alpha = c(0.2, 0.05),
+#' type.test = "Chisq", num.resamples = 50, type.resampling = "Wallisch2021")
 #'
-#' pie.abe(fit.resample, alpha=0.2,tau=0.1)
+#' pie.abe(fit.resample, alpha = 0.2, tau = 0.1)
 #'
-#' fit.resample<-abe.resampling(fit,data=dd,include="x1",active="x2",
-#' tau=c(0.05,0.1),exact=TRUE,
-#' criterion="alpha",alpha=c(0.2,0.05),type.test="Chisq",
-#' num.resamples=50,type.resampling="subsampling")
+#' fit.resample <- abe.resampling(fit, data = dd, include = "x1", active = "x2",
+#' tau=  c(0.05, 0.1), exact=TRUE, criterion = "alpha", alpha = c(0.2, 0.05),
+#' type.test = "Chisq", num.resamples = 50, type.resampling = "subsampling")
 #'
-#' pie.abe(fit.resample, alpha=0.2,tau=0.1)
+#' pie.abe(fit.resample, alpha = 0.2, tau = 0.1)
 
 
 

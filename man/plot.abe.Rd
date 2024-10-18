@@ -39,9 +39,9 @@ Plot function for the resampled/bootstrapped version of ABE.
 When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
 When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
 
-When using `type.plot="variables"` the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 
-When using `type.plot="models"` the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
 
 When using `type.plot="stability"` the function plots variable inclusion frequencies for each value of alpha. `type.stability` specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
 
@@ -103,6 +103,8 @@ alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
 Sladana Babic
+
+Daniela Dunkler
 
 Gregor Steiner
 }

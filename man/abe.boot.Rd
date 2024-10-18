@@ -100,6 +100,8 @@ Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsa
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
 
+Daniela Dunkler
+
 Sladana Babic
 }
 \keyword{internal}
