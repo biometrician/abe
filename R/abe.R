@@ -271,7 +271,7 @@ if (is.null(type.factor)) {type.factor="factor"; warning("There are factors in t
 }
 
 bt0<-try(eval(bt$call),silent=TRUE)
-if (class(bt0)=="try-error") bt else bt0
+if (inherits(bt0, "try-error")) bt else bt0
 
 }
 
