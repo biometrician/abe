@@ -48,7 +48,11 @@ num.resamples=50,type.resampling="subsampling")
 pie.abe(fit.resample, alpha=0.2,tau=0.1)
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
+=======
+\link{abe.resampling}, \link{summary.abe}, \link{plot.abe}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

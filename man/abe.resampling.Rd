@@ -49,8 +49,13 @@ If you are using significance level, in that case you have to specify the value 
 
 \item{alpha}{Value that specifies the level of significance as explained above. Default is set to 0.2.}
 
+<<<<<<< Updated upstream
 \item{type.test}{String that specifies which test should be performed in case the \code{criterion = "alpha"}.
 Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.}
+=======
+\item{type.test}{String that specifies which test should be performed in case the `criterion = "alpha"`.
+Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also \link{drop1}.}
+>>>>>>> Stashed changes
 
 \item{type.factor}{String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.}
 
@@ -146,7 +151,11 @@ Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsa
 Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+=======
+\link{abe}, \link{summary.abe}, \link{print.abe}, \link{plot.abe}, \link{pie.abe}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

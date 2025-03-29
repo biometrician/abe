@@ -28,11 +28,19 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
 #' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}) and type of the test statistic (see parameter \code{type.test}). Default is set to \code{"alpha"}.
 #' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
+<<<<<<< Updated upstream
 #' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
 #' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
 #' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
 #' @param verbose Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.
 #'
+=======
+#' @param type.test String that specifies which test should be performed in case the `criterion = "alpha"`.
+#' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also \link{drop1}.
+#' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
+#' @param verbose Logical that specifies if the variable selection process should be printed. This can severely slow down the algorithm. Default is set to TRUE.
+#' @param ... Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.
+>>>>>>> Stashed changes
 #' @details
 #' Using the default settings ABE will perform augmented backward elimination based on significance.
 #' The level of significance will be set to 0.2. All variables will be treated as "passive or active".
@@ -42,6 +50,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' as then variables are not safe from exclusion because of their p-values.
 #' Specifying \code{"alpha" = 1} will always include all variables.
 #'
+<<<<<<< Updated upstream
 #' When using \code{type.factor="individual"} each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
 #' Using \code{type.factor="factor"} will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
 #'
@@ -49,6 +58,15 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #'
 #' @seealso \code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
+=======
+#' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group. When using this option, a new data frame `df` is added in the global environment with a warning.
+#' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model. If `type.factor="factor"` then `exact` should be set to `TRUE` to avoid poor approximations.
+#'
+#' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change-in-estimate for logistic, Cox, and parametric survival models only.
+#' @return An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
+#' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented Backward Elimination: A Pragmatic and Purposeful Way to Develop Statistical Models. PloS One, 9(11):e113677, 2014, [doi:](doi:10.1371/journal.pone.0113677).
+#' @seealso \link{abe.resampling}, \link{lm}, \link{glm} and \link[survival]{coxph}
+>>>>>>> Stashed changes
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
 #' @export
@@ -110,6 +128,45 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exac
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 assign(as.character(substitute(data)),data)
 
+<<<<<<< Updated upstream
+=======
+# match arguments
+criterion <- match.arg(criterion)
+type.test <- match.arg(type.test)
+
+# check if user supplied the exp.beta argument and warn them if so
+if("exp.beta" %in% names(list(...))) warning("Using exp.beta is not supported anymore. It is now automatically set to FALSE for linear models and TRUE for logistic and Cox models.")
+
+# fix exp.beta depending on model type
+exp.beta <- FALSE
+if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
+if(class(fit)[1] == "coxph") exp.beta <- TRUE
+if(inherits(fit, "logistf")) exp.beta <- TRUE
+if(inherits(fit, "survreg")) exp.beta <- TRUE
+
+
+
+# some checks and adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+  class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+  vrs<-names(fit$model)
+  fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+  #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+  #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+  attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+  attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+  names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+}
+
+# check if model matrix is included in the fit
+>>>>>>> Stashed changes
 if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
 if (nrow(fit$x)!=nrow(data)) stop("Data object contains missing values. Remove all the missing values and refit the model.")
 
@@ -133,9 +190,16 @@ if (criterion=="alpha") if (alpha<0|alpha>1) stop("specify alpha between zero an
 if (is.null(tau)) stop("Specify tau.")
 if (tau<0) stop("Tau has to be >=0.")
 
+<<<<<<< Updated upstream
 nm.var<-ncol(model.matrix(fit))
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
+=======
+nm.var<-ncol(xm)
+if (nm.var == 1) stop("performing variable selection with a single variable in the model is meaningless")
+if(class(fit)[1]=="lm"){
+  n<-nrow(xm)
+>>>>>>> Stashed changes
   epv<-n/nm.var
   if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
 }
@@ -235,9 +299,11 @@ if (sum(attributes(fit$terms)$dataClasses[!my_grepl("strata",names(attributes(fi
 
 if (is.null(type.factor)) {type.factor="factor"; warning("There are factors in the model but type.factor is not specified, using type.factor=factor")}
 
-	if (type.factor=="factor") bt<-abe.fact1(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose) else bt<-abe.fact2(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
+	if (type.factor=="factor") bt<-abe.fact1(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose) else {
+	  bt<-abe.fact2(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
+	  warning("A new data frame, df, was created in the global environment due to type.factor=individual.")
 
-
+}
 	} else  bt<-abe.num(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
 }
 
@@ -272,9 +338,15 @@ bt
 #' Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
 #' If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}). Default is set to \code{"alpha"}.
 #' @param alpha Value that specifies the level of significance as explained above. Default is set to 0.2.
+<<<<<<< Updated upstream
 #' @param type.test String that specifies which test should be performed in case the \code{criterion = "alpha"}.
 #' Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.
 #' @param type.factor String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.
+=======
+#' @param type.test String that specifies which test should be performed in case the `criterion = "alpha"`.
+#' Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also \link{drop1}.
+#' @param type.factor String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.
+>>>>>>> Stashed changes
 #' @param num.resamples number of resamples.
 #' @param type.resampling String that specifies the type of resampling. Possible values are \code{"Wallisch2021"}, \code{"bootstrap"}, \code{"mn.bootstrap"}, \code{"subsampling"}. Default is set to \code{"Wallisch2021"}. See details.
 #' @param prop.sampling Sampling proportion. Only applicable for \code{type.boot="mn.bootstrap"} and \code{type.boot="subsampling"}, defaults to 0.5. See details.
@@ -308,12 +380,22 @@ bt
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+<<<<<<< Updated upstream
 #' @details \code{type.resampling} can be \code{bootstrap} (n observations drawn from the original data with replacement), \code{mn.bootstrap} (m out of n observations drawn from the original data with replacement), \code{subsampling} (m out of n observations drawn from the original data without replacement, where m is [prop.sampling*n]) and \code{"Wallisch2021"}. When using \code{"Wallisch2021"} the resampling is done twice: first time using bootstrap (these results are contained in \code{models}) and the second time using resampling with \code{prop.sampling} equal to 0.5 (these results are contained in \code{models.wallisch}); see Walisch et al. (2021).
 #' @details When using \code(parallel=TRUE) parallel backend must be registered before using \code{abe.resampling}. The parallel backends available will be system-specific; see \code{\link{foreach}} for more details.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso \code{\link{abe}}, \code{\link{summary.abe}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+=======
+#' @details `type.resampling` can be `bootstrap` (n observations drawn from the original data with replacement), `mn.bootstrap` (m out of n observations drawn from the original data with replacement), `subsampling` (m out of n observations drawn from the original data without replacement, where m is `prop.sampling*n` ) and `"Wallisch2021"`. When using `"Wallisch2021"` the resampling is done twice: first time using bootstrap (these results are contained in `models`) and the second time using resampling with `prop.sampling` equal to 0.5 (these results are contained in `models.wallisch`); see Wallisch et al. (2021).
+#' @details When using `parallel=TRUE` parallel backend must be registered before using `abe.resampling`. The parallel backends available will be system-specific; see [foreach()] for more details.
+#' @details In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change in estimate for logistic and Cox models only.
+#' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented Backward Elimination: A Pragmatic and Purposeful Way to Develop Statistical Models. PloS One, 9(11):e113677, 2014, [doi:](doi:10.1371/journal.pone.0113677).
+#' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016, [doi:](doi:10.1111/biom.12381).
+#' @references Wallisch Christine, Dunkler Daniela, Rauch Geraldine, de Bin Ricardo, Heinze Georg. Selection of Variables for Multivariable Models: Opportunities and Limitations in Quantifying Model Stability by Resampling. Statistics in Medicine 40:369-381, 2021, [doi:](doi:10.1002/sim.8779).
+#' @seealso \link{abe}, \link{summary.abe}, \link{print.abe}, \link{plot.abe}, \link{pie.abe}
+>>>>>>> Stashed changes
 #' @export
 #' @examples
 #' # simulate some data and fit a model
@@ -416,6 +498,38 @@ if (!is.null(seed)) set.seed(seed)
 num.boot<-num.resamples
   if (is.null(data)) stop("Supply the data which were used when fitting the full model.")
 
+<<<<<<< Updated upstream
+=======
+  # check if user supplied the exp.beta argument and warn them if so
+  if("exp.beta" %in% names(list(...))) warning("Using exp.beta is not supported anymore. It is now automatically set to FALSE for linear models and TRUE for logistic and Cox models.")
+
+  # fix exp.beta depending on model type
+  exp.beta <- FALSE
+  if(class(fit)[1] == "glm" && fit$family$family=="binomial") exp.beta <- TRUE
+  if(class(fit)[1] == "coxph") exp.beta <- TRUE
+  if(inherits(fit, "logistf")) exp.beta <- TRUE
+  if(inherits(fit, "survreg")) exp.beta <- TRUE
+
+  # some checks and adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+  }
+
+>>>>>>> Stashed changes
   if (!"x"%in%names(fit)) stop("the model should be fitted with: x=T")
   if (nrow(fit$x)!=nrow(data)) stop("Data contains missing values. Remove all the missing values and refit the model.")
 
@@ -444,7 +558,12 @@ num.boot<-num.resamples
   if (!is.matrix(xm) ) stop("performing variable selection with a single variable in the model is meaningless")
 
 
+<<<<<<< Updated upstream
 nm.var<-ncol(model.matrix(fit))
+=======
+
+nm.var<-ncol(fit$x)
+>>>>>>> Stashed changes
 if (class(fit)[1]=="lm"){
   n<-nrow(model.matrix(fit))
   epv<-n/nm.var
@@ -464,6 +583,11 @@ if (class(fit)[1]=="coxph"){
 
 }
 
+if(class(fit)[1]=="logistf"){
+  n<-min(table(fit$y))
+  epv<-n/nm.var
+  if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
+}
 
   if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
 
@@ -756,8 +880,6 @@ boot2<-NULL
         foreach(t=tau,.combine="c") %do% {#for (t in tau){
           foreach(ii=1:num.boot,.packages=c("abe","survival") ) %dopar% {#for (ii in 1:num.boot){
            # i=i+1
-#source("R/abe.R") #used only to test is dopar works (since it looks for abe package on cran!)
-#library(survival)
 
             data.boot<-data[idsb[ii,],]
 
@@ -891,8 +1013,6 @@ boot1<-boot
         foreach(t=tau,.combine="c") %do% {# for (t in tau){
           foreach(ii=1:num.boot ,.packages=c("abe","survival")) %dopar% {#for (ii in 1:num.boot){
            # i=i+1
-#source("R/abe.R") #used only to test is dopar works (since it looks for abe package on cran!)
-#library(survival)
 
             data.boot<-data[idss[ii,],]
 
@@ -1495,6 +1615,49 @@ if (length( my_grep("matrix",attributes(fit$terms)$dataClasses[-1]))==0){
     model.params <- grid[, c("tau"), drop = FALSE]
   }
 
+<<<<<<< Updated upstream
+=======
+  # add selected fit
+  if(criterion != "alpha"){
+    #sink("NUL") #could be problem for nonwidows!
+    null_connection <- file("nul", open = "w")
+    sink(null_connection)
+    fit.selected <- lapply(unique(model.params$tau), function(tau.int){
+      abe(fit, data = data, criterion = criterion, tau = tau.int, include = include,
+          active = active, exact = exact, type.test = type.test, type.factor = type.factor, verbose = FALSE)
+    })
+    sink()
+    close(null_connection)
+  }
+  if(criterion == "alpha"){
+    #sink("NUL")
+    null_connection <- file("nul", open = "w")
+    sink(null_connection)
+    fit.selected <- apply(unique(model.params), 1, function(x){
+      abe(fit, data = data, criterion = criterion, alpha = x[1], tau = x[2], include = include,
+          active = active, exact = exact, type.test = type.test, type.factor = type.factor, verbose = FALSE)
+    })
+    sink()
+    close(null_connection)
+  }
+  names(fit.selected) <- 1:length(fit.selected)
+
+
+
+  # create coefficient matrix
+  coefficients <- matrix(0, nrow = length(boot1), ncol = length(fit.global$coefficients),
+                         dimnames = list(1:length(boot1), names(fit.global$coefficients)))
+  if(type.resampling=="Wallisch2021"){
+    coefficients.wallisch <-  matrix(0, nrow = length(boot2), ncol = length(fit.global$coefficients),
+                                     dimnames = list(1:length(boot2), names(fit.global$coefficients)))
+  } else coefficients.wallisch <- NULL
+
+  for (i in 1:nrow(coefficients)) {
+    coefficients[i, names(boot1[[i]]$coefficients)] <- boot1[[i]]$coefficients
+    if(type.resampling=="Wallisch2021") coefficients.wallisch[i, names(boot2[[i]]$coefficients)] <- boot2[[i]]$coefficients
+  }
+
+>>>>>>> Stashed changes
 
 if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 
@@ -1561,7 +1724,11 @@ if(type.boot.or!="Wallisch2021") {id1<-ids;id2<-NULL} else {id1<-idsb;id2<-idss}
 #' @details Used only for compatibility with the previous versions and will be removed at some point; see/use \code{\link{abe.resampling}} instead.
 #' @references Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 #' @references Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
+<<<<<<< Updated upstream
 #' @seealso \code{\link{abe.resampling}}
+=======
+#' @seealso \link{abe.resampling}
+>>>>>>> Stashed changes
 #' @export
 #'
 #' # use ABE on 50 subsamples randomly selecting 50% of subjects
@@ -1945,8 +2112,16 @@ warning("This function is obsolete, please use abe.resampling instead.")
 #'
 #' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
 #' @author Sladana Babic
+<<<<<<< Updated upstream
 #' @details Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @seealso \code{\link{abe.resampling}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+=======
+#' @author Daniela Dunkler
+#' @author Gregor Steiner
+#' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
+#' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
+#' @seealso \link{abe.resampling}, \link{print.abe}, \link{plot.abe}, \link{pie.abe}
+>>>>>>> Stashed changes
 #' @export
 #' @examples
 #' set.seed(1)
@@ -2393,9 +2568,106 @@ return(list)
 #'
 #' Parameter \code{conf.level} defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
+<<<<<<< Updated upstream
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
 #' @export
 #' @examples
+=======
+#' @seealso \link{abe.resampling}, \link{summary.abe}, \link{plot.abe}, \link{pie.abe}
+#' @export
+#' @examples
+#' set.seed(100)
+#' n = 100
+#' x1 <- runif(n)
+#' x2 <- runif(n)
+#' x3 <- runif(n)
+#' y<- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+#' dd <- data.frame(y = y,x1 = x1, x2 = x2, x3 = x3)
+#' fit <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data= dd)
+#'
+#' fit.resample <- abe.resampling(fit, data = dd, include = "x1", active = "x2",
+#' tau = c(0.05, 0.1), exact = TRUE, criterion = "alpha", alpha = c(0.2, 0.05),
+#' type.test = "Chisq", num.resamples = 50, type.resampling = "Wallisch2021")
+#'
+#' print(fit.resample, conf.level = 0.95, alpha = 0.2, tau = 0.05)
+
+
+print.abe <- function(x, type = c("coefficients", "coefficients reporting", "models"), models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
+
+  # match arguments
+  type <- match.arg(type)
+
+  object <- x
+
+  # coefficient table
+  if(type == "coefficients"){
+
+    sum.obj <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)
+
+    res <- sum.obj$var.coefs
+    # round
+    res <- lapply(res, round, digits = digits)
+
+    names(res) <- names(sum.obj$var.coefs)
+    return(res)
+
+  }
+
+  if(type == "coefficients reporting"){
+
+    sum.obj <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)
+
+    # only keep essential columns
+    res <- lapply(sum.obj$var.coefs, function(x) x[, c(1:5, 10)])
+    # round
+    res <- lapply(res, round, digits = digits)
+
+    names(res) <- names(sum.obj$var.coefs)
+    return(res)
+  }
+
+  # model selection frequencies
+  if(type == "models"){
+
+    res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau, models.n = models.n)$model.rel.frequencies
+    return(res)
+
+  }
+
+}
+
+
+#' Plot Function
+#'
+#' Plot function for the resampled/bootstrapped version of ABE.
+#'
+#' @param x an object of class `"abe"`, an object returned by a call to [abe.resampling()]
+#' @param type.plot string which specifies the type of the plot. See details.
+#' @param alpha values of alpha for which the plot is to be made (can be a vector of length >1)
+#' @param tau values of tau for which the plot is to be made (can be a vector of length >1)
+#' @param variable variables for which the plot is to be made (can be a vector of length >1)
+#' @param type.stability string which specifies the type of stability plot. See details.
+#' @param pval significance level to be used to determine a significant deviation from the expected pairwise inclusion frequency under independence (default 0.01). Only relevant if `type.plot="pairwise"`.
+#' @param ... Arguments to be passed to methods, such as graphical parameters.
+#' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
+#' @author Sladana Babic
+#' @author Daniela Dunkler
+#' @author Gregor Steiner
+#' @details When using `type.plot="coefficients"` the function plots a histogram of the estimated regression coefficients for the specified variables, alpha(s) and tau(s) obtained from different re-sampled datasets.
+#' When the variable is not included in the final model, its regression coefficient is set to zero. When using `type.resampling="Wallisch2021"` the plot is based on bootstrap, otherwise as specified in `type.resampling`.
+#'
+#' When using \code{type.plot="variables"} the function plots a barplot of the relative inclusion frequencies of the specified variables, for the specified values of alpha and tau. When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+#'
+#' When using \code{type.plot="models"} the function plots a barplot of the relative frequencies of the final models for specified alpha(s) and tau(s). When using `type.resampling="Wallisch2021"` the plot is based on subsampling with sampling proportion equal to 0.5, otherwise as specified in `type.resampling`.
+#'
+#' When using `type.plot="stability"` the function plots variable inclusion frequencies for each value of alpha. `type.stability` specifies if inclusion frequencies should be plotted as a function of alpha (default) or tau.
+#'
+#' When using `type.plot="pairwise"` the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See `summary.abe` for more details.
+#' @import stats ggplot2 reshape2 tidytext
+#' @export
+#' @seealso \link{abe.resampling}, \link{summary.abe}, \link{pie.abe}
+#' @examples
+>>>>>>> Stashed changes
 #' set.seed(1)
 #' n=100
 #' x1<-runif(n)
@@ -2971,7 +3243,11 @@ if(type.plot == "pairwise"){
 #' @author Sladana Babic
 #' @import graphics
 #' @export
+<<<<<<< Updated upstream
 #' @seealso \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}
+=======
+#' @seealso \link{abe.resampling}, \link{summary.abe}, \link{plot.abe}
+>>>>>>> Stashed changes
 #' @examples
 #' set.seed(1)
 #' n=100
@@ -3155,7 +3431,24 @@ if (object$misc$type.boot!="Wallisch2021"){
 
 abe.num<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=TRUE){
 
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+  }
 if (criterion[1]=="alpha") k<-qchisq(1-alpha,df=1)
 if (criterion[1]=="AIC") k<-2
 
@@ -3216,6 +3509,29 @@ stop=F
 
 while(stop==F){
 
+<<<<<<< Updated upstream
+=======
+# some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+  }
+
+>>>>>>> Stashed changes
 vcvm<-vcov(fit)
 
 if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
@@ -3230,13 +3546,41 @@ if (verbose==TRUE) {
 	print(fit$call)
 	}
 
+<<<<<<< Updated upstream
 
  if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
+=======
+if(inherits(fit, "logistf")){
+  scope <- unique(varnfix) # drop1.logistf() requires the scope as a vector of variables and not as a formula
+} else {
+  scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+}
+if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
+>>>>>>> Stashed changes
 
-if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
+if (verbose==TRUE){
+  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else {
+    if(inherits(fit, "logistf")){cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[which(rownames(bl)%in%varnfix),pmatch("P",colnames(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) } else {
+      cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
+    }
+  }
+    }
 
-
+<<<<<<< Updated upstream
 if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
+=======
+if (criterion!="alpha"){
+  black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+} else {
+  if(inherits(fit, "logistf")){
+    ind <- pmatch("P",colnames(bl))
+    black.list.i<-varnfix[which(bl[, ind]>alpha)]
+  }  else {
+    ind <- pmatch("Pr", names(bl))
+    black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+  }
+}
+>>>>>>> Stashed changes
 
 
 if (length(black.list.i)!=0){
@@ -3267,8 +3611,27 @@ if (length(black.list.i)!=0){
 
 		 		fit.i<-update(fit,xf,evaluate=FALSE)
 				fit.i<-eval.parent(fit.i)
+				if(inherits(fit.i, "logistf")){
+				  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+				  if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
+				  class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
+				  class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+				  vrs<-names(fit.i$model)
+				  fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
+<<<<<<< Updated upstream
 				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+=======
+
+				  attr(fit.i$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+				  attr(fit.i$terms, "dataClasses") <- class # add dataClasses attribute
+				  names(attr(fit.i$terms, "dataClasses"))<-vrs[-1]
+
+				}
+				if (colnames(fit$x)[1]=="(Intercept)") {
+>>>>>>> Stashed changes
 
 					change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
 					} else {
@@ -3364,6 +3727,28 @@ fit
 
 abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",k){
 
+<<<<<<< Updated upstream
+=======
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+  }
+>>>>>>> Stashed changes
 
 
 
@@ -3387,6 +3772,30 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
   while(stop==F){
 
+<<<<<<< Updated upstream
+=======
+    # some necessary adjustments for logistf objects
+    if(inherits(fit, "logistf")){
+      if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+      if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+      class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      vrs<-names(fit$model)
+      fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+      #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+      #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+      attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+      attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+      names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+    }
+
+
+>>>>>>> Stashed changes
     vcvm<-vcov(fit)
 
     if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
@@ -3397,6 +3806,15 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
 
 
+<<<<<<< Updated upstream
+=======
+      if(class(fit)[1] == "logistf"){
+        scope <- unique(varnfix) # drop1.logistf() requires the scope as a vector of variables and not as a formula
+      } else {
+        scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+      }
+      if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
+>>>>>>> Stashed changes
 
       if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
 
@@ -3430,8 +3848,27 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
 
            fit.i<-update(fit,xf,evaluate=FALSE)
           fit.i<-eval.parent(fit.i)
+          if(inherits(fit.i, "logistf")){
+            if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+            if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
+            class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
+            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            vrs<-names(fit.i$model)
+            fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
+<<<<<<< Updated upstream
           if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+=======
+
+            attr(fit.i$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+            attr(fit.i$terms, "dataClasses") <- class # add dataClasses attribute
+            names(attr(fit.i$terms, "dataClasses"))<-vrs[-1]
+
+          }
+          if (colnames(fit$x)[1]=="(Intercept)") {
+>>>>>>> Stashed changes
 
             change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
           } else {
@@ -3521,6 +3958,28 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
 
 if (exact==F) {warning("there are factors in the model, using approximate change-in-estimate with this type.factor is inappropriate; using exact change in estimate instead"); exact=T}
 
+<<<<<<< Updated upstream
+=======
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+  class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+  vrs<-names(fit$model)
+  fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+  #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+  #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+  attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+  attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+  names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+}
+>>>>>>> Stashed changes
 
 
  if (criterion[1]=="AIC") k<-2
@@ -3614,6 +4073,29 @@ stop=F
 
 while(stop==F){
 
+<<<<<<< Updated upstream
+=======
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+  class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+  vrs<-names(fit$model)
+  fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+  #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+  #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+  attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+  attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+  names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+}
+
+>>>>>>> Stashed changes
 vcvm<-vcov(fit)
 
 if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
@@ -3630,11 +4112,26 @@ if (verbose==TRUE) {
 	print(fit$call)
 	}
 
+<<<<<<< Updated upstream
+=======
+if(inherits(fit, "logistf")){
+  scope <- varnfix # drop1.logistf() requires the scope as a vector of variables and not as a formula
+scope<-unique(scope)
+} else {
+  scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+}
+>>>>>>> Stashed changes
 
  if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),test=type.test)
 varnfixn<-unique(varnfix)
-if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
+if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else {
+  if (inherits(fit, "logistf")){
+    cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl[which(rownames(bl)%in%varnfixn),pmatch("P",colnames(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
+  } else {
+    cat("Criterion for non-passive variables: "  ,paste( paste(varnfixn,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
+}
+    }
 
 if (criterion!="alpha") black.list.i<-varnfixn[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfixn[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
 
@@ -3666,7 +4163,22 @@ if (length(black.list.i)!=0){
 
 			 	fit.i<-update(fit,xf,evaluate=FALSE)
 				fit.i<-eval.parent(fit.i)
+				if(inherits(fit.i, "logistf")){
+				  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+				  if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
+				  class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
+				  class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+				  vrs<-names(fit.i$model)
+				  fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
+
+				  attr(fit.i$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+				  attr(fit.i$terms, "dataClasses") <- class # add dataClasses attribute
+				  names(attr(fit.i$terms, "dataClasses"))<-vrs[-1]
+
+				}
 
 				  var.mod.i<-attributes(fit.i$terms)$term.labels
 				  if (length(var.mod.i)==0) fit.i$assign<-0 else {
@@ -3688,8 +4200,9 @@ if (length(black.list.i)!=0){
 
 				    rep.var.namesi<-sum(grepl(var.modii,var.mod.i))-1
 				    if (sum(rep.var.namesi)<0) rep.var.namesi<-0
+				    #if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
 				    if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
-				   }
+				  }
 
 				  fit.i$assign<-unlist(fit.i$assign)
 
@@ -3730,7 +4243,24 @@ if (length(black.list.i)!=0){
    			if (flag==F) {
    			 	  fit<-update(fit,as.formula(paste("~.-",black.list.i[i])),evaluate=FALSE)
    			  fit<-eval.parent(fit)
+   			  if(inherits(fit, "logistf")){
+   			    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+   			    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+   			    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+   			    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+   			    vrs<-names(fit$model)
+   			    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
+
+   			    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+   			    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+   			    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+   			    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+   			    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+   			  }
 
    			    var.mod<-attributes(fit$terms)$term.labels
    			    if (length(var.mod)==0) fit$assign<-0 else {
@@ -3819,6 +4349,27 @@ fit
 
 abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",k){
 
+<<<<<<< Updated upstream
+=======
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+  }
+>>>>>>> Stashed changes
 
   if (colnames(model.matrix(fit))[1]=="(Intercept)") xm<-as.matrix(fit$x)[,-1] else xm<-as.matrix(fit$x)
 
@@ -3889,6 +4440,29 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   while(stop==F){
 
+<<<<<<< Updated upstream
+=======
+    # some necessary adjustments for logistf objects
+    if(inherits(fit, "logistf")){
+      if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+      if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+      class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      vrs<-names(fit$model)
+      fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+      #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+      #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+      attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+      attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+      names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+    }
+
+
+>>>>>>> Stashed changes
     vcvm<-vcov(fit)
 
     if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
@@ -3901,6 +4475,14 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     }
 
 
+<<<<<<< Updated upstream
+=======
+    if(inherits(fit, "logistf")){
+      scope <- unique(varnfix) # drop1.logistf() requires the scope as a vector of variables and not as a formula
+    } else {
+      scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+    }
+>>>>>>> Stashed changes
 
 
      if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(unique(varnfix),collapse=" + ") )),test=type.test)
@@ -3934,7 +4516,22 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
           fit.i<-update(fit,xf,evaluate=FALSE)
         fit.i<-eval.parent(fit.i)
+        if(inherits(fit.i, "logistf")){
+          if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+          if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
+          class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
+          class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+          vrs<-names(fit.i$model)
+          fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
+
+          attr(fit.i$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+          attr(fit.i$terms, "dataClasses") <- class # add dataClasses attribute
+          names(attr(fit.i$terms, "dataClasses"))<-vrs[-1]
+
+        }
 
         var.mod.i<-attributes(fit.i$terms)$term.labels
 
@@ -3994,7 +4591,24 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
             fit<-update(fit,as.formula(paste("~.-",black.list.i[i])),evaluate=FALSE)
           fit<-eval.parent(fit)
 
+          if(inherits(fit, "logistf")){
+            if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+            if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+            class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+            class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+            vrs<-names(fit$model)
+            fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
+
+            #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+            #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+            attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+            attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+            names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+
+          }
           var.mod<-attributes(fit$terms)$term.labels
           if (length(var.mod)==0) fit$assign<-0 else {
             fit$assign<-list()
@@ -4075,7 +4689,30 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",verbose=TRUE){
 
 
+<<<<<<< Updated upstream
 df<-as.data.frame(model.matrix(fit))
+=======
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+  class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+  vrs<-names(fit$model)
+  fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+  #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+  #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+  attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+  attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+  names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+}
+
+df<-as.data.frame(fit$x)
+>>>>>>> Stashed changes
 
 names(df)<-gsub("factor", replacement="", names(df), ignore.case = FALSE, perl = FALSE,
      fixed = FALSE, useBytes = FALSE)
@@ -4120,7 +4757,23 @@ if ( class(fit)[1]=="coxph" )    updt.f<-as.formula(paste("~",paste(check.names,
 df<-cbind(df,model.frame(fit),data)
 
 fit<-my_update(fit, updt.f   ,data=df)
+if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+  class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+  vrs<-names(fit$model)
+  fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
+
+  #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+  #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+  attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+  attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+  names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+}
 if (sum(include%in%active)!=0) stop("at least one include variable is also specified as active")
 
  if (criterion[1]=="AIC") k<-2
@@ -4156,6 +4809,29 @@ stop=F
 
 while(stop==F){
 
+<<<<<<< Updated upstream
+=======
+# some necessary adjustments for logistf objects
+if(inherits(fit, "logistf")){
+  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+  if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+  class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+  class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+  vrs<-names(fit$model)
+  fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+  #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+  #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+  attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+  attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+  names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+}
+
+
+>>>>>>> Stashed changes
 vcvm<-vcov(fit)
 
 if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
@@ -4171,11 +4847,40 @@ if (verbose==TRUE) {
 	}
 
 
+<<<<<<< Updated upstream
  if (criterion!="alpha") bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),k=k) else bl<-drop1(fit,scope=as.formula(paste("~",paste(varnfix,collapse=" + ") )),test=type.test)
 
 if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
 
 if (criterion!="alpha") black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]  else   black.list.i<-varnfix[which(bl[-1,pmatch("Pr",names(bl))]>alpha)]
+=======
+if(inherits(fit, "logistf")){
+  scope <- unique(varnfix) # drop1.logistf() requires the scope as a vector of variables and not as a formula
+} else {
+  scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+}
+
+if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
+
+if (verbose==TRUE)  if (criterion!="alpha")  cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl$AIC[-1],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  ) else {
+  if(inherits(fit, "logistf")){
+    cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[which(rownames(bl)%in%varnfix),pmatch("P",colnames(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
+  } else { cat("Criterion for non-passive variables: "  ,paste( paste(varnfix,round(bl[-1,pmatch("Pr",names(bl))],4),sep=" : "),collapse=" , "),"\n"  ,sep=""  )
+  }
+}
+if (criterion!="alpha"){
+  black.list.i<-varnfix[which(bl$AIC[-1]<bl$AIC[1])]
+}
+else {
+  if(inherits(fit, "logistf")){
+    ind <- pmatch("P",colnames(bl))
+    black.list.i<-varnfix[which(bl[, ind]>alpha)]
+  }  else {
+    ind <- pmatch("Pr", names(bl))
+    black.list.i<-varnfix[which(bl[-1, ind]>alpha)]
+  }
+}
+>>>>>>> Stashed changes
 
 
 if (length(black.list.i)!=0){
@@ -4203,8 +4908,27 @@ if (length(black.list.i)!=0){
 				xf<-as.formula(paste("~.-",black.list.i[i]  ))
 
 			 	fit.i<-my_update(fit,xf,data=df)
+			 	if(inherits(fit.i, "logistf")){
+			 	  if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+			 	  if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
+			 	  class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
+			 	  class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+			 	  vrs<-names(fit.i$model)
+			 	  fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
+<<<<<<< Updated upstream
 				if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+=======
+
+			 	  attr(fit.i$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+			 	  attr(fit.i$terms, "dataClasses") <- class # add dataClasses attribute
+			 	  names(attr(fit.i$terms, "dataClasses"))<-vrs[-1]
+
+			 	}
+				if (colnames(fit$x)[1]=="(Intercept)") {
+>>>>>>> Stashed changes
 
 					change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
 					} else {
@@ -4268,7 +4992,8 @@ if (verbose==T) {
 	cat("\n\n")
 	}
 
-fit<-my_update2(fit,data.n="df")
+assign("df", df, envir = .GlobalEnv)
+fit<-my_update2(fit,data.n="df") #commenting this out solves all the issues, but the output is ugly
 fit
 }
 
@@ -4301,6 +5026,27 @@ fit
 
 abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact=FALSE,criterion="alpha",alpha=0.2,type.test="Chisq",k){
 
+<<<<<<< Updated upstream
+=======
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+  }
+>>>>>>> Stashed changes
 
   df<-as.data.frame(model.matrix(fit))
 
@@ -4345,6 +5091,27 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
 
   fit<-my_update(fit, updt.f   ,data=df)
+<<<<<<< Updated upstream
+=======
+  # some necessary adjustments for logistf objects
+  if(inherits(fit, "logistf")){
+    if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+    if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+    class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    vrs<-names(fit$model)
+    fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+    #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+    #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+    attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+    attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+    names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+  }
+>>>>>>> Stashed changes
 
 
 
@@ -4370,6 +5137,28 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
   while(stop==F){
 
+<<<<<<< Updated upstream
+=======
+    # some necessary adjustments for logistf objects
+    if(inherits(fit, "logistf")){
+      if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+      if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
+      class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      vrs<-names(fit$model)
+      fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
+
+
+      #attr(fit$terms, "term.labels") <- if("(Intercept)" %in% fit$terms) fit$terms[-1] else fit$terms # add term.labels attribute #ROK: this is wrong for factors!
+      #attr(fit$terms, "dataClasses") <- sapply(fit$x, mode) # add dataClasses attribute #ROK: this is wrong for factors!
+      attr(fit$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+      attr(fit$terms, "dataClasses") <- class # add dataClasses attribute
+      names(attr(fit$terms, "dataClasses"))<-vrs[-1]
+    }
+
+>>>>>>> Stashed changes
     vcvm<-vcov(fit)
 
     if (colnames(model.matrix(fit))[1]=="(Intercept)") vcvm<-vcvm[-1,-1]
@@ -4378,6 +5167,17 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
       if (colnames(model.matrix(fit))[1]=="(Intercept)") colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))[-1] else colnames(vcvm)<-rownames(vcvm)<-colnames(vcov(fit))
     }
 
+<<<<<<< Updated upstream
+=======
+    if(inherits(fit, "logistf")){
+      scope <- unique(varnfix) # drop1.logistf() requires the scope as a vector of variables and not as a formula
+    } else {
+      scope <- as.formula(paste("~",paste(varnfix,collapse=" + ") ))
+    }
+
+    if (criterion!="alpha") bl<-drop1(fit,scope=scope,k=k) else bl<-drop1(fit,scope=scope,test=type.test)
+    varnfixn<-unique(varnfix)
+>>>>>>> Stashed changes
 
 
 
@@ -4411,8 +5211,27 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
             fit.i<-update(fit,xf,evaluate=FALSE)
           fit.i<-eval.parent(fit.i)
+          if(inherits(fit.i, "logistf")){
+            if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
+            if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
+            class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
+            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            vrs<-names(fit.i$model)
+            fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
+<<<<<<< Updated upstream
           if (colnames(model.matrix(fit))[1]=="(Intercept)") {
+=======
+
+            attr(fit.i$terms, "term.labels") <-vrs[-1]  # add term.labels attribute
+
+
+            attr(fit.i$terms, "dataClasses") <- class # add dataClasses attribute
+            names(attr(fit.i$terms, "dataClasses"))<-vrs[-1]
+
+          }
+          if (colnames(fit$x)[1]=="(Intercept)") {
+>>>>>>> Stashed changes
 
             change.in.estimate<-abs(fit$coef[which(attributes(fit$terms)$term.labels[!my_grepl("strata",attributes(fit$terms)$term.labels)]%in%varpas[!varpas%in%black.list.i[i]])+1]-fit.i$coef[which(!attributes(fit.i$terms)$term.labels[!my_grepl("strata",attributes(fit.i$terms)$term.labels)]%in%active[!active%in%black.list.i[i]])+1])
           } else {
@@ -4512,6 +5331,16 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
 
   fit<-eval(call, env, parent.frame())
   if (!is.null(data.n)) fit$call$data<-as.symbol(data.n)
+<<<<<<< Updated upstream
+=======
+
+  #added to fix the issue with shrink, it would be probably be better to solve the issue with model.frame not working once we call upd2
+  if (class(fit)[1]=="coxph"){
+  if (class(try(weights(fit),silent = TRUE))=="try-error") fit$weights<-rep(1L, fit$n)
+  }
+  #end added
+
+>>>>>>> Stashed changes
   fit
 }
 

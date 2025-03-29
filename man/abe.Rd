@@ -46,8 +46,13 @@ If you are using significance level, in that case you have to specify the value 
 
 \item{alpha}{Value that specifies the level of significance as explained above. Default is set to 0.2.}
 
+<<<<<<< Updated upstream
 \item{type.test}{String that specifies which test should be performed in case the \code{criterion = "alpha"}.
 Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.}
+=======
+\item{type.test}{String that specifies which test should be performed in case the `criterion = "alpha"`.
+Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also \link{drop1}.}
+>>>>>>> Stashed changes
 
 \item{type.factor}{String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.}
 
@@ -69,8 +74,15 @@ Specifying \code{"alpha" = 0} will include variables only because of the change-
 as then variables are not safe from exclusion because of their p-values.
 Specifying \code{"alpha" = 1} will always include all variables.
 
+<<<<<<< Updated upstream
 When using \code{type.factor="individual"} each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
 Using \code{type.factor="factor"} will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
+=======
+When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group. When using this option, a new data frame `df` is added in the global environment with a warning.
+Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model. If `type.factor="factor"` then `exact` should be set to `TRUE` to avoid poor approximations.
+
+In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change-in-estimate for logistic, Cox, and parametric survival models only.
+>>>>>>> Stashed changes
 }
 \examples{
 # simulate some data:
@@ -129,7 +141,11 @@ summary(abe.fit.ind)
 Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
+=======
+\link{abe.resampling}, \link{lm}, \link{glm} and \link[survival]{coxph}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

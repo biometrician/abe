@@ -94,7 +94,11 @@ plot(fit.resample,type.plot="models",
 alpha=0.2,tau=0.1,col="light blue",horiz=TRUE,las=1)
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{pie.abe}}
+=======
+\link{abe.resampling}, \link{summary.abe}, \link{pie.abe}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

@@ -50,7 +50,11 @@ num.resamples=50,type.resampling="Wallisch2021")
 summary(fit.resample)
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe.resampling}}, \code{\link{print.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+=======
+\link{abe.resampling}, \link{print.abe}, \link{plot.abe}, \link{pie.abe}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

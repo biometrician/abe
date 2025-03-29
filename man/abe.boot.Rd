@@ -91,7 +91,11 @@ Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backw
 Riccardo De Bin, Silke Janitza, Willi Sauerbrei and Anne-Laure Boulesteix. Subsampling versus Bootstrapping in Resampling-Based Model Selection for Multivariable Regression. Biometrics 72, 272-280, 2016.
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe.resampling}}
+=======
+\link{abe.resampling}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}

@@ -52,7 +52,11 @@ print(fit.resample,conf.level=0.95,alpha=0.2,tau=0.05)
 Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 }
 \seealso{
+<<<<<<< Updated upstream
 \code{\link{abe.resampling}}, \code{\link{summary.abe}}, \code{\link{plot.abe}}, \code{\link{pie.abe}}
+=======
+\link{abe.resampling}, \link{summary.abe}, \link{plot.abe}, \link{pie.abe}
+>>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
