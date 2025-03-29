@@ -276,7 +276,7 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
 
       if (type.factor=="factor") bt<-abe.fact1(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose) else {
         bt<-abe.fact2(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
-        if (type.factor=="individual") warning("A new data frame, df, was created in the global environment due to type.factor=individual.")
+        warning("A new data frame, df, was created in the global environment due to type.factor=individual.")
 
       }
     } else  bt<-abe.num(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
