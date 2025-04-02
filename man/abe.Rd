@@ -10,145 +10,135 @@ abe(
   include = NULL,
   active = NULL,
   tau = 0.05,
-  exp.beta = TRUE,
   exact = FALSE,
-  criterion = "alpha",
+  criterion = c("alpha", "AIC", "BIC"),
   alpha = 0.2,
-  type.test = "Chisq",
+  type.test = c("Chisq", "F", "Rao", "LRT"),
   type.factor = NULL,
-  verbose = TRUE
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
-\item{fit}{An object of a class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the fit.
-Note, the functions should be fitted with argument \code{x=TRUE} and \code{y=TRUE}.}
+\item{fit}{An object of class `"lm"`, `"glm"`, `"logistf"`, `"coxph"`, or `"survreg"` representing the fit.
+Note, the functions should be fitted with argument `x=TRUE` and `y=TRUE` (or `model=TRUE` for `"logistf"` objects).}
 
-\item{data}{data frame used when fitting the object \code{fit}.}
+\item{data}{data frame used when fitting the object `fit`.}
 
-\item{include}{a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. These variables might be exposure variables of interest or known confounders.
+\item{include}{a vector containing the names of variables that will be included in the final model. These variables are used as only passive variables during modeling. *These variables might be exposure variables of interest or known confounders.*
 They will never be dropped from the working model in the selection process,
 but they will be used passively in evaluating change-in-estimate criteria of other variables.
 Note, variables which are not specified as include or active in the model fit are assumed to be active and passive variables.}
 
-\item{active}{a vector containing the names of active variables. These less important explanatory variables will only be used as active,
+\item{active}{a vector containing the names of active variables. These *less important explanatory variables* will only be used as active,
 but not as passive variables when evaluating the change-in-estimate criterion.}
 
 \item{tau}{Value that specifies the threshold of the relative change-in-estimate criterion. Default is set to 0.05.}
 
-\item{exp.beta}{Logical specifying if exponent is used in formula to standardize the criterion. Default is set to TRUE.}
-
-\item{exact}{Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use approximation proposed by Dunkler et al.
-Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases lead to a poor approximation of the change-in-estimate criterion.}
+\item{exact}{Logical, specifies if the method will use exact change-in-estimate or its approximation. Default is set to FALSE, which means that the method will use the approximation proposed by Dunkler et al. (2014).
+Note, setting to TRUE can severely slow down the algorithm, but setting to FALSE can in some cases, i.e., if dummy variables of a factor are evaluated together, lead to a poor approximation of the change-in-estimate criterion. See details.}
 
 \item{criterion}{String that specifies the strategy to select variables for the black list.
-Currently supported options are significance level \code{'alpha'}, Akaike information criterion \code{'AIC'} and Bayesian information criterion \code{'BIC'}.
-If you are using significance level, in that case you have to specify the value of 'alpha' (see parameter \code{alpha}) and type of the test statistic (see parameter \code{type.test}). Default is set to \code{"alpha"}.}
+Currently supported options are significance level `'alpha'`, Akaike information criterion `'AIC'` and Bayesian information criterion `'BIC'`.
+If you are using significance level, you have to specify the value of 'alpha' (see parameter `alpha`) and the type of the test statistic (see parameter `type.test`). Default is set to `"alpha"`.}
 
 \item{alpha}{Value that specifies the level of significance as explained above. Default is set to 0.2.}
 
-<<<<<<< Updated upstream
-\item{type.test}{String that specifies which test should be performed in case the \code{criterion = "alpha"}.
-Possible values are \code{"F"} and \code{"Chisq"} (default) for class \code{"lm"}, \code{"Rao"}, \code{"LRT"}, \code{"Chisq"} (default), \code{"F"} for class \code{"glm"} and \code{"Chisq"} for class \code{"coxph"}. See also \code{\link{drop1}}.}
-=======
 \item{type.test}{String that specifies which test should be performed in case the `criterion = "alpha"`.
 Possible values are `"F"` and `"Chisq"` (default) for class `"lm"`, `"Rao"`, `"LRT"`, `"Chisq"` (default), `"F"` for class `"glm"` and `"Chisq"` for class `"coxph"`. See also \link{drop1}.}
->>>>>>> Stashed changes
 
-\item{type.factor}{String that specifies how to treat factors, see details, possible values are \code{"factor"} and \code{"individual"}.}
+\item{type.factor}{String that specifies how to treat factors, see details, possible values are `"factor"` and `"individual"`.}
 
-\item{verbose}{Logical that specifies if the variable selection process should be printed. Note: this can severely slow down the algorithm. Default is set to TRUE.}
+\item{verbose}{Logical that specifies if the variable selection process should be printed. This can severely slow down the algorithm. Default is set to TRUE.}
+
+\item{...}{Further arguments. Currently, this is primarily used to warn users about arguments that are no longer supported.}
 }
 \value{
-An object of class \code{"lm"}, \code{"glm"} or \code{"coxph"} representing the model chosen by abe method.
+An object of class `"lm"`, `"glm"`, `"coxph"`, or `"survreg"` representing the model chosen by abe method.
 }
 \description{
-Function \code{abe} performs Augmented backward elimination where variable selection is based on the change-in-estimate and significance or information criteria.
-It can also make a backward-selection based on significance or information criteria only by turning off the change-in-estimate criterion.
+Function `abe` performs Augmented Backward Elimination where variable selection is based on the change-in-estimate and significance or information criteria as presented in [Dunkler et al. (2014)](doi:10.1371/journal.pone.0113677).
+It can also make a backward elimination based on significance or information criteria only by turning off the change-in-estimate criterion.
 }
 \details{
-Using the default settings ABE will perform augmented backward elimination based on significance.
+Using the default settings `abe` will perform augmented backward elimination based on significance.
 The level of significance will be set to 0.2. All variables will be treated as "passive or active".
 Approximated change-in-estimate will be used. Threshold of the relative change-in-estimate criterion will be 0.05.
-Setting tau to a very large number (e.g. \code{Inf}) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
-Specifying \code{"alpha" = 0} will include variables only because of the change-in-estimate criterion,
+Setting tau to a very large number (e.g. `Inf`) turns off the change-in-estimate criterion, and ABE will only perform backward elimination.
+Specifying `"alpha" = 0` will include variables only because of the change-in-estimate criterion,
 as then variables are not safe from exclusion because of their p-values.
-Specifying \code{"alpha" = 1} will always include all variables.
+Specifying `"alpha" = 1` will always include all variables.
 
-<<<<<<< Updated upstream
-When using \code{type.factor="individual"} each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model (warning: use sensible coding for the reference group).
-Using \code{type.factor="factor"} will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model.
-=======
 When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group. When using this option, a new data frame `df` is added in the global environment with a warning.
 Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model. If `type.factor="factor"` then `exact` should be set to `TRUE` to avoid poor approximations.
 
 In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change-in-estimate for logistic, Cox, and parametric survival models only.
->>>>>>> Stashed changes
 }
 \examples{
 # simulate some data:
 
 set.seed(1)
-n=100
-x1<-runif(n)
-x2<-runif(n)
-x3<-runif(n)
-y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-dd<-data.frame(y,x1,x2,x3)
+n = 100
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+y <- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+dd <- data.frame(y, x1, x2, x3)
 
-# fit a simple model containing only numeric covariates
-fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+# fit a simple model containing all variables
+fit1 <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data = dd)
 
 # perform ABE with "x1" as only passive and "x2" as only active
 # using the exact change in the estimate of 5\% and significance
 # using 0.2 as a threshold
-abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
-type.test="Chisq",verbose=TRUE)
+abe.fit <- abe(fit1, data = dd, include = "x1", active = "x2",
+tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+type.test = "Chisq", verbose = TRUE)
 
 summary(abe.fit)
 
 # similar example, but turn off the change-in-estimate and perform
 # only backward elimination
 
-abe.fit<-abe(fit,data=dd,include="x1",active="x2",
-tau=Inf,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
-type.test="Chisq",verbose=TRUE)
+be.fit <- abe(fit1, data = dd, include = "x1", active = "x2",
+tau = Inf, exact = TRUE, criterion = "alpha", alpha = 0.2,
+type.test = "Chisq", verbose = TRUE)
 
-summary(abe.fit)
+summary(be.fit)
 
 # an example with the model containing categorical covariates:
-dd$x3<-rbinom(n,size=3,prob=1/3)
-dd$y1<--5+5*x1+5*x2+ rnorm(n,sd=5)
-fit<-lm(y1~x1+x2+factor(x3),x=TRUE,y=TRUE,data=dd)
+dd$x4 <- rbinom(n, size = 3, prob = 1/3)
+dd$y1 <- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
+fit2 <- lm(y1 ~ x1 + x2 + factor(x4), x = TRUE, y = TRUE, data = dd)
 
-# treat "x3" as a single covariate:
+# treat "x4" as a single covariate: perform ABE as in abe.fit
 
-abe.fit.fact<-abe(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
-type.test="Chisq",verbose=TRUE,type.factor="factor")
+abe.fit.fact <- abe(fit2, data = dd, include = "x1", active = "x2",
+tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+type.test = "Chisq", verbose = TRUE, type.factor = "factor")
 
 summary(abe.fit.fact)
 
-# treat each dummy of "x3" as a separate covariate:
+# treat each dummy of "x3" as a separate covariate: perform ABE as in abe.fit
 
-abe.fit.ind<-abe(fit,data=dd,include="x1",active="x2",
-tau=0.05,exp.beta=FALSE,exact=TRUE,criterion="alpha",alpha=0.2,
-type.test="Chisq",verbose=TRUE,type.factor="individual")
+abe.fit.ind <- abe(fit2, data = dd, include = "x1", active = "x2",
+tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+type.test = "Chisq", verbose = TRUE, type.factor = "individual")
 
 summary(abe.fit.ind)
 }
 \references{
-Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented backward elimination: a pragmatic and purposeful way to develop statistical models. PloS one, 9(11):e113677, 2014.
+Daniela Dunkler, Max Plischke, Karen Lefondre, and Georg Heinze. Augmented Backward Elimination: A Pragmatic and Purposeful Way to Develop Statistical Models. PloS One, 9(11):e113677, 2014, [doi:](doi:10.1371/journal.pone.0113677).
 }
 \seealso{
-<<<<<<< Updated upstream
-\code{\link{abe.resampling}}, \code{\link{lm}}, \code{\link{glm}} and \code{\link{coxph}}
-=======
 \link{abe.resampling}, \link{lm}, \link{glm} and \link[survival]{coxph}
->>>>>>> Stashed changes
 }
 \author{
 Rok Blagus, \email{rok.blagus@mf.uni-lj.si}
+
+Daniela Dunkler
+
+Gregor Steiner
 
 Sladana Babic
 }
