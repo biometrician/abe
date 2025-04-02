@@ -132,7 +132,10 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
+
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -477,7 +480,9 @@ abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=F
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -2806,7 +2811,9 @@ abe.num<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -2885,7 +2892,9 @@ abe.num<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact
       if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
       if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
       class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
       vrs<-names(fit$model)
       fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -2980,7 +2989,9 @@ abe.num<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exact
             if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
             if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
             class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
-            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class<-unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit.i$model[, -1]  ))
+            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))|unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit.i$model[, -1]  ))]<-"factor"
             vrs<-names(fit.i$model)
             fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
@@ -3093,7 +3104,9 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3133,7 +3146,9 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
       if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
       if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
       class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
       vrs<-names(fit$model)
       fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3214,7 +3229,9 @@ abe.num.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,
             if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
             if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
             class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
-            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class<-unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit.i$model[, -1]  ))
+            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))|unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit.i$model[, -1]  ))]<-"factor"
             vrs<-names(fit.i$model)
             fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
@@ -3321,7 +3338,9 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3433,7 +3452,9 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
       if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
       if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
       class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
       vrs<-names(fit$model)
       fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3530,7 +3551,9 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
           if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
           if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
           class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
-          class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+          #class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+          #class<-unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit.i$model[, -1]  ))
+          class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))|unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit.i$model[, -1]  ))]<-"factor"
           vrs<-names(fit.i$model)
           fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
@@ -3610,7 +3633,9 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
             if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
             if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
             class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-            class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+            #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+            #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+            class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
             vrs<-names(fit$model)
             fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3717,7 +3742,9 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3805,7 +3832,9 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
       if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
       if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
       class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
       vrs<-names(fit$model)
       fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -3888,7 +3917,9 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
           if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
           if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
           class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
-          class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+          #class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+          #class<-unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit.i$model[, -1]  ))
+          class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))|unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit.i$model[, -1]  ))]<-"factor"
           vrs<-names(fit.i$model)
           fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
@@ -3963,7 +3994,9 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
             if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
             if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
             class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-            class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+            #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+            #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+            class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
             vrs<-names(fit$model)
             fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4062,7 +4095,9 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4125,7 +4160,9 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4178,7 +4215,9 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
       if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
       if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
       class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
       vrs<-names(fit$model)
       fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4271,7 +4310,9 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
             if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
             if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
             class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
-            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class<-unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit.i$model[, -1]  ))
+            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))|unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit.i$model[, -1]  ))]<-"factor"
             vrs<-names(fit.i$model)
             fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
@@ -4386,7 +4427,9 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4448,7 +4491,9 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
     if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
     if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
     class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-    class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+    #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+    class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
     vrs<-names(fit$model)
     fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4489,7 +4534,9 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
       if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
       if(!("model" %in% names(fit))) stop("the model should be fitted with: model=TRUE")
       class<-rep("numeric",length(names(as.data.frame(fit$model[, -1]))))
-      class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class[grepl("factor",names(as.data.frame(fit$model[, -1])))]<-"factor"
+      #class<-unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit$model[, -1]  ))
+      class[grepl("factor",names(as.data.frame(fit$model[, -1])))|unlist(lapply(1:ncol(fit$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit$model[, -1]  ))]<-"factor"
       vrs<-names(fit$model)
       fit$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit$model)
 
@@ -4568,7 +4615,9 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
             if(criterion != "alpha") stop("AIC and BIC selection are not supported for objects of class logistf")
             if(!("model" %in% names(fit.i))) stop("the model should be fitted with: model=TRUE")
             class<-rep("numeric",length(names(as.data.frame(fit.i$model[, -1]))))
-            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))]<-"factor"
+            #class<-unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),"numeric","factor"), fit.i$model[, -1]  ))
+            class[grepl("factor",names(as.data.frame(fit.i$model[, -1])))|unlist(lapply(1:ncol(fit.i$model[, -1]),function(i,x) ifelse(is.null(levels(x[,i])),FALSE,TRUE), fit.i$model[, -1]  ))]<-"factor"
             vrs<-names(fit.i$model)
             fit.i$x<-model.matrix(as.formula(paste0(vrs[1],"~",paste(vrs[-1],collapse = "+"))),fit.i$model)
 
