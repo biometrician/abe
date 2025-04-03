@@ -69,7 +69,7 @@ Specifying `"alpha" = 0` will include variables only because of the change-in-es
 as then variables are not safe from exclusion because of their p-values.
 Specifying `"alpha" = 1` will always include all variables.
 
-When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group. When using this option, a new data frame `df` is added in the global environment with a warning.
+When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group.
 Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model. If `type.factor="factor"` then `exact` should be set to `TRUE` to avoid poor approximations.
 
 In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change-in-estimate for logistic, Cox, and parametric survival models only.

@@ -41,7 +41,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("value", "Variable", "VI
 #' as then variables are not safe from exclusion because of their p-values.
 #' Specifying `"alpha" = 1` will always include all variables.
 #'
-#' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group. When using this option, a new data frame `df` is added in the global environment with a warning.
+#' When using `type.factor="individual"` each dummy variable of a factor is treated as an individual explanatory variable, hence only this dummy variable can be removed from the model. Use sensible coding for the reference group.
 #' Using `type.factor="factor"` will look at the significance of removing all dummy variables of the factor and can drop the entire variable from the model. If `type.factor="factor"` then `exact` should be set to `TRUE` to avoid poor approximations.
 #'
 #' In earlier versions, \code{abe} used to include an \code{exp.beta} argument. This is not supported anymore. Instead, the function now uses the exponential change-in-estimate for logistic, Cox, and parametric survival models only.
@@ -279,7 +279,7 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
 
       if (type.factor=="factor") bt<-abe.fact1(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose) else {
         bt<-abe.fact2(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
-        warning("A new data frame, df, was created in the global environment due to type.factor=individual.")
+        #warning("A new data frame, new_dataframe, was created in the global environment due to type.factor=individual.")
 
       }
     } else  bt<-abe.num(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
@@ -376,13 +376,13 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
 #' dd <- data.frame(y = y, x1 = x1, x2 = x2, x3 = x3)
 #' fit <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data = dd)
 #'
-#' # use ABE on 50 re-samples considering different
+#' # use ABE on 10 re-samples considering different
 #' # change-in-estimate thresholds and significance levels
 #'
 #' fit.resample1 <- abe.resampling(fit, data = dd, include = "x1",
 #' active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "Wallisch2021")
+#' num.resamples = 10, type.resampling = "Wallisch2021")
 #'
 #' names(summary(fit.resample1))
 #' summary(fit.resample1)$var.rel.frequencies
@@ -391,24 +391,24 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
 #' summary(fit.resample1)$pair.rel.frequencies[1]
 #' print(fit.resample1)
 #'
-#' # use ABE on 50 bootstrap re-samples considering different
+#' # use ABE on 10 bootstrap re-samples considering different
 #' # change-in-estimate thresholds and significance levels
 #'
 #' fit.resample2 <- abe.resampling(fit, data = dd, include = "x1",
 #' active = "x2", tau = c(0.05, 0.1),exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "bootstrap")
+#' num.resamples = 10, type.resampling = "bootstrap")
 #'
 #' summary(fit.resample2)
 #'
-#' # use ABE on 50 subsamples randomly selecting 50% of subjects
+#' # use ABE on 10 subsamples randomly selecting 50% of subjects
 #' # considering different change-in-estimate thresholds and
 #' # significance levels
 #'
 #' fit.resample3 <- abe.resampling(fit, data = dd, include = "x1",
 #' active = "x2", tau = c(0.05,0.1), exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "subsampling", prop.sampling = 0.5)
+#' num.resamples = 10, type.resampling = "subsampling", prop.sampling = 0.5)
 #'
 #' summary(fit.resample3)
 #'
@@ -417,24 +417,24 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
 #' fit.resample.1 <- abe.resampling(fit,  data = dd, include = "x1",
 #' active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "Wallisch2021")
+#' num.resamples = 10, type.resampling = "Wallisch2021")
 #'
 #' fit.resample.2 <- abe.resampling(fit, data = dd, include = "x1",
 #' active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "Wallisch2021")
+#' num.resamples = 10, type.resampling = "Wallisch2021")
 #'
 #' #since different seeds are used, fit.resample.1 and fit.resample.2 give different results
 #'
 #' fit.resample.3 <- abe.resampling(fit, data = dd, include = "x1",
 #' active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "Wallisch2021", seed = 87982)
+#' num.resamples = 10, type.resampling = "Wallisch2021", seed = 87982)
 #'
 #' fit.resample.4 <- abe.resampling(fit, data = dd, include = "x1",
 #' active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 #' criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-#' num.resamples = 50, type.resampling = "Wallisch2021", seed = 87982)
+#' num.resamples = 10, type.resampling = "Wallisch2021", seed = 87982)
 #'
 #' #now fit.resample.3 and fit.resample.4 give exactly the same results
 #'
@@ -1567,26 +1567,26 @@ abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=F
 
   # add selected fit
   if(criterion != "alpha"){
-    #sink("NUL") #could be problem for nonwidows!
-    null_connection <- file("nul", open = "w")
-    sink(null_connection)
+    #sink("NULL") #could be problem for nonwidows!
+    #null_connection <- file("null", open = "w")
+    #sink(null_connection)
     fit.selected <- lapply(unique(model.params$tau), function(tau.int){
       abe(fit, data = data, criterion = criterion, tau = tau.int, include = include,
           active = active, exact = exact, type.test = type.test, type.factor = type.factor, verbose = FALSE)
     })
-    sink()
-    close(null_connection)
+    #sink()
+    #close(null_connection)
   }
   if(criterion == "alpha"){
-    #sink("NUL")
-    null_connection <- file("nul", open = "w")
-    sink(null_connection)
+    #sink("NULL")
+    #null_connection <- file("null", open = "w")
+    #sink(null_connection)
     fit.selected <- apply(unique(model.params), 1, function(x){
       abe(fit, data = data, criterion = criterion, alpha = x[1], tau = x[2], include = include,
           active = active, exact = exact, type.test = type.test, type.factor = type.factor, verbose = FALSE)
     })
-    sink()
-    close(null_connection)
+    #sink()
+    #close(null_connection)
   }
   names(fit.selected) <- 1:length(fit.selected)
 
@@ -4387,9 +4387,9 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
     print(formula(fit))
     cat("\n\n")
   }
-
-  assign("df", df, envir = .GlobalEnv)
-  fit<-my_update2(fit,data.n="df") #commenting this out solves all the issues, but the output is ugly
+#new_dataframe<-df
+#  assign("new_dataframe", new_dataframe, envir = .GlobalEnv)
+#  fit<-my_update2(fit,data.n="new_dataframe") #commenting this out solves all the issues, but the output is ugly
   fit
 }
 
@@ -4731,8 +4731,8 @@ my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
   if (!is.null(data.n)) fit$call$data<-as.symbol(data.n)
 
   #added to fix the issue with shrink, it would be probably be better to solve the issue with model.frame not working once we call upd2
-  if (class(fit)[1]=="coxph"){
-    if (class(try(weights(fit),silent = TRUE))=="try-error") fit$weights<-rep(1L, fit$n)
+  if (inherits(fit,"coxph")){
+    if (inherits(try(weights(fit),silent = TRUE),"try-error")) fit$weights<-rep(1L, fit$n)
   }
   #end added
 

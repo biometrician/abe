@@ -116,13 +116,13 @@ y<- -5 + 5 * x1 + 5 * x2 + rnorm(n, sd = 5)
 dd <- data.frame(y = y, x1 = x1, x2 = x2, x3 = x3)
 fit <- lm(y ~ x1 + x2 + x3, x = TRUE, y = TRUE, data = dd)
 
-# use ABE on 50 re-samples considering different
+# use ABE on 10 re-samples considering different
 # change-in-estimate thresholds and significance levels
 
 fit.resample1 <- abe.resampling(fit, data = dd, include = "x1",
 active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "Wallisch2021")
+num.resamples = 10, type.resampling = "Wallisch2021")
 
 names(summary(fit.resample1))
 summary(fit.resample1)$var.rel.frequencies
@@ -131,24 +131,24 @@ summary(fit.resample1)$var.coefs[1]
 summary(fit.resample1)$pair.rel.frequencies[1]
 print(fit.resample1)
 
-# use ABE on 50 bootstrap re-samples considering different
+# use ABE on 10 bootstrap re-samples considering different
 # change-in-estimate thresholds and significance levels
 
 fit.resample2 <- abe.resampling(fit, data = dd, include = "x1",
 active = "x2", tau = c(0.05, 0.1),exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "bootstrap")
+num.resamples = 10, type.resampling = "bootstrap")
 
 summary(fit.resample2)
 
-# use ABE on 50 subsamples randomly selecting 50\% of subjects
+# use ABE on 10 subsamples randomly selecting 50\% of subjects
 # considering different change-in-estimate thresholds and
 # significance levels
 
 fit.resample3 <- abe.resampling(fit, data = dd, include = "x1",
 active = "x2", tau = c(0.05,0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "subsampling", prop.sampling = 0.5)
+num.resamples = 10, type.resampling = "subsampling", prop.sampling = 0.5)
 
 summary(fit.resample3)
 
@@ -157,24 +157,24 @@ summary(fit.resample3)
 fit.resample.1 <- abe.resampling(fit,  data = dd, include = "x1",
 active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "Wallisch2021")
+num.resamples = 10, type.resampling = "Wallisch2021")
 
 fit.resample.2 <- abe.resampling(fit, data = dd, include = "x1",
 active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "Wallisch2021")
+num.resamples = 10, type.resampling = "Wallisch2021")
 
 #since different seeds are used, fit.resample.1 and fit.resample.2 give different results
 
 fit.resample.3 <- abe.resampling(fit, data = dd, include = "x1",
 active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "Wallisch2021", seed = 87982)
+num.resamples = 10, type.resampling = "Wallisch2021", seed = 87982)
 
 fit.resample.4 <- abe.resampling(fit, data = dd, include = "x1",
 active = "x2", tau = c(0.05, 0.1), exact = TRUE,
 criterion = "alpha", alpha = c(0.2, 0.05), type.test = "Chisq",
-num.resamples = 50, type.resampling = "Wallisch2021", seed = 87982)
+num.resamples = 10, type.resampling = "Wallisch2021", seed = 87982)
 
 #now fit.resample.3 and fit.resample.4 give exactly the same results
 
