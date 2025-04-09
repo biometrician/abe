@@ -2389,6 +2389,7 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
     res <- lapply(res, round, digits = digits)
 
     names(res) <- names(sum.obj$var.coefs)
+    print(res)
     return(res)
 
   }
@@ -2403,6 +2404,7 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
     res <- lapply(res, round, digits = digits)
 
     names(res) <- names(sum.obj$var.coefs)
+    print(res)
     return(res)
   }
 
@@ -2410,6 +2412,7 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
   if(type == "models"){
 
     res <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau, models.n = models.n)$model.rel.frequencies
+    print(res)
     return(res)
 
   }
