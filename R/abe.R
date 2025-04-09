@@ -285,9 +285,14 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
     } else  bt<-abe.num(fit,data,include,active,tau,exp.beta,exact,criterion,alpha,type.test,verbose)
   }
 
-  bt0<-try(eval(bt$call),silent=TRUE)
-  if (inherits(bt0, "try-error")) bt else bt0
+  bt0<-try(eval(bt$call),silent=TRUE) #what is this??
 
+  if (inherits(bt0, "try-error")) bt else {
+   if (!is.null(type.factor)){
+    if (type.factor=="individual") class(bt0)<-c("abe_ind",class(bt0))
+   }
+     bt0
+   }
 }
 
 
@@ -2071,6 +2076,8 @@ abe.boot<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE
 #' @details Parameter `conf.level` defines the lower and upper quantile of the bootstrapped/resampled distribution such that equal proportion of values are smaller and larger than the lower and the upper quantile, respectively.
 #' @details The `models.n` parameter controls the number of models printed in `model.rel.frequencies`. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
 #' @seealso \link{abe.resampling}, \link{print.abe}, \link{plot.abe}, \link{pie.abe}
+#' @method summary abe
+#' @export summary.abe
 #' @export
 #' @examples
 #' set.seed(1)
@@ -2345,6 +2352,8 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' If `type = "models"`, the `models.n` parameter controls the number of models printed. One option is to directly specify the number of models to return (i.e. an integer larger than 1). Alternatively, if `models.n` is set to a number less than (or equal to) 1, the number of models returned is such that the cumulative frequency attains that value. By default (`models.n = NULL`), the top 20 models or all models up to a cumulative frequency of 0.8, whichever is shorter, are returned. The selected model is marked with an asterisk. If it is not among the printed models, it is added as the last model.
 #' @references Wallisch C, Dunkler D, Rauch G, de Bin R, Heinze G. Selection of variables for multivariable models: Opportunities and limitations in quantifying model stability by resampling. Statistics in Medicine 40:369-381, 2021.
 #' @seealso \link{abe.resampling}, \link{summary.abe}, \link{plot.abe}, \link{pie.abe}
+#' @method print abe
+#' @export print.abe
 #' @export
 #' @examples
 #' set.seed(100)
@@ -2435,6 +2444,8 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 #'
 #' When using `type.plot="pairwise"` the function plots a heatmap of differences between observed pairwise inclusion frequencies and the expected pairwise inclusion frequencies under independence. A high value indicates overselection, i.e. the pair of variables is selected together more often than expected under independence. Selection frequencies (in %) are displayed on top of the heatmap. See `summary.abe` for more details.
 #' @import stats ggplot2 reshape2 tidytext
+#' @method plot abe
+#' @export plot.abe
 #' @export
 #' @seealso \link{abe.resampling}, \link{summary.abe}, \link{pie.abe}
 #' @examples
@@ -4390,10 +4401,82 @@ abe.fact2<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
 #new_dataframe<-df
 #  assign("new_dataframe", new_dataframe, envir = .GlobalEnv)
 #  fit<-my_update2(fit,data.n="new_dataframe") #commenting this out solves all the issues, but the output is ugly
+
+  #fit$call$data<-NULL#try to see: makes the output nice, but we loose all functionality, we could simply change print and summary
+  class(fit)<-c("abe_ind",class(fit))
   fit
 }
 
+#' Print of a `"abe_ind"` object
+#'
+#' Prints the `"abe_ind"` object.
+#'
+#' @param x an object of class `"abe_ind"`
+#' @param ... Further arguments.
+#' @seealso \link{abe}, \link{summary.abe_ind}
+#' @method print abe_ind
+#' @export print.abe_ind
+#' @export
+#' @examples
+#' set.seed(1)
+#' n=100
+#' x1<-runif(n)
+#' x2<-runif(n)
+#' x3<-rbinom(n,size=1,prob=0.5)
+#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
+#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=factor(x3))
+#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#'
+#' abe.fit <- abe(fit, data = dd, include = "x1", active = "x2",
+#' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+#' type.test = "Chisq",type.factor="individual", verbose = FALSE)
+#'
+#' print(abe.fit)
 
+print.abe_ind<-function(x,...){
+  x$call$data<-NULL
+  if (inherits(x,"abe_ind")){
+    class(x)<-class(x)[-which(class(x)=="abe_ind")]
+  }
+  print(x)
+  }
+
+
+#' Summary of a `"abe_ind"` object
+#'
+#' Summarize the `"abe_ind"` object.
+#'
+#' @param object an object of class `"abe_ind"`
+#' @param ... Further arguments.
+#' @return see \link{summary}
+#' @author Rok Blagus, \email{rok.blagus@@mf.uni-lj.si}
+#' @seealso \link{abe}, \link{print.abe_ind}
+#' @method summary abe_ind
+#' @export summary.abe_ind
+#' @export
+#' @examples
+#' set.seed(1)
+#' n=100
+#' x1<-runif(n)
+#' x2<-runif(n)
+#' x3<-rbinom(n,size=1,prob=0.5)
+#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
+#' dd<-data.frame(y=y,x1=x1,x2=x2,x3=factor(x3))
+#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
+#'
+#' abe.fit <- abe(fit, data = dd, include = "x1", active = "x2",
+#' tau = 0.05, exact = TRUE, criterion = "alpha", alpha = 0.2,
+#' type.test = "Chisq",type.factor="individual", verbose = FALSE)
+#'
+#' summary(abe.fit)
+
+summary.abe_ind<-function(object,...){
+  object$call$data<-NULL
+  if (inherits(object,"abe_ind")){
+  class(object)<-class(object)[-which(class(object)=="abe_ind")]
+  }
+  summary(object)
+  }
 
 
 
@@ -4693,51 +4776,6 @@ abe.fact2.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
 
 
-#' update function which searches for objects within the parent environment, gives a nicer output than my_update
-#' @keywords internal
-#' @examples
-#' \dontrun{
-#' set.seed(1)
-#' n=100
-#' x1<-runif(n)
-#' x2<-runif(n)
-#' x3<-runif(n)
-#' y<--5+5*x1+5*x2+ rnorm(n,sd=5)
-#' dd<-data.frame(y,x1,x2,x3)
-#' fit<-lm(y~x1+x2+x3,x=TRUE,y=TRUE,data=dd)
-#'
-#' ddn<-dd[-1,]
-#' my_update2(fit,data=ddn,data.n="ddn")
-#' my_update2(fit,formula=as.formula(".~.-x1"),data=ddn,data.n="ddn")
-#' }
-
-
-
-my_update2 <- function(mod, formula = NULL, data = NULL,data.n=NULL) {
-  call <- getCall(mod)
-  if (is.null(call)) {
-    stop("Model object does not support updating (no call)", call. = FALSE)
-  }
-  term <- terms(mod)
-  if (is.null(term)) {
-    stop("Model object does not support updating (no terms)", call. = FALSE)
-  }
-
-  if (!is.null(data)) call$data <- data
-  if (!is.null(formula)) call$formula <- update.formula(call$formula, formula)
-  env <- attr(term, ".Environment")
-
-  fit<-eval(call, env, parent.frame())
-  if (!is.null(data.n)) fit$call$data<-as.symbol(data.n)
-
-  #added to fix the issue with shrink, it would be probably be better to solve the issue with model.frame not working once we call upd2
-  if (inherits(fit,"coxph")){
-    if (inherits(try(weights(fit),silent = TRUE),"try-error")) fit$weights<-rep(1L, fit$n)
-  }
-  #end added
-
-  fit
-}
 
 #' update function which searches for objects within the parent environment
 #' @keywords internal
