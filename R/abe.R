@@ -2568,7 +2568,7 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
     }
     if(object$criterion == "AIC") alphas <- c("0.157")
     if(object$criterion == "BIC") alphas <- c(1-pchisq(log(nrow(object$fit.global$x)), df=1))
-    taus <- sort(object$misc$tau)
+    taus <- object$misc$tau
     if(!is.null(tau)) taus <- tau
 
     if(length(alphas) > 1 & length(taus) == 1){
@@ -2589,9 +2589,15 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
 
       if(length(alphas) <= 1) stop("Stability plots require more than one alpha value.")
 
+      data_longABE$tauLabel <- factor(
+        # save the labels as a factor with the desired order
+        # this makes sure the facet labels are in the right order in the plot
+        paste0("Tau = ", data_longABE$tau),
+        levels = paste0("Tau = ", taus)
+        )
       p <- ggplot(data_longABE) +
         geom_line(aes(x = alpha, y = value, col = variable), linewidth = 0.75) +
-        facet_wrap(~ paste0("Tau = ", tau)) +
+        facet_wrap(~ tauLabel) +
         theme_bw() +
         geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
         labs(x = expression(alpha), y = "Inclusion frequencies", col = "") +
