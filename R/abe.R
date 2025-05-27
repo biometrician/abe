@@ -195,6 +195,8 @@ abe<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=FALSE,criter
     if (epv<10) cat("Warning: Events per variable ratio is smaller than 10.")
   }
 
+
+
   if (sum(my_grepl("offset",names(attributes(fit$terms)$dataClasses)))!=0){
 
     warning("offset variables are in the model treating them as only passive")
@@ -1596,7 +1598,7 @@ abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=F
   names(fit.selected) <- 1:length(fit.selected)
 
 
-
+#Rok[27.5.2025]: whoever added this made a huge mess: this logic does not work when we have some duplicate names in $coefficients, e.g. as with splines!
   # create coefficient matrix
   coefficients <- matrix(0, nrow = length(boot1), ncol = length(fit.global$coefficients),
                          dimnames = list(1:length(boot1), names(fit.global$coefficients)))
@@ -1606,8 +1608,10 @@ abe.resampling<-function(fit,data=NULL,include=NULL,active=NULL,tau=0.05,exact=F
   } else coefficients.wallisch <- NULL
 
   for (i in 1:nrow(coefficients)) {
-    coefficients[i, names(boot1[[i]]$coefficients)] <- boot1[[i]]$coefficients
-    if(type.resampling=="Wallisch2021") coefficients.wallisch[i, names(boot2[[i]]$coefficients)] <- boot2[[i]]$coefficients
+    #coefficients[i, names(boot1[[i]]$coefficients)] <- boot1[[i]]$coefficients
+    coefficients[i, colnames(coefficients)%in%names(boot1[[i]]$coefficients)] <- boot1[[i]]$coefficients #fix by Rok, 27/5/2025
+    #if(type.resampling=="Wallisch2021") coefficients.wallisch[i, names(boot2[[i]]$coefficients)] <- boot2[[i]]$coefficients
+    if(type.resampling=="Wallisch2021") coefficients.wallisch[i,colnames(coefficients.wallisch)%in%names(boot2[[i]]$coefficients)] <- boot2[[i]]$coefficients #fix by Rok, 27/5/2025
   }
 
 
@@ -2335,7 +2339,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' root mean squared difference ratio (RMSD) and relative bias conditional on selection (RBCS), see `details`.
 #'
 #' @param x an object of class `"abe"`, an object returned by a call to [abe.resampling()]
-#' @param type the type of the output. `type = "coefficients"` prints summary statistics for each coefficient, `type = "coefficients reporting"` prints a reduced version of the coefficient statistics, and `type = "models"` reports model selection frequencies.
+#' @param type the type of the output. `type = "coefficients"` prints summary statistics for each coefficient, `type = "coefficients_reporting"` prints a reduced version of the coefficient statistics, and `type = "models"` reports model selection frequencies.
 #' @param conf.level the confidence level, defaults to 0.95, see `details`
 #' @param alpha the alpha value for which the output is to be printed, defaults to `NULL`
 #' @param tau the tau value for which the output is to be printed, defaults to `NULL`
@@ -2372,7 +2376,7 @@ summary.abe <- function(object, conf.level = 0.95, pval = 0.01, alpha = NULL, ta
 #' print(fit.resample, conf.level = 0.95, alpha = 0.2, tau = 0.05)
 
 
-print.abe <- function(x, type = c("coefficients", "coefficients reporting", "models"), models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
+print.abe <- function(x, type = c("coefficients", "coefficients_reporting", "models"), models.n = NULL, conf.level = 0.95, alpha = NULL, tau = NULL, digits = 3,...){
 
   # match arguments
   type <- match.arg(type)
@@ -2394,7 +2398,7 @@ print.abe <- function(x, type = c("coefficients", "coefficients reporting", "mod
 
   }
 
-  if(type == "coefficients reporting"){
+  if(type == "coefficients_reporting"){
 
     sum.obj <- summary(object, conf.level = conf.level, alpha = alpha, tau = tau)
 
@@ -2735,7 +2739,6 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
   return(p)
 
 }
-
 
 
 
@@ -3402,7 +3405,8 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
 
       rep.var.names<-sum(grepl(var.modi,var.mod))-1
       if (sum(rep.var.names)<0) rep.var.names<-0
-      if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+     # if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+      if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl2(var.modi,name.cfi))-rep.var.names
 
     }
 
@@ -3601,7 +3605,8 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
             rep.var.namesi<-sum(grepl(var.modii,var.mod.i))-1
             if (sum(rep.var.namesi)<0) rep.var.namesi<-0
             #if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
-            if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
+            #if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
+            if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl2(var.modii,name.cfii))-rep.var.namesi
           }
 
           fit.i$assign<-unlist(fit.i$assign)
@@ -3685,7 +3690,8 @@ abe.fact1<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRUE,exa
 
               rep.var.names<-sum(grepl(var.modi,var.mod))-1
               if (sum(rep.var.names)<0) rep.var.names<-0
-              if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+              #if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+              if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl2(var.modi,name.cfi))-rep.var.names
             }
 
             fit$assign<-unlist(fit$assign)
@@ -3794,7 +3800,8 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
       rep.var.names<-sum(grepl(var.modi,var.mod))-1
       if (sum(rep.var.names)<0) rep.var.names<-0
-      if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+      #if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+      if (grepl("strata",var.mod[i])) fit$assign[[i+1]]<-0 else fit$assign[[i+1]]<-sum(my_grepl2(var.modi,name.cfi))-rep.var.names
 
     }
 
@@ -3967,7 +3974,8 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
             rep.var.namesi<-sum(grepl(var.modii,var.mod.i))-1
             if (sum(rep.var.namesi)<0) rep.var.namesi<-0
-            if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
+            #if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl(var.modii,name.cfii))-rep.var.namesi
+            if (grepl("strata",var.mod[iii])) fit.i$assign[[iii+1]]<-0 else fit.i$assign[[iii+1]]<-sum(my_grepl2(var.modii,name.cfii))-rep.var.namesi
           }
 
           fit.i$assign<-unlist(fit.i$assign)
@@ -4043,7 +4051,8 @@ abe.fact1.boot<-function(fit,data,include=NULL,active=NULL,tau=0.05,exp.beta=TRU
 
               rep.var.names<-sum(grepl(var.modi,var.mod))-1
               if (sum(rep.var.names)<0) rep.var.names<-0
-              if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+              #if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl(var.modi,name.cfi))-rep.var.names
+              if (grepl("strata",var.mod[ii])) fit$assign[[ii+1]]<-0 else fit$assign[[ii+1]]<-sum(my_grepl2(var.modi,name.cfi))-rep.var.names
             }
 
             fit$assign<-unlist(fit$assign)
@@ -4855,7 +4864,16 @@ my_update_boot <- function(mod, data = NULL) {
 #' \dontrun{
 #' my_grepl("x",c("xy","xz","ab"))
 #' }
-my_grepl<-function(...) grepl(fixed=TRUE,...)
+#my_grepl<-function(...) grepl(fixed=TRUE,...)
+my_grepl<-function(pattern,...) {pattern<-paste0("\\b",pattern,"\\b");grepl(pattern=pattern,...)} #new to try and fix age stage issue
+
+#' grepl function changed
+#' @keywords internal
+#' @examples
+#' \dontrun{
+#' my_grepl3("x",c("xy","xz","ab"))
+#' }
+my_grepl2<-function(...) grepl(fixed=TRUE,...)
 
 
 #' grep function changed
@@ -4864,5 +4882,6 @@ my_grepl<-function(...) grepl(fixed=TRUE,...)
 #' \dontrun{
 #' my_grep("x",c("xy","xz","ab"))
 #' }
-my_grep<-function(...) grep(fixed=TRUE,...)
+#my_grep<-function(...) grep(fixed=TRUE,...)
+my_grep<-function(pattern,...) {pattern<-paste0("\\b",pattern,"\\b");grep(pattern=pattern,...)} #new to try and fix age stage issue
 

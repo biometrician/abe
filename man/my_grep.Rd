@@ -4,7 +4,7 @@
 \alias{my_grep}
 \title{grep function changed}
 \usage{
-my_grep(...)
+my_grep(pattern, ...)
 }
 \description{
 grep function changed
