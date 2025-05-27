@@ -2563,7 +2563,7 @@ plot.abe<-function(x,type.plot=c("coefficients", "variables", "models", "stabili
   if(type.plot == "stability"){
 
     if(object$criterion == "alpha"){
-      alphas <- sort(object$misc$alpha)
+      alphas <- object$misc$alpha
       if(!is.null(alpha)) alphas <- alpha
     }
     if(object$criterion == "AIC") alphas <- c("0.157")
